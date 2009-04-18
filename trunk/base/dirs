@@ -1,0 +1,5 @@
+DIRS = \
+    rtl \
+    hal \
+    ke
+

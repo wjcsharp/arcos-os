@@ -1,0 +1,7 @@
+TARGETNAME=rtl
+TARGETPATH=lib
+TARGETTYPE=library
+
+SOURCES= \
+        memory.c \
+        string.c
