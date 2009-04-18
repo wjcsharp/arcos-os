@@ -1,0 +1,14 @@
+TARGETNAME=kernel
+TARGETPATH=obj
+TARGETTYPE=executable
+
+SOURCES = \
+        init.c \
+        scheduler.c \
+        bugcheck.c
+
+
+LIBS = \
+        $(BASEDIR)/build/lib/*/hal \
+        $(BASEDIR)/build/lib/*/rtl
+
