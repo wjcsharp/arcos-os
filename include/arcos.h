@@ -15,7 +15,7 @@
 //
 #ifndef NDEBUG
 #define ASSERT(X) \
-    do { if (!(X)) KeBugCheck("Assertion failed: " __FILE__ "(" STRINGIFY(__LINE__) "): " #x "\n" ); } while (0)
+    do { if (!(X)) KeBugCheck("Assertion failed: " __FILE__ "(" STRINGIFY(__LINE__) "): " #X "\n" ); } while (0)
 #else
 #define ASSERT(X) ((void)0)
 #endif
@@ -71,6 +71,65 @@ typedef struct _CONTEXT {
 } CONTEXT, *PCONTEXT;
 
 #endif // MIPS32
+
+#ifdef WIN32
+
+#define DWORD                           ULONG
+#define BYTE                            UCHAR
+
+#define MAXIMUM_SUPPORTED_EXTENSION     512
+#define SIZE_OF_80387_REGISTERS         80
+
+typedef struct _FLOATING_SAVE_AREA {
+    DWORD   ControlWord;
+    DWORD   StatusWord;
+    DWORD   TagWord;
+    DWORD   ErrorOffset;
+    DWORD   ErrorSelector;
+    DWORD   DataOffset;
+    DWORD   DataSelector;
+    BYTE    RegisterArea[SIZE_OF_80387_REGISTERS];
+    DWORD   Cr0NpxState;
+} FLOATING_SAVE_AREA;
+
+//
+// again, do not reorder, this order is used by Windows API
+//
+typedef struct _CONTEXT {
+    DWORD ContextFlags;
+
+    DWORD   Dr0;
+    DWORD   Dr1;
+    DWORD   Dr2;
+    DWORD   Dr3;
+    DWORD   Dr6;
+    DWORD   Dr7;
+
+    FLOATING_SAVE_AREA FloatSave;
+
+    DWORD   SegGs;
+    DWORD   SegFs;
+    DWORD   SegEs;
+    DWORD   SegDs;
+
+    DWORD   Edi;
+    DWORD   Esi;
+    DWORD   Ebx;
+    DWORD   Edx;
+    DWORD   Ecx;
+    DWORD   Eax;
+
+    DWORD   Ebp;
+    DWORD   Eip;
+    DWORD   SegCs;
+    DWORD   EFlags;
+    DWORD   Esp;
+    DWORD   SegSs;
+
+    BYTE    ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
+} CONTEXT, *PCONTEXT;
+
+#endif
 
 typedef struct _PROCESS {
     CONTEXT Context;
