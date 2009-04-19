@@ -1,0 +1,6 @@
+SOURCES+= \
+    display.c \
+    init.c \
+    sandbox.c
+
+

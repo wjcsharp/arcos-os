@@ -189,10 +189,22 @@ $(TARGET) : $(OBJECTS)
 endif
 	
 else # MSVC
-$(TARGET) : $(OBJECTS)
+
+# MSVC, create executable
+ifeq "$(TARGETTYPE)" "executable"
+$(TARGET) : $(OBJECTS) $(LIBS)
 	@echo === Linking $(@F) for $(TARGET_DIRECTORY)...
-	$(LD) $(LDFLAGS) /out:$@ $(addprefix $(OBJECT_DIRECTORY)/,$(notdir $^))
+	$(LD) $(LDFLAGS) /out:$@ $(addprefix $(OBJECT_DIRECTORY)/,$(notdir $(OBJECTS))) $(LIBS)
 endif
+
+# MSVC, create library
+ifeq "$(TARGETTYPE)" "library"
+$(TARGET) : $(OBJECTS)
+	@echo === Building library $(@F) for $(TARGET_DIRECTORY)...
+	$(AR) $(ARFLAGS) /out:$@ $(addprefix $(OBJECT_DIRECTORY)/,$(notdir $^))
+endif
+
+endif # MSVC
 
 #
 # Rule to compile a C source file

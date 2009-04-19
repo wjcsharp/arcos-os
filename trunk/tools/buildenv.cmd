@@ -67,7 +67,8 @@ set PATH=%TOOLSDIR%\gnu\bin;%PATH%
 
 cd %BASEDIR%
 
-set FREEBUILD=0
+rem when set = checked build, when unset = free build
+set OSDEBUG=1
 
 cmd /k title Build Window: %TARGET%/chk
 

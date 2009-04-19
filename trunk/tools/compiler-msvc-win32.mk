@@ -1,4 +1,5 @@
 OBJECT_SUFFIX=obj
+LIBRARY_SUFFIX=lib
 
 ifeq "$(TARGETTYPE)" "library"
 TARGETEXT=lib
@@ -34,10 +35,11 @@ ASFLAGS:=$(CFLAGS)
 #
 # Linker configuration
 #
-LD:=link
-LDFLAGS:=/subsystem:console /nologo /debug
+LD=link
+LDFLAGS=/subsystem:console /nologo /debug
 
 #
 # Librarian configuration
 #
-
+AR=lib
+ARFLAGS=/nologo
