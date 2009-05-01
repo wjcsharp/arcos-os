@@ -131,9 +131,19 @@ typedef struct _CONTEXT {
 
 #endif
 
+typedef struct _HANDLE_TABLE_ENTRY {
+    ULONG Attributes;
+    PVOID Object;
+} HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
+
+//
+// specifies the maximum number of open handles in a process
+//
+#define MAX_HANDLE_COUNT 256
+
 typedef struct _PROCESS {
     CONTEXT Context;
-    
+    HANDLE_TABLE_ENTRY HandleTable[MAX_HANDLE_COUNT];
 } PROCESS, *PPROCESS;
 
 

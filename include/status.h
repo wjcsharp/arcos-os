@@ -21,6 +21,8 @@ Revision History:
 
 #include <types.h>
 
+typedef ULONG STATUS;
+
 #define STATUS_SUCCESS                  ((STATUS)0x00000000)
 
 #define STATUS_TIMEOUT                  ((STATUS)0x00000001)
@@ -43,6 +45,8 @@ Revision History:
 
 #define STATUS_INVALID_PARAMETER        ((STATUS)0x0000000A)
 
+#define STATUS_OBJECT_TYPE_MISMATCH     ((STATUS)0x0000000B)
 
+#define STATUS_HANDLE_LIMIT_REACHED     ((STATUS)0x0000000C)
 
 #endif

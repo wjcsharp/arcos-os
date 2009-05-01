@@ -21,7 +21,9 @@ typedef BOOL *PBOOL;
 #define TRUE    1
 #define FALSE   0
 
-typedef PVOID HANDLE;
+#define NULL	(0)
+
+typedef PVOID HANDLE, *PHANDLE;
 
 //
 // Calculate the address of the base of the structure given its type, and an
@@ -29,6 +31,11 @@ typedef PVOID HANDLE;
 //
 #define CONTAINING_RECORD(address, type, field) \
     ((type *)( (PCHAR)(address) - (PCHAR)(&((type *)0)->field) ))
+
+//
+// Calculate offset of a field in a structure
+//
+#define FIELD_OFFSET(type, field)    ((ULONG)&(((type *)0)->field))
                                                   
 typedef struct _STRING {
     PCHAR Buffer;
