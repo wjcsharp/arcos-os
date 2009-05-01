@@ -232,20 +232,22 @@ endif
 # BUGBUG: the MKDIR command should be removed somehow.
 # Without the mkdir command, the first attempt to create dependencies
 # after "make clean" fails, because the directory does not exist :(
-MAKEDEPEND=$(MKDIR) $(call MAKE_NATIVE_PATH,$(OBJECT_DIRECTORY)) $(SILENT) & \
-    $(CC) -M $(CPPFLAGS) $< | sed "s,\($*\)\.o[ :]*,\1.o $@ : ,g" > $(OBJECT_DIRECTORY)/$(@F)
+#MAKEDEPEND=$(MKDIR) $(call MAKE_NATIVE_PATH,$(OBJECT_DIRECTORY)) $(SILENT) & \
+#    $(CC) -M $(CPPFLAGS) $< | sed "s,\($*\)\.o[ :]*,\1.o $@ : ,g" > $(OBJECT_DIRECTORY)/$(@F)
 
 #
 # Rule to create C dependecy file
 #
 $(OBJECT_DIRECTORY)/%.d : %.c
-	-$(MAKEDEPEND)
+	-$(MKDIR) $(call MAKE_NATIVE_PATH,$(OBJECT_DIRECTORY)) $(SILENT)
+	$(CC) -M $(CPPFLAGS) $< | sed "s,\($*\)\.o[ :]*,\1.o $@ : ,g" > $(OBJECT_DIRECTORY)/$(@F)
 
 #
 # Rule to create assembler dependecy file
 #
 $(OBJECT_DIRECTORY)/%.d : %.S
-	-$(MAKEDEPEND)
+	-$(MKDIR) $(call MAKE_NATIVE_PATH,$(OBJECT_DIRECTORY)) $(SILENT)
+	$(CC) -M $(CPPFLAGS) $< | sed "s,\($*\)\.o[ :]*,\1.o $@ : ,g" > $(OBJECT_DIRECTORY)/$(@F)
 
 #
 # Rule to clean up
