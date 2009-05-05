@@ -7,8 +7,7 @@
 #ifndef _PS_H
 #define	_PS_H
 
-#include <types.h>
-#include <status.h>
+#include <arcos.h>
 //#include <io.h> Not implemented
 
 //Defines possible states of a process.
