@@ -2,7 +2,7 @@
 #define __OB_H__
 
 #include <arcos.h>
-
+#include <ps.h>
 //
 // object attibutes
 //
