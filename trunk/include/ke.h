@@ -5,6 +5,8 @@ Magnus removed #include <arcos.h> added #include <ps.h> for PPROCESS
 #ifndef __KE_H__
 #define __KE_H__
 
+#include <types.h>
+#include <status.h>
 #include <ps.h>
 
 VOID
