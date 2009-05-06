@@ -1,21 +1,25 @@
-/* 
+/*
  * File:   ps.h
  * Author: Magnus Soderling
  *
  * Created on den 4 maj 2009, 22:44
  */
-#ifndef _PS_H
-#define	_PS_H
+
+#ifndef __PS_H__
+#define	__PS_H__
 
 #include <arcos.h>
-//#include <mm.h> Generates build error 090506
-//#include <io.h> Not implemented
+/* Following includes generates build error
+#include <ob.h>
+#include <mm.h>
+*/
 
 
 /* PROCESS CONTROL BLOCK
  * PROCESS and datastructures of PROCESS
  */
-//Defines possible states of a process.
+
+/* Defines possible states of a process.*/
 typedef enum {
     running, ready, waiting, done
 }PROCESS_STATUS, *PPROCESS_STATUS;
@@ -40,13 +44,10 @@ typedef struct _PROCESS {
     PVOID StackCounter;
     PVOID AllocatedMemory;//Assume only one allocation per process
     ULONG CPUTime;
-    // PMESSAGEQUEUE MessageQueue; MessageQUEUE not in any header
-    // PMESSAGEQUEUE Supervisor;
+    /* PMESSAGEQUEUE MessageQueue; MessageQUEUE not in any header */
+    /* PMESSAGEQUEUE Supervisor; */
     struct _PROCESS *NextPCB;
 } PROCESS, *PPROCESS;
 
-
-
-
-#endif	/* _PS_H */
+#endif	// __PS_H__ 
 
