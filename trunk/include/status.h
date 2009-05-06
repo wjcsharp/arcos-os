@@ -21,7 +21,7 @@ Revision History:
 
 #include <types.h>
 
-typedef ULONG STATUS;
+typedef ULONG STATUS, *PSTATUS;
 
 #define STATUS_SUCCESS                  ((STATUS)0x00000000)
 
