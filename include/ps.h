@@ -25,7 +25,7 @@ PsKillProcess(
         );
 
 STATUS
-PsProcessExitStatus(
+PsGetProcessExitStatus(
         HANDLE ProcessHandle,
         PSTATUS ExitStatus
         );
