@@ -136,7 +136,7 @@ typedef struct _CONTEXT {
  */
 //Defines possible states of a process.
 typedef enum {
-    running, ready, waiting, done
+    created, running, ready,  blocked, done
 }PROCESS_STATUS, *PPROCESS_STATUS;
 
 
