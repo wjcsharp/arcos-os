@@ -1,6 +1,7 @@
 #include <arcos.h>
 #include <ob.h>
 #include <ke.h>
+#include <mm.h>
 
 //
 // head of type objects list
@@ -95,7 +96,7 @@ ObCreateObjectType(
     //
     // create the type object
     //
-    status = ObCreateObject(NULL, OBJ_PERMANENT, sizeof(OBJECT_TYPE), &objectBody);
+    status = ObCreateObject(NULL, OBJ_PERMANENT, sizeof(OBJECT_TYPE), (PVOID*)&objectBody);
     if (status) {
         return status;
     }
