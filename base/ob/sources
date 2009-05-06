@@ -1,0 +1,6 @@
+TARGETNAME=ob
+TARGETPATH=lib
+TARGETTYPE=library
+
+SOURCES= \
+        ob.c

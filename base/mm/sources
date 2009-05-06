@@ -1,0 +1,6 @@
+TARGETNAME=mm
+TARGETPATH=lib
+TARGETTYPE=library
+
+SOURCES=\
+        mm.c
