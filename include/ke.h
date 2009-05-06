@@ -1,6 +1,6 @@
 /*REVISIONS: 
-Magnus added #include <ps.h> for PPROCESS
-*/
+ *Magnus added #include <ps.h> for PPROCESS
+ */
 
 #ifndef __KE_H__
 #define __KE_H__
