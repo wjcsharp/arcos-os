@@ -3,7 +3,7 @@
 rem ***************************************************************************
 rem Set these variables when setting up the build environment
 rem ***************************************************************************
-set BASEDIR=\osprojekt\trunk
+set BASEDIR=\osprojekt
 
 rem Visual C++ specific directories
 set MSVCHOMEDIR=C:\Program Files (x86)\Microsoft Visual Studio 9.0
