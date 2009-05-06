@@ -5,7 +5,7 @@
 */
 
 #include <arcos.h>      // Which one are necessary here ??
-#include <ke.h>
+//#include <ke.h>
 #include <mm.h>
 #include <hal.h>        // For HalGetFirstUsableMemoryAdress().
 
@@ -33,13 +33,13 @@ MmAlloc(
         )
 {
         PVOID returnPointer = freeMemPointer;                   // Give current address to object
-        freeMemPointer = ALIGN_MEMORY(freeMemPointer + size);   // Increase freeMemPointer	
+        freeMemPointer = ALIGN_MEMORY((ULONG)freeMemPointer + size); // Increase freeMemPointer	
 	return returnPointer;
 }
 
 VOID
 MmFree(
-	POBJECT_HEADER objectHeader
+	PVOID objectHeader
 	)
 {
 	// Add code here.

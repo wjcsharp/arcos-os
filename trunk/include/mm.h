@@ -3,7 +3,6 @@
 
 #include <arcos.h>
 #include <ke.h>
-#include <ob.h>
      
 VOID
 MmInitialize();         // NEW! Use this in KeInit to initialize   
@@ -19,7 +18,7 @@ MmAlloc(ULONG size);	// CHANGED! Function now return POBJECT_HEADER
 
 VOID
 MmFree(
-	POBJECT_HEADER objectHeader	
+	PVOID m
 	);				
 					// CHANGED PARAMETER!
 					// Before: PBLOCK

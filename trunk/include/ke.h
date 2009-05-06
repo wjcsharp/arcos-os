@@ -1,12 +1,8 @@
-/*REVISIONS: 
- *Magnus added #include <ps.h> for PPROCESS
- */
-
 #ifndef __KE_H__
 #define __KE_H__
 
 #include <arcos.h>
-#include <ps.h>
+
 
 VOID
 KeBugCheck(PCHAR messageText);
