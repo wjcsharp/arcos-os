@@ -5,13 +5,16 @@
 */
 
 #include <arcos.h>      // Which one are necessary here ??
-#include <types.h>
-#include <ob.h>
 #include <ke.h>
 #include <mm.h>
 #include <hal.h>        // For HalGetFirstUsableMemoryAdress().
 
 PVOID freeMemPointer;  // The pointer to the free adress space.
+
+//
+// aligns memory pointer at a 4-byte boundary
+//
+#define ALIGN_MEMORY(X)     ((PVOID)(((ULONG)(X) + 3) & ~3))
 
 VOID
 MmInitialize()
@@ -29,8 +32,8 @@ MmAlloc(
         ULONG size      // Could we use parameter "type" here instead?
         )
 {
-        POBJECT_HEADER returnPointer = freeMemPointer;          // Give current address to object
-        freeMemPointer = freeMemPointer + size;                 // Increase freeMemPointer	
+        PVOID returnPointer = freeMemPointer;                   // Give current address to object
+        freeMemPointer = ALIGN_MEMORY(freeMemPointer + size);   // Increase freeMemPointer	
 	return returnPointer;
 }
 
