@@ -12,5 +12,6 @@ LIBS = \
         $(BASEDIR)/build/lib/*/hal \
         $(BASEDIR)/build/lib/*/mm \
         $(BASEDIR)/build/lib/*/rtl \
-        $(BASEDIR)/build/lib/*/ob
+        $(BASEDIR)/build/lib/*/ob \
+        $(BASEDIR)/build/lib/*/ps
 

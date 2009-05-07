@@ -1,6 +1,7 @@
 DIRS = \
     rtl \
     mm\
+    ps\
     hal \
     ob \
     ke
