@@ -13,7 +13,7 @@
 
 STATUS
 PsCreateProcess(
-        PVOID (*PFunction)(),
+        PVOID (*PStartingAddress)(),
         ULONG Priority,
         PHANDLE ProcessHandle,
         PCHAR Args
@@ -27,7 +27,7 @@ PsKillProcess(
 STATUS
 PsGetProcessExitStatus(
         HANDLE ProcessHandle,
-        PSTATUS ExitStatus
+        PULONG ExitCode
         );
 
 #endif	/* _PS_H */
