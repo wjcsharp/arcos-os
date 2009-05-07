@@ -1,0 +1,6 @@
+TARGETNAME=ps
+TARGETPATH=lib
+TARGETTYPE=library
+
+SOURCES= \
+        ps.c

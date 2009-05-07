@@ -8,8 +8,12 @@
 #define	_PS_H
 
 #include <arcos.h>
-#include <mm.h>
 //#include <io.h> Not implemented
+
+//
+// Defines size of memory to be allocated for a process
+//
+#define PROCESS_MEMORY_TO_ALLOCATE 65536
 
 STATUS
 PsCreateProcess(
