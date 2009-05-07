@@ -155,8 +155,7 @@ typedef struct _PROCESS {
     HANDLE_TABLE_ENTRY HandleTable[MAX_HANDLE_COUNT];
     PROCESS_STATUS ProcessStatus;
     ULONG Priority;
-    PVOID ProgramCounter;
-    PVOID StackCounter;
+    PVOID ExitStatus;
     PVOID AllocatedMemory;//Assume only one allocation per process
     ULONG CPUTime;
     // PMESSAGEQUEUE MessageQueue; MessageQUEUE not in any header
