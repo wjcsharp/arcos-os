@@ -254,8 +254,8 @@ $(OBJECT_DIRECTORY)/%.d : %.S
 #
 .PHONY : clean
 clean :
-	$(DEL) $(call MAKE_NATIVE_PATH, $(TARGET))
-	$(RMDIR) $(call MAKE_NATIVE_PATH, $(OBJECT_DIRECTORY))
+	-$(DEL) $(call MAKE_NATIVE_PATH, $(TARGET))
+	-$(RMDIR) $(call MAKE_NATIVE_PATH, $(OBJECT_DIRECTORY))
 
 #
 # Include dependency files, but not when when cleaning up
