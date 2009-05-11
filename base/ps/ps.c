@@ -8,14 +8,15 @@
 #include <ps.h>
 #include <mm.h>
 #include <ob.h>
+#include <ke.h>
 
-
-//Create Process object type
+extern POBJECT_TYPE processType;
 
 STATUS
 CreateProcessObjectType(
         POBJECT_TYPE ProcessType
         ) {
+    //Create Process object type
     OBJECT_TYPE_INITIALIZER typeInitializer;
     STATUS status;
 
@@ -24,56 +25,55 @@ CreateProcessObjectType(
     //
     typeInitializer.DumpMethod = NULL; //Should be implemented...
     typeInitializer.DeleteMethod = NULL;
-    status = ObCreateObjectType('proc', &typeInitializer, &ProcessType);
+    status = ObCreateObjectType(0x0CE55, &typeInitializer, &ProcessType);
 
     return status;
 }
 
-
+STATUS
+PsInitialize() {
+    STATUS status;
+    status = CreateProcessObjectType(processType);
+    return status;
+}
 
 STATUS
 PsCreateProcess(
-        PVOID (*PStartingAddress)(),
+        PVOID(*PStartingAddress)(),
         ULONG Priority,
         PHANDLE ProcessHandle,
         PCHAR Args
-        )
-{
-    STATUS status;
-    PVOID createdProcessObject=NULL;
-    PPROCESS process;
-    ///-------SHOULD Be moved to initialize only once
-    POBJECT_TYPE processType = NULL;
-    status = CreateProcessObjectType(processType);
-    //----------------------------------------------------
+        ) {
+    //Create new process
+    STATUS status = 0;
+    PVOID memPointer;
+    PVOID createdProcessObject = NULL;
+    PPROCESS process = NULL;
 
-    status = ObCreateObject(processType, 0, sizeof(PROCESS), createdProcessObject);
-    process = (PPROCESS)createdProcessObject;
+    status = ObCreateObject(processType, 0, sizeof (PROCESS), createdProcessObject);
+    if (status != 0) return status;
+
+    //Cast to PPROCESS before using the new object
+    process = (PPROCESS) createdProcessObject;
+
+    //Set process status to created
+    process->ProcessStatus = created;
+
+    //Ask mamory manager for a chunk of memory to be attached to the process
+    memPointer = MmAlloc(PROCESS_MEMORY_TO_ALLOCATE);
+    if (memPointer == NULL) {
+        ObDereferenceObject(createdProcessObject);
+        return STATUS_NO_MEMORY;
+    }
+    //Attach memory block
+    process->AllocatedMemory = memPointer;
+    //Set priority
     process->Priority = Priority;
+    //Initialize CPUTime
     process->CPUTime = 0;
-    
-    return status;
+
+    //Initialize handletable
+    ObInitProcess(KeCurrentProcess, process);
+
+    return STATUS_SUCCESS;
 }
-
-
-
-
-/*
-//Ask object manager for a new processobject
-
-
-
-
-
-
-//Ask mamory manager for a chunk of memory to be attached to the process
-mempointer = MmAlloc(PROCESS_MEMORY_TO_ALLOCATE);
-if (mempointer == NULL)
-    return STATUS_NO_MEMORY;
-
-
-return STATUS_SUCCESS;
-
-
-
-*/

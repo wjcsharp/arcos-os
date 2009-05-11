@@ -8,12 +8,19 @@
 #define	_PS_H
 
 #include <arcos.h>
-//#include <io.h> Not implemented
+#include <ps.h>
+#include <mm.h>
+#include <ob.h>
+#include <ke.h>
 
 //
 // Defines size of memory to be allocated for a process
 //
-#define PROCESS_MEMORY_TO_ALLOCATE 65536
+#define PROCESS_MEMORY_TO_ALLOCATE 32768
+
+STATUS
+PsInitialize();
+//Setting up the process manager.
 
 STATUS
 PsCreateProcess(
