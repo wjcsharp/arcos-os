@@ -67,13 +67,34 @@ PsCreateProcess(
     }
     //Attach memory block
     process->AllocatedMemory = memPointer;
+    
+    //---Initialize Context what needs to be init?
     //Set priority
     process->Priority = Priority;
     //Initialize CPUTime
     process->CPUTime = 0;
 
+    (process->Context).Pc = (ULONG) PStartingAddress;
+
+    (process->Context).Sp = (ULONG) memPointer;
+
     //Initialize handletable
-    ObInitProcess(KeCurrentProcess, process);
+    status = ObInitProcess(KeCurrentProcess, process);
+    if (status != 0) {
+        ObDereferenceObject(createdProcessObject);
+        MmFree(memPointer);
+        return status;
+    }
+
+    status = ObOpenObjectByPointer(createdProcessObject, 0, processType, ProcessHandle);
+    if (status != 0) {
+        ObDereferenceObject(createdProcessObject);
+        MmFree(memPointer);
+        return status;
+    }
+    process->ProcessStatus = ready;
+    KeEnqueue(process); //Shouldnt this return a status?
+    //Dereferenc?
 
     return STATUS_SUCCESS;
 }
