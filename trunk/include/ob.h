@@ -30,7 +30,7 @@ typedef struct _OBJECT_HEADER {
 //
 // object type specific dump method pointer
 //
-typedef VOID (*DUMP_METHOD)(PVOID object);
+typedef VOID (*DUMP_METHOD)(PVOID object, PCHAR buffer, ULONG bufferSize);
 
 //
 // object type specific delete method pointer
@@ -86,6 +86,12 @@ ObReferenceObjectByHandle(
     PVOID *Object
     );
 
+STATUS
+ObReferenceObject(
+    PVOID Object,
+    POBJECT_TYPE ObjectType
+);
+
 VOID
 ObDereferenceObject(
     PVOID Object
@@ -113,5 +119,21 @@ ObCloseHandle(
     HANDLE Handle
     );
 
+PVOID
+ObGetFirstObjectOfType(
+    POBJECT_TYPE ObjectType
+    );
+
+PVOID
+ObGetNextObjectOfType(
+    PVOID Object
+    );
+
+VOID
+ObDumpObject(
+    PVOID Object,
+    PCHAR Buffer,
+    ULONG BufferSize
+    );
 
 #endif
