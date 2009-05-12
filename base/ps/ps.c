@@ -99,6 +99,23 @@ PsCreateProcess(
 }
 
 STATUS
+PsKillProcess(
+        PPROCESS process
+        ) {
+    STATUS status;
+
+    status = ObReferenceObject(process, processType);
+    if (status != 0)
+        return status;
+
+    KeDequeue(process);
+    ObKillProcess(process);
+    MmFree(process->AllocatedMemory);
+    ObDereferenceObject(process);
+    return STATUS_SUCCESS;
+}
+
+STATUS
 PsGetProcessExitStatus(
         HANDLE psHandle,
         PULONG exitStatus
@@ -107,10 +124,10 @@ PsGetProcessExitStatus(
     PPROCESS process;
     STATUS status;
 
-    status = ObReferenceObjectByHandle(psHandle, processType, (void**) &process);
+    status = ObReferenceObjectByHandle(psHandle, processType, (void**) & process);
     if (status != 0) return status;
-    
+
     *exitStatus = process->ExitStatus;
     ObDereferenceObject(process);
-    return status;
+    return STATUS_SUCCESS;
 }
