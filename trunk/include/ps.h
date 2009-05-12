@@ -32,7 +32,7 @@ PsCreateProcess(
 
 STATUS
 PsKillProcess(
-        HANDLE ProcessHandle
+        PPROCESS Process
         );
 
 STATUS
