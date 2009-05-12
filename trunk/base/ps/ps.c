@@ -60,7 +60,7 @@ PsCreateProcess(
     process->ProcessStatus = created;
 
     //Ask mamory manager for a chunk of memory to be attached to the process
-    memPointer = MmAlloc(PROCESS_MEMORY_TO_ALLOCATE);
+    memPointer = MmAlloc(PROCESS_MEMORY_SIZE);
     if (memPointer == NULL) {
         ObDereferenceObject(createdProcessObject);
         return STATUS_NO_MEMORY;
@@ -76,7 +76,7 @@ PsCreateProcess(
 
     (process->Context).Pc = (ULONG) PStartingAddress;
 
-    (process->Context).Sp = (ULONG) memPointer;
+    (process->Context).Sp = (ULONG) (memPointer + PROCESS_MEMORY_SIZE);
 
     //Initialize handletable
     status = ObInitProcess(KeCurrentProcess, process);
@@ -94,7 +94,7 @@ PsCreateProcess(
     }
     process->ProcessStatus = ready;
     KeEnqueue(process); //Shouldnt this return a status?
-
+    ObDereferenceObject(createdProcessObject);
     return STATUS_SUCCESS;
 }
 
@@ -104,15 +104,13 @@ PsGetProcessExitStatus(
         PULONG exitStatus
         ) {
     //Get process exit status
-    PVOID *object = NULL;
-    PPROCESS process = NULL;
+    PPROCESS process;
     STATUS status;
 
-    status = ObReferenceObjectByHandle(psHandle, processType, object);
+    status = ObReferenceObjectByHandle(psHandle, processType, (void**) &process);
     if (status != 0) return status;
-
-    process = (PPROCESS)object;
-
+    
     *exitStatus = process->ExitStatus;
+    ObDereferenceObject(process);
     return status;
 }
