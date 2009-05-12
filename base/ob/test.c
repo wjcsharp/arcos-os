@@ -43,6 +43,16 @@ DeleteFoo(
     printf("FOO object with value %d getting deleted\n", foo->value);
 }
 
+VOID
+DumpFoo(
+    PFOO foo,
+    PCHAR buffer,
+    ULONG bufferSize
+    )
+{
+    _snprintf(buffer, bufferSize, "FOO, value: %d", foo->value);
+}
+
 STATUS
 InitializeFoo(
     )
@@ -53,7 +63,7 @@ InitializeFoo(
     //
     // create a new object type: foo
     //
-    typeInitializer.DumpMethod = NULL;
+    typeInitializer.DumpMethod = DumpFoo;
     typeInitializer.DeleteMethod = DeleteFoo;
     status = ObCreateObjectType('foo', &typeInitializer, &fooType);
 
@@ -115,25 +125,61 @@ GetFooValue(
     return (ULONG)-1;
 }
 
+void
+DumpFooList()
+{
+    PFOO currentFoo = (PFOO)ObGetFirstObjectOfType(fooType);
+
+    printf("*** LIST OF OBJECTS OF TYPE FOO ***\n");
+
+    while (currentFoo) {
+        CHAR buffer[256];
+        ObDumpObject(currentFoo, buffer, sizeof(buffer));
+        printf("%s\n", buffer);
+
+        currentFoo = ObGetNextObjectOfType(currentFoo);
+    }
+}
+
 int main()
 {
     STATUS status;
-    HANDLE handle;
+    HANDLE handle1, handle2, handle3, handle4;
 
     //
     // ObInitProcess is called when the process manager creates a new process
     //
     status = ObInitProcess(NULL, KeCurrentProcess);
     CHECK_STATUS(status);
-
     
     status = InitializeFoo();
     CHECK_STATUS(status);
 
-    status = CreateFoo(42, &handle);
+    status = CreateFoo(42, &handle1);
     CHECK_STATUS(status);
 
-    printf("Foo has value: %d\n", GetFooValue(handle));
+    status = CreateFoo(1985, &handle2);
+    CHECK_STATUS(status);
+
+    status = CreateFoo(2009, &handle3);
+    CHECK_STATUS(status);
+
+    printf("Foo has value: %d\n\n", GetFooValue(handle1));
+
+    DumpFooList();
+
+    ObCloseHandle(handle2);
+
+    DumpFooList();
+
+    ObCloseHandle(handle1);
+
+    DumpFooList();
+
+    status = CreateFoo(65536, &handle4);
+    CHECK_STATUS(status);
+
+    DumpFooList();
 
     //
     // ObKillProcess is called when the process manager kills a process

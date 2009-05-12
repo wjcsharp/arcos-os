@@ -357,6 +357,36 @@ ObOpenObjectByPointer(
 }
 
 STATUS
+ObReferenceObject(
+    PVOID Object,
+    POBJECT_TYPE ObjectType
+)
+{
+    POBJECT_HEADER objectHeader;
+
+    ASSERT(Object);
+
+    objectHeader = OBJECT_BODY_TO_HEADER(Object);
+
+    //
+    // if a type object was specified, check it
+    //
+    if (ObjectType) {
+    
+        if (objectHeader->Type != ObjectType) {
+            return STATUS_OBJECT_TYPE_MISMATCH;
+        }
+    }
+
+    //
+    // increase reference counter
+    //
+    objectHeader->PointerCount++;
+
+    return STATUS_SUCCESS;
+}
+
+STATUS
 ObReferenceObjectByHandle(
     HANDLE Handle,
     POBJECT_TYPE ObjectType,
@@ -383,6 +413,9 @@ ObReferenceObjectByHandle(
             }
         }
 
+        //
+        // increase reference couter
+        //
         objectHeader->PointerCount++;
 
         *Object = KeCurrentProcess->HandleTable[(ULONG)Handle].Object;
@@ -412,5 +445,65 @@ ObCloseHandle(
     } else {
     
         return STATUS_INVALID_HANDLE;
+    }
+}
+
+PVOID
+ObGetFirstObjectOfType(
+    POBJECT_TYPE ObjectType
+    )
+{
+    ASSERT(ObjectType);
+
+    //
+    // is there an object of this type?
+    //
+    if (ObjectType->FirstObjectOfType) {
+
+        return &ObjectType->FirstObjectOfType->Body;
+    } else {
+
+        return NULL;
+    }
+}
+
+PVOID
+ObGetNextObjectOfType(
+    PVOID Object
+    )
+{
+    POBJECT_HEADER objectHeader = OBJECT_BODY_TO_HEADER(Object);
+
+    ASSERT(Object);
+
+    //
+    // is there a next object?
+    //
+    if (objectHeader->NextObjectOfType) {
+
+        return &objectHeader->NextObjectOfType->Body;
+    } else {
+
+        return NULL;
+    }
+}
+
+VOID
+ObDumpObject(
+    PVOID Object,
+    PCHAR Buffer,
+    ULONG BufferSize
+    )
+{
+    POBJECT_HEADER objectHeader = OBJECT_BODY_TO_HEADER(Object);
+
+    ASSERT(Object);
+    ASSERT(Buffer);
+
+    if (objectHeader->Type) {
+        if (objectHeader->Type->Dump) {
+
+            objectHeader->Type->Dump(Object, Buffer, BufferSize);
+        }
     }
 }
