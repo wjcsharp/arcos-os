@@ -3,6 +3,16 @@
 
 #include <arcos.h>
 #include <ke.h>
+
+//
+// memory block struct
+//     
+typedef struct _MEMORY_BLOCK {
+  ULONG Size;
+  struct _MEMORY_BLOCK *NextBlock;
+  struct _MEMORY_BLOCK *PreviousBlock;
+  
+} MEMORY_BLOCK, PMEMORY_BLOCK;
      
 VOID
 MmInitialize();         // NEW! Use this in KeInit to initialize   
