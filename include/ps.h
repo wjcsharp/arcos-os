@@ -16,7 +16,7 @@
 //
 // Defines size of memory to be allocated for a process
 //
-#define PROCESS_MEMORY_TO_ALLOCATE 32768
+#define PROCESS_MEMORY_SIZE 32768
 
 STATUS
 PsInitialize();
