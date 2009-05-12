@@ -67,7 +67,7 @@ PsCreateProcess(
     }
     //Attach memory block
     process->AllocatedMemory = memPointer;
-    
+
     //---Initialize Context what needs to be init?
     //Set priority
     process->Priority = Priority;
@@ -94,7 +94,25 @@ PsCreateProcess(
     }
     process->ProcessStatus = ready;
     KeEnqueue(process); //Shouldnt this return a status?
-    //Dereferenc?
 
     return STATUS_SUCCESS;
+}
+
+STATUS
+PsGetProcessExitStatus(
+        HANDLE psHandle,
+        PULONG exitStatus
+        ) {
+    //Get process exit status
+    PVOID *object = NULL;
+    PPROCESS process = NULL;
+    STATUS status;
+
+    status = ObReferenceObjectByHandle(psHandle, processType, object);
+    if (status != 0) return status;
+
+    process = (PPROCESS)object;
+
+    *exitStatus = process->ExitStatus;
+    return status;
 }
