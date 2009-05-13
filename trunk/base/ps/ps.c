@@ -59,6 +59,7 @@ PsCreateProcess(
 
     //Zero memory of process
     RtlZeroMemory(process, sizeof (PROCESS));
+
     //Set process status to created
     process->State = created;
 
@@ -96,7 +97,15 @@ PsCreateProcess(
         return status;
     }
     process->State = ready;
-    KeEnqueue(process); //Shouldnt this return a status?
+
+    //Schedule process
+    status = KeStartSchedulingProcess(process);
+    if (status != 0) {
+        ObDereferenceObject(createdProcessObject);
+        MmFree(memPointer);
+        return status;
+    }
+
     ObDereferenceObject(createdProcessObject);
     return STATUS_SUCCESS;
 }
@@ -111,7 +120,9 @@ PsKillProcess(
     if (status != 0)
         return status;
 
-    KeDequeue(process);
+    status = KeStopSchedulingProcess(process);
+    if (status != 0) return status;
+
     ObKillProcess(process);
     MmFree(process->AllocatedMemory);
     ObDereferenceObject(process);
