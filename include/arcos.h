@@ -154,6 +154,7 @@ typedef struct _PROCESS {
     CONTEXT Context;
     HANDLE_TABLE_ENTRY HandleTable[MAX_HANDLE_COUNT];
     PROCESS_STATUS ProcessStatus;
+    ULONG PID;
     ULONG Priority;
     ULONG ExitStatus;
     PVOID AllocatedMemory;//Assume only one allocation per process
