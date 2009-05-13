@@ -11,7 +11,7 @@
 #include <ke.h>
 #include <rtl.h>
 
-extern POBJECT_TYPE processType;
+POBJECT_TYPE processType;
 
 STATUS
 CreateProcessObjectType(
@@ -130,7 +130,7 @@ PsKillProcess(
 }
 
 STATUS
-PsGetProcessExitStatus(
+PsGetExitStatus(
         HANDLE psHandle,
         PULONG exitStatus
         ) {

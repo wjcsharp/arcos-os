@@ -37,7 +37,7 @@ PsKillProcess(
         );
 
 STATUS
-PsGetProcessExitStatus(
+PsGetExitStatus(
         HANDLE ProcessHandle,
         PULONG ExitCode
         );
