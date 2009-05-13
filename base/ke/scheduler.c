@@ -67,7 +67,7 @@ KepEnqueueProcess(
     
     }
 
-    Process->ProcessStatus = ready;
+    Process->State = ready;
     
 }
 
@@ -212,7 +212,7 @@ KeStopSchedulingProcess(
     //
     // determine in which list the process is located
     //
-    switch (Process->ProcessStatus) {
+    switch (Process->State) {
 
         case running:
             // TODO: currently running - what now???
@@ -259,7 +259,7 @@ KeResumeProcess(
     )
 {
     ASSERT(Process);
-    ASSERT(Process->ProcessStatus == blocked);
+    ASSERT(Process->State == blocked);
 
     //
     // remove process from the blocked list
@@ -285,7 +285,7 @@ KeChangeProcessPriority(
     ASSERT(Process);
     ASSERT(NewPriority < PROCESS_PRIORITY_LEVELS);
     
-    switch (Process->ProcessStatus) {
+    switch (Process->State) {
 
         case running:
         case blocked:
