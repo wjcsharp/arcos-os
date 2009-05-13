@@ -5,42 +5,46 @@
 
 
 VOID
-KeBugCheck(PCHAR messageText);
+KeBugCheck(PCHAR MessageText);
 
 BOOL
 KeDisableInterrupts(VOID);
 
 VOID
-KeRestoreInterrupts(BOOL enable);
+KeRestoreInterrupts(BOOL Enable);
 
 VOID
 KeYieldProcessor(VOID);
 
 extern PPROCESS KeCurrentProcess;
 
-#ifndef __QUEUE__
-#define __QUEUE__
+#define PROCESS_PRIORITY_LEVELS 32
 
-#define MAXIMUM_QUEUE_LEVEL 32
-
-typedef struct _QUEUE
+//
+// Holds heads and tails of process scheduling queues
+//
+typedef struct _PROCESS_QUEUE
 {
-	PPROCESS First;
-	PPROCESS Last;
-} QUEUE, *PQUEUE;
-QUEUE priorities [MAXIMUM_QUEUE_LEVEL];
-
-VOID 
-KeEnqueue(PPROCESS object);
-
-VOID 
-KeDequeue(PPROCESS object);
-
-VOID 
-KeChangeProcessPriority(PPROCESS object, ULONG newPriority);
+    PPROCESS First;
+    PPROCESS Last;
+} PROCESS_QUEUE, *PPROCESS_QUEUE;
 
 STATUS 
-ProcSleep(PHANDLE PsHandle, ULONG Time);
+KeStartSchedulingProcess(PPROCESS Process);
 
-#endif //QUEUE
+STATUS 
+KeStopSchedulingProcess(PPROCESS Process);
+
+VOID 
+KeChangeProcessPriority(PPROCESS Process, ULONG NewPriority);
+
+VOID
+KeBlockProcess(VOID);
+
+VOID
+KeResumeProcess(PPROCESS Process);
+
+VOID
+KeSuspendProcess(ULONG Milliseconds);
+
 #endif
