@@ -1,0 +1,6 @@
+TARGETNAME=io
+TARGETPATH=lib
+TARGETTYPE=library
+
+SOURCES = \
+        io.c

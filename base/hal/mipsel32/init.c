@@ -22,6 +22,8 @@ Revision History:
 #include <hal.h>
 #include "halp.h"
 
+static FIFO fifo;	// fifo
+
 PVOID
 HalGetFirstUsableMemoryAddress(
     VOID
@@ -67,6 +69,38 @@ HalInitialize(
     // reset the system timer to fire in specified time
     //
     HalResetTimer(67000 * 5000);
+
+    //
+    // set buffer fifo length (IO)
+    //
+    fifo.length = 0;	
+}
+
+// Added by Olle
+// Stops adding when buffer is full. 
+VOID
+HalAddCharToBuffer(CHAR c)
+{
+	if (fifo.length + 1 < FIFO_SIZE)		// length + 1
+	{
+		fifo.buffer[fifo.length] = c;
+		fifo.length++;
+	}
+}
+
+// Added by Olle. 
+// Returns first char in fifo buffer, which can be NULL.
+CHAR
+HalGetFirstCharFromBuffer()
+{
+	CHAR c;
+	ULONG i;
+	c = fifo.buffer[0];
+	for (i = 0; i != fifo.length; i++)		// Move all chars one step. Tested, but not supertested.
+		fifo.buffer[i] = fifo.buffer[i+1];	// Could be optimized. Later.
+	if (fifo.length > 0)				// Decrease fifo length
+		fifo.length--;
+	return c;
 }
 
 VOID
@@ -93,7 +127,6 @@ HalHandleException(
         if (pFrame->Cause & CP0_CAUSE_TIMER) {
 
             HalDisplayString("TICK\n");
-
             //
             // reset timer so that it fires next time again
             //
@@ -108,10 +141,7 @@ HalHandleException(
             // check if any data is ready in the buffer
             // (if it's not, this interrupt just acknowledges that we finished writing data - ignore it)
             if (tty->lsr.field.dr) {
-                CHAR c = tty->rbr;
-                CHAR tmp[] = { c, 0 };
-                HalDisplayString(tmp);
-
+                HalAddCharToBuffer(tty->rbr);	// New code for IO
                 //
                 // HACKHACK: Simics voodoo to acknowledge interrupt
                 //
