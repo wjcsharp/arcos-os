@@ -8,10 +8,16 @@ SOURCES = \
         bugcheck.c
 
 
+#
+# Make sure the libraries are in the right order.
+# If library A uses a function from library B, B has to
+# be placed AFTER library A in the list.
+# 
+#
 LIBS = \
+        $(BASEDIR)/build/lib/*/ps \
+        $(BASEDIR)/build/lib/*/ob \
         $(BASEDIR)/build/lib/*/hal \
         $(BASEDIR)/build/lib/*/mm \
-        $(BASEDIR)/build/lib/*/rtl \
-        $(BASEDIR)/build/lib/*/ob \
-        $(BASEDIR)/build/lib/*/ps
+        $(BASEDIR)/build/lib/*/rtl
 
