@@ -12,6 +12,7 @@
 #include <mm.h>
 #include <ob.h>
 #include <ke.h>
+#include <rtl.h>
 
 //
 // Defines size of memory to be allocated for a process
