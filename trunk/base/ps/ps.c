@@ -9,6 +9,7 @@
 #include <mm.h>
 #include <ob.h>
 #include <ke.h>
+#include <rtl.h>
 
 extern POBJECT_TYPE processType;
 
@@ -56,8 +57,10 @@ PsCreateProcess(
     //Cast to PPROCESS before using the new object
     process = (PPROCESS) createdProcessObject;
 
+    //Zero memory of process
+    RtlZeroMemory(process, sizeof (PROCESS));
     //Set process status to created
-    process->ProcessStatus = created;
+    process->State = created;
 
     //Ask mamory manager for a chunk of memory to be attached to the process
     memPointer = MmAlloc(PROCESS_MEMORY_SIZE);
@@ -92,7 +95,7 @@ PsCreateProcess(
         MmFree(memPointer);
         return status;
     }
-    process->ProcessStatus = ready;
+    process->State = ready;
     KeEnqueue(process); //Shouldnt this return a status?
     ObDereferenceObject(createdProcessObject);
     return STATUS_SUCCESS;

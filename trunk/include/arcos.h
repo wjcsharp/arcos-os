@@ -137,7 +137,7 @@ typedef struct _CONTEXT {
 //Defines possible states of a process.
 typedef enum {
     created, running, ready,  blocked, done
-}PROCESS_STATUS, *PPROCESS_STATUS;
+}PROCESS_STATE, *PPROCESS_STATE;
 
 
 typedef struct _HANDLE_TABLE_ENTRY {
@@ -153,7 +153,7 @@ typedef struct _HANDLE_TABLE_ENTRY {
 typedef struct _PROCESS {
     CONTEXT Context;
     HANDLE_TABLE_ENTRY HandleTable[MAX_HANDLE_COUNT];
-    PROCESS_STATUS ProcessStatus;
+    PROCESS_STATE State;
     ULONG RunningProgram;
     ULONG PID;
     ULONG Priority;
