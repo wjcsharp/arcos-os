@@ -25,6 +25,8 @@ typedef BOOL *PBOOL;
 
 typedef PVOID HANDLE, *PHANDLE;
 
+#define INVALID_HANDLE_VALUE    ((HANDLE)-1)
+
 //
 // Calculate the address of the base of the structure given its type, and an
 // address of a field within the structure.
