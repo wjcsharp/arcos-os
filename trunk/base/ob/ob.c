@@ -399,6 +399,10 @@ ObReferenceObjectByHandle(
 
     *Object = NULL;
 
+    if ((ULONG)Handle >= MAX_HANDLE_COUNT)
+        return STATUS_INVALID_HANDLE;
+
+
     if (KeCurrentProcess->HandleTable[(ULONG)Handle].Object) {
 
         objectHeader = OBJECT_BODY_TO_HEADER(KeCurrentProcess->HandleTable[(ULONG)Handle].Object);
@@ -431,6 +435,9 @@ ObCloseHandle(
     HANDLE Handle
     )
 {
+    if ((ULONG)Handle >= MAX_HANDLE_COUNT)
+        return STATUS_INVALID_HANDLE;
+    
     if (KeCurrentProcess->HandleTable[(ULONG)Handle].Object) {
 
         POBJECT_HEADER objectHeader = OBJECT_BODY_TO_HEADER(KeCurrentProcess->HandleTable[(ULONG)Handle].Object);
