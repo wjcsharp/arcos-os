@@ -19,7 +19,7 @@
 //
 #define PROCESS_MEMORY_SIZE 32768
 
-STATUS
+VOID
 PsInitialize();
 //Setting up the process manager.
 
