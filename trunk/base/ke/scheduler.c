@@ -21,9 +21,9 @@ Revision History:
 #include <ob.h>
 
 //
-// Scheduling queues: each priority class has one queue
+// Ready queues: one queue for each priority level
 //
-PROCESS_QUEUE KepSchedulingQueues[PROCESS_PRIORITY_LEVELS];
+PROCESS_QUEUE KepReadyQueues[PROCESS_PRIORITY_LEVELS];
 
 //
 // List of processes currently blocked
@@ -31,15 +31,26 @@ PROCESS_QUEUE KepSchedulingQueues[PROCESS_PRIORITY_LEVELS];
 PPROCESS KepBlockedList;
 
 //
-// List of processes waiting for a timer to expire
+// Sorted list of processes waiting for a timer to expire
 //
 PPROCESS KepTimerList;
 
 //
-// Holds control block for the currently active process
+// Control block of the currently active process
 //
 PPROCESS KeCurrentProcess;
 
+//
+// Number of milliseconds since the system has started
+//
+ULONG KepTickCount;
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KepEnqueueProcess
+//
+//      Adds process to one of the ready queues.
+//
 VOID
 KepEnqueueProcess(
     PPROCESS Process
@@ -51,19 +62,19 @@ KepEnqueueProcess(
     //
     // is there another process in this queue?
     //
-    if (KepSchedulingQueues[Process->Priority].First) {
+    if (KepReadyQueues[Process->Priority].First) {
 
-        ASSERT(KepSchedulingQueues[Process->Priority].Last->NextPCB == NULL);
+        ASSERT(KepReadyQueues[Process->Priority].Last->NextPCB == NULL);
         
-        KepSchedulingQueues[Process->Priority].Last->NextPCB = Process;
+        KepReadyQueues[Process->Priority].Last->NextPCB = Process;
         
-        KepSchedulingQueues[Process->Priority].Last = Process;
+        KepReadyQueues[Process->Priority].Last = Process;
         
     } else {
 
-        KepSchedulingQueues[Process->Priority].First = Process;
+        KepReadyQueues[Process->Priority].First = Process;
 
-        KepSchedulingQueues[Process->Priority].Last = Process;
+        KepReadyQueues[Process->Priority].Last = Process;
     
     }
 
@@ -71,6 +82,12 @@ KepEnqueueProcess(
     
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KepDequeueProcess
+//
+//      Removes a process from the ready queue.
+//
 VOID
 KepDequeueProcess(
     PPROCESS Process
@@ -80,7 +97,7 @@ KepDequeueProcess(
     
     ASSERT(Process->Priority < PROCESS_PRIORITY_LEVELS);
 
-    currentProcess = KepSchedulingQueues[Process->Priority].First;
+    currentProcess = KepReadyQueues[Process->Priority].First;
 
     //
     // handle special case when Process is the first in the queue
@@ -91,7 +108,7 @@ KepDequeueProcess(
         // (if the process was the only one in the queue, it's NextPCB is NULL
         // and that's enough for us - no need to check for this special case)
         //
-        KepSchedulingQueues[Process->Priority].First = currentProcess->NextPCB;
+        KepReadyQueues[Process->Priority].First = currentProcess->NextPCB;
 
         currentProcess->NextPCB = NULL;
 
@@ -113,9 +130,9 @@ KepDequeueProcess(
             //
             // handle special case when this process was the last on the list
             //
-            if (KepSchedulingQueues[Process->Priority].Last == Process) {
+            if (KepReadyQueues[Process->Priority].Last == Process) {
 
-                KepSchedulingQueues[Process->Priority].Last = currentProcess;
+                KepReadyQueues[Process->Priority].Last = currentProcess;
             }
 
             Process->NextPCB = NULL;
@@ -132,6 +149,12 @@ KepDequeueProcess(
     KeBugCheck("KepDequeueProcess: process is not in the priority queue");
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KeStartSchedulingProcess
+//
+//      Starts scheduling a new process.
+//
 STATUS 
 KeStartSchedulingProcess(
     PPROCESS Process
@@ -140,6 +163,7 @@ KeStartSchedulingProcess(
     STATUS status;
 
     ASSERT(Process);
+    ASSERT(Process->NextPCB == NULL);
 
     //
     // we will be holding a pointer to this object, register it with OB
@@ -156,6 +180,13 @@ KeStartSchedulingProcess(
     return STATUS_SUCCESS;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KepRemoveFromProcessList
+//
+//      Removes process from the specified list.
+//      Returns TRUE if process was on the list, FALSE otherwise.
+//
 BOOL
 KepRemoveFromProcessList(
     PPROCESS *ListHead,
@@ -185,6 +216,11 @@ KepRemoveFromProcessList(
                 // unlink process from the list
                 //
                 currentProcess->NextPCB = Process->NextPCB;
+
+                //
+                // make sure is't completely unlinked :)
+                //
+                currentProcess->NextPCB = NULL;
                 
                 return TRUE;
             }
@@ -202,6 +238,12 @@ KepRemoveFromProcessList(
     return FALSE;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KeStopSchedulingProcess
+//
+//      Stops scheduling specified process.
+//
 STATUS 
 KeStopSchedulingProcess(
     PPROCESS Process
@@ -245,14 +287,36 @@ KeStopSchedulingProcess(
     return STATUS_SUCCESS;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KeBlockProcess
+//
+//      Moves current process to the blocked process list and changes it's
+//      state to blocked.
+//
 VOID
 KeBlockProcess(
     VOID
     )
 {
-    
+    KeCurrentProcess->State = blocked;
+
+    //
+    // add process to the blocked list
+    // 
+    KeCurrentProcess->NextPCB = KepBlockedList;
+    KepBlockedList = KeCurrentProcess;
+
+    // TODO: schedule next
 }
-    
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KeResumeProcess
+//
+//      Moves process from the blocked or sleeping list to the ready queue
+//      and changes it's state to ready.
+//
 VOID
 KeResumeProcess(
     PPROCESS Process
@@ -276,6 +340,12 @@ KeResumeProcess(
     KepEnqueueProcess(Process);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KeChangeProcessPriority
+//
+//      Changes the priority of specified process.
+//
 VOID 
 KeChangeProcessPriority(
     PPROCESS Process,
@@ -304,12 +374,121 @@ KeChangeProcessPriority(
 }
 
 VOID
+KepReschedule(
+    VOID
+    )
+{
+    ULONG i;
+    
+    //
+    // if the current process is not blocked, add it to ready queue
+    // (if it's blocked, someone else already put it where it belongs)
+    //
+    if (KeCurrentProcess->State != blocked) {
+        KepEnqueueProcess(KeCurrentProcess);
+    }
+
+    KeCurrentProcess = NULL;
+
+    //
+    // scan the ready queue and find the first non-empty slot
+    //
+    for (i = PROCESS_PRIORITY_LEVELS - 1; i >= 0; i--) {
+
+        //
+        // is the queue non-empty?
+        //
+        if (KepReadyQueues[i].First) {
+
+            //
+            // lets schedule the first process in this queue
+            //
+            KeCurrentProcess = KepReadyQueues[i].First;
+            KepDequeueProcess(KeCurrentProcess);
+        }
+    }
+
+    // TODO: what should I do if no process is ready?
+    ASSERT(KeCurrentProcess);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KepWakeUpSleepers
+//
+//      Scans the list of sleeping processes and wakes up processes whose sleep 
+//      timer has expired.
+//
+VOID
+KepWakeUpSleepers(
+    VOID
+    )
+{
+    while (KepTimerList && (KepTimerList->WakeUpTime < KepTickCount)) {
+        KeResumeProcess(KepTimerList);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KeSuspendProcess
+//
+//      Suspends the execution of current process for a the specified time
+//      interval.
+//
+VOID
 KeSuspendProcess(
     ULONG Milliseconds
     )
 {
+    ASSERT(KeCurrentProcess->NextPCB == NULL);
+    
+    KeCurrentProcess->WakeUpTime = KepTickCount + Milliseconds;
+
+    KeCurrentProcess->State = blocked;
+
+    //
+    // add this process to the (sorted) timer list
+    //
+    if (KepTimerList == NULL || (KepTimerList->WakeUpTime > KeCurrentProcess->WakeUpTime)) {
+
+        KeCurrentProcess->NextPCB = KepTimerList;
+        KepTimerList = KeCurrentProcess;
+    }
+    else {
+
+        PPROCESS current = KepTimerList;
+
+        //
+        // find our spot in the list
+        //
+        while (current->NextPCB && (current->NextPCB->WakeUpTime < KeCurrentProcess->WakeUpTime)) {
+            current = current->NextPCB;
+        }
+
+        //
+        // insert into list
+        //
+        KeCurrentProcess->NextPCB = current->NextPCB;
+        current->NextPCB = KeCurrentProcess;
+    }
+
+    // TODO: reschedule
 }
 
-
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KeGetTickCount
+//
+//      Returns the number of milliseconds that have elapsed since the system
+//      was started, up to 49.7 days. (Then it overflows and wraps.)
+//
+ULONG
+KeGetTickCount(
+    VOID
+    )
+{
+    return KepTickCount;
+}
 
 
