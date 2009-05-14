@@ -59,6 +59,12 @@ PsOpenProcess(
 	ULONG PID,
 	PHANDLE ProcessHandle
 	);
+STATUS
+PsGetRunningProcesses(
+	PPROCESS Buffer[],
+	ULONG Buffsize,
+	PULONG NumberRunningProcesses
+	);
 
 #endif	/* _PS_H */
 

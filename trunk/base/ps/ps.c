@@ -192,18 +192,48 @@ PsOpenProcess(
     PPROCESS process;
 
     process = ObGetFirstObjectOfType(processType);
-   
+
     while (process) {
         if (process->PID == PID) {
             status = ObOpenObjectByPointer(process, 0, processType, ProcessHandle);
             return status;
         }
-        process = ObGetNextObjectOfType(process);
+        process = ObGetNextObjectOfType(processType);
     }
-    
+
     return STATUS_NO_SUCH_PROCESS;
 }
 
+STATUS
+PsGetRunningProcesses(
+        PPROCESS Buffer[],
+        ULONG BufferSize,
+        PULONG NumberRunningProcesses
+        ) {
+    PPROCESS process;
+    ULONG numRunProcesses = 0;
+    STATUS status;
 
+    //Get first process object
+    process = ObGetFirstObjectOfType(processType);
+
+    while (process) {
+        if (process->State == running) {
+
+            if (BufferSize > numRunProcesses) {
+                status = ObReferenceObject(process, processType);
+                //If reference was created add to buffer otherwise disregard
+                if (status == STATUS_SUCCESS) {
+                    Buffer[numRunProcesses] = process;
+                    numRunProcesses++;
+                }
+            } else //buffer is full
+                numRunProcesses++;
+        }
+        process = ObGetNextObjectOfType(processType);
+    }
+    *NumberRunningProcesses = numRunProcesses;
+    return STATUS_SUCCESS;
+}
 
 
