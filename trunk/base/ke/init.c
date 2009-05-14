@@ -4,6 +4,7 @@
 #include <rtl.h>
 #include <mm.h>
 #include <io.h>
+#include <ps.h>
 
 VOID
 KeInitialize(VOID)
@@ -12,8 +13,12 @@ KeInitialize(VOID)
     PROCESS initProcess;
     
     HalInitialize();
+    
     MmInitialize();
+
     //IoInitialize();
+
+    PsInitialize();
 
     KeRestoreInterrupts(TRUE);
 
