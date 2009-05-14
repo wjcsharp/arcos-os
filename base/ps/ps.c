@@ -11,6 +11,12 @@
 #include <ke.h>
 #include <rtl.h>
 
+BOOL
+PIDInUse(ULONG PID);
+
+ULONG
+GetPID();
+
 POBJECT_TYPE processType;
 
 STATUS
@@ -34,6 +40,34 @@ CreateProcessObjectType(
 VOID
 PsInitialize() {
     CreateProcessObjectType(processType);
+}
+
+BOOL
+PIDInUse(
+        ULONG PID
+        ) {
+    PPROCESS process;
+
+    process = ObGetFirstObjectOfType(processType);
+
+    while (process) {
+        if (process->PID == PID)
+            return TRUE;
+
+        process = ObGetNextObjectOfType(process);
+    }
+    return FALSE;
+}
+
+
+ULONG
+GetPID() {
+    ULONG PID = 1;
+
+    while (PIDInUse(PID)) {
+        PID++;
+    }
+    return PID;
 }
 
 STATUS
@@ -69,6 +103,9 @@ PsCreateProcess(
     }
     //Attach memory block
     process->AllocatedMemory = memPointer;
+
+    //Generate PID
+    process->PID = GetPID();
 
     //---Initialize Context what needs to be init?
     //Set priority
