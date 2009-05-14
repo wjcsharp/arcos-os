@@ -19,7 +19,7 @@ KeInitialize(VOID)
     //IoInitialize();
 
     PsInitialize();
-
+    
     KeRestoreInterrupts(TRUE);
 
     HalDisplayString("Hello world!\n");
