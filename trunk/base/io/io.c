@@ -23,7 +23,7 @@ IoInitialize()
     	typeInitializer.DeleteMethod = NULL;	// Can't delete file types in this version of ARCOS.
     	status = ObCreateObjectType('serial', &typeInitializer, &serialType);
     
-	if (status != STATUS_SUCCESS)	// Abandon procedure 
+	if (status != STATUS_SUCCESS)	// Abandon procedure, and OS, I guess.
 		return status;
 
 	// Create LEDType
@@ -35,14 +35,13 @@ IoInitialize()
 }
 
 HANDLE
-IoCreateFile(			// Error-handling is this function?
+IoCreateFile(			// Error-handling in this function?
         ULONG filename		// Most of the code is from test.c, CreateFoo
         )
 {
     HANDLE handle = NULL;
     STATUS status;
     PFILE file;
-    HalDisplayString("In IoCreateFile\n");
 
     // Pick right type.
     if (filename == 'serial') 
@@ -66,7 +65,6 @@ IoCreateFile(			// Error-handling is this function?
 	file->write = IoWriteLED;
         status = ObOpenObjectByPointer(file, OBJ_INHERIT, LEDType, &handle);
         ObDereferenceObject(file);
-	HalDisplayString("Before return in IoCreateFile\n");
 	return handle;
       }  
     }
@@ -83,13 +81,10 @@ IoWriteFile(
 	STATUS status;
 	PFILE file;
 
-        HalDisplayString("In IoWriteFile\n");
-
-	// How to solve different types here??
-	status = ObReferenceObjectByHandle(handle, LEDType, &file);
+	status = ObReferenceObjectByHandle(handle, LEDType, &file); // How to solve different types here??
 	file->write(buffer,bufferSize);
 
-        return 0;
+        return 0;	// Return what?
 }
 
 // Don't do anything if there doesn't exists a pointer to a read function.
@@ -102,15 +97,14 @@ IoReadFile(
 	STATUS status;
 	PFILE file;
 
-        HalDisplayString("In IoReadFile\n");
-
-	status = ObReferenceObjectByHandle(handle, serialType, &file);
+	status = ObReferenceObjectByHandle(handle, serialType, &file);	// Only serial type have write capability in this OS.
 	if (file->read != NULL)
 		file->read(buffer,bufferSize);
 	
         return 0;
 }
 
+// Nothing is in here. The fifo-buffer must be in hal/mipsl32/init.c
 VOID
 IoInterruptHandler()
 {
@@ -118,6 +112,7 @@ IoInterruptHandler()
 	// Not platform independet, I'm afraid.
 }
 
+// Write string to serial display.
 VOID
 IoWriteSerial(
         PVOID buffer,
@@ -128,41 +123,31 @@ IoWriteSerial(
 	HalDisplayString(string);
 }
 
+// Read characters from the Io-buffer.
 VOID
-IoReadSerial(			// Character from the interrupt buffer.
+IoReadSerial(			
 	PVOID buffer,
 	ULONG bufferSize)
 {
 	CHAR temp[100];
-	HalDisplayString("In IoReadSerial\n");
 	PCHAR b = buffer;
-
-	//*b = HalGetFirstCharFromBuffer();
-	*((CHAR*) buffer) = 33;
-//	*((CHAR*) buffer) = HalGetFirstCharFromBuffer();
+	*((CHAR*) buffer) = HalGetFirstCharFromBuffer();	// The fifo-buffer in hal/mipsl32/halp.h
 }
 
+// Write up to 8 characters to the ascii-board (NOT the led board), should change name).
+// Only writes 8 chars, even if bufferSize > 8.
 VOID
 IoWriteLED(
         PVOID buffer,
         ULONG bufferSize)
 {
+	ULONG i;
+	PCHAR string = buffer;
 	volatile PCHAR ledAddress; 	
-	//volatile PCHAR ledAddress = 0xbf000408;	// LED-stuff.
-	//*ledAddress = 0xff;
-	ledAddress = 0xbf000418;
-	HalDisplayString("In IoWriteLED\n");
-	*ledAddress = (CHAR) buffer;
-	
-
-	/**
-	ledAddress = 0x1f000408;
-	RtlFillMemory(ledAddress,(CHAR) 1,1);
-	ledAddress = 0x1f000418;
-	RtlFillMemory(ledAddress,'A',1);
-	**/ 
-
-	//ledAddress = 'A';
-	//malta->ledbar.reg = 0xff;
-	//malta->asciipos[2].value = 'A';
+	ledAddress = 0xbf000418;	// Address of first char on ascii-board.
+	for (i = 0; i < bufferSize && i < 8; i++)
+	{
+		*ledAddress = string[i];
+		ledAddress += 8;
+	}
 }
