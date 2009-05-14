@@ -200,8 +200,7 @@ PsOpenProcess(
         }
         process = ObGetNextObjectOfType(process);
     }
-
-    *ProcessHandle = NULL;
+    
     return STATUS_NO_SUCH_PROCESS;
 }
 
