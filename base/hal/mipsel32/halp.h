@@ -19,16 +19,6 @@ Revision History:
 
 #include <arcos.h>
 
-#define FIFO_SIZE 16
-
-// Used by HalHandleInterrupt to store chars in buffer. Fixed size.
-typedef struct _FIFO 
-{
-	CHAR buffer[FIFO_SIZE];
-	ULONG length;
-} FIFO;
-
-
 //
 // base address of the NS16550 UART controller
 //

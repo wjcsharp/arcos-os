@@ -2,6 +2,8 @@
 #include <hal.h>
 #include <ke.h>
 #include <rtl.h>
+#include <mm.h>
+#include <io.h>
 
 VOID
 KeInitialize(VOID)
@@ -10,6 +12,8 @@ KeInitialize(VOID)
     PROCESS initProcess;
     
     HalInitialize();
+    MmInitialize();
+    //IoInitialize();
 
     KeRestoreInterrupts(TRUE);
 
@@ -22,6 +26,8 @@ KeInitialize(VOID)
     HalDisplayString("\x1B[D"); // ANSI cursor back by one character
 
     KeCurrentProcess = &initProcess;
+
+	//HANDLE handle = IoCreateFile('serial');
 
     while (1) {
         // wait for something interesting to happen

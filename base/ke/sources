@@ -16,8 +16,9 @@ SOURCES = \
 #
 LIBS = \
         $(BASEDIR)/build/lib/*/ps \
-        $(BASEDIR)/build/lib/*/ob \
         $(BASEDIR)/build/lib/*/hal \
+        $(BASEDIR)/build/lib/*/io \
+        $(BASEDIR)/build/lib/*/ob \
         $(BASEDIR)/build/lib/*/mm \
         $(BASEDIR)/build/lib/*/rtl
 
