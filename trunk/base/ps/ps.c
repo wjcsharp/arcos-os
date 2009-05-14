@@ -31,11 +31,9 @@ CreateProcessObjectType(
     return status;
 }
 
-STATUS
+VOID
 PsInitialize() {
-    STATUS status;
-    status = CreateProcessObjectType(processType);
-    return status;
+    CreateProcessObjectType(processType);
 }
 
 STATUS
