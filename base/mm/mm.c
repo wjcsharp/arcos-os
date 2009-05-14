@@ -3,8 +3,8 @@
         Author: Hugo Heyman
 
 
-		Please comment on the MmAlloc.
-		I know the block list is only single linked so far, I'll add PreviousBlock refering when making the Free
+		Now only free blocks should be in the pointer list.
+		There's a lot of commented code in MmAlloc but I don't want to remove it til I know this is somewhat working
 		
 */
 
@@ -14,7 +14,7 @@
 
 
 // First free memory address
-PVOID FirstMemPointer; 
+static PVOID FirstMemPointer; 
 
 // Memory Block list
 PMEMORY_BLOCK MemBlock;
@@ -27,11 +27,15 @@ PMEMORY_BLOCK MemBlock;
 VOID
 MmInitialize()
 {
-	FirstMemPointer = HalGetFirstUsableMemoryAddress();
-	MemBlock = ALIGN_MEMORY((ULONG)MemBlock + FirstMemPointer + MAIN_MEM_SIZE);
+	// Initialize first memory addrress
+	FirstMemPointer = ALIGN_MEMORY(HalGetFirstUsableMemoryAddress());
+
+	//Initialize the first block
+	MemBlock = FirstMemPointer;
+	MemBlock->StartBlock = MemBlock;
+	MemBlock->Size = MAIN_MEM_SIZE - sizeof(MEMORY_BLOCK);
 	MemBlock->NextBlock = NULL;
 	MemBlock->PreviousBlock = NULL;
-	MemBlock->IsFree = 1; 
 }
 
 
@@ -44,54 +48,98 @@ MmGetMemPointer(){
 
 PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	
+	// Address to return
+	PVOID ReturnAddress;
+
 	// Size of the header
-	ULONG HeaderSize = sizeof(PMEMORY_BLOCK);
+	ULONG HeaderSize = sizeof(MEMORY_BLOCK);
 	
 	// Copy of the mb-list
 	PMEMORY_BLOCK PMb = MemBlock;
 	
 	// Search for a free block to use
-	while (PMb != FirstMemPointer) {
+	while (PMb->NextBlock != NULL) {
+
 		// Block big enough and free?
-		if(PMb->Size > SizeToBeAllocated + HeaderSize && PMb->IsFree == 1) {
+		if(PMb->Size > SizeToBeAllocated + HeaderSize) {
 			ULONG FragmentSize = PMb->Size - (SizeToBeAllocated + HeaderSize);
+
 			// Is the fragment block bigger than the header?
 			if (FragmentSize > HeaderSize) {
-				// Alloc the requested block
-				PMb = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
 
+				// Alloc the fragment block
+				ReturnAddress = PMb;
+				PMb = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
+				PMb->Size = FragmentSize;
+
+				// Point back to the start and "save"
+				PMb = PMb->StartBlock;
+				MemBlock = PMb;
+
+				return ReturnAddress;	
+
+				/*
 				// Create and alloc the fragment block
 				PMEMORY_BLOCK FragmentMb;
 				FragmentMb= ALIGN_MEMORY((ULONG)PMb + FragmentSize);
 				FragmentMb->NextBlock = PMb->NextBlock;
+				FragmentMb->PreviousBlock = PMb;
 				FragmentMb->IsFree = 1;
-
+				*/
+				
+				/*
 				// Put the fragment block in the list and make it free
 				PMb->NextBlock = FragmentMb;
 				PMb->IsFree = 0;
 				return PMb;
+				*/
 			}
+
 			// ..otherwise alloc the full block (make no fragment block)
 			else {
-				PMb = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize + FragmentSize);
-				PMb->IsFree = 0;
-				return PMb;
+				ReturnAddress = PMb;
+
+				// Remove block from list
+				PMb->NextBlock->PreviousBlock = PMb->PreviousBlock;
+				PMb->PreviousBlock->NextBlock = PMb->NextBlock;
+
+				// Point back to the start and "save"
+				PMb = PMb->StartBlock;
+				MemBlock = PMb;
+
+				return ReturnAddress;
 			}
 		}
+
 		// Check the next block
 		else {
 			PMb = PMb->NextBlock;
 		}
 	}
 	
+	// All block except last one has been checked, so now alloc from last "big" block
+	ReturnAddress = PMb;
+	PMb = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
+
+	// Point back to the start and "save"
+	PMb = PMb->StartBlock;
+	MemBlock = PMb;
+
+	return ReturnAddress;
+
+	/*
 	// No free block was found so a new one is created
 	PMb = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
 	PMb->IsFree = 0;
-	
-	
+	*/
+
+	/*
+	//*** I'm a bit unsure that these two lines does what I want ***
 	PMb->NextBlock = MemBlock;
 	MemBlock = PMb;
+
 	return PMb;
+	*/
 	
 	// Old code
 	/*
@@ -101,10 +149,10 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	*/
 }
 
+
+// I'm on it...
 VOID
-MmFree(
-	PVOID objectHeader
-	)
+MmFree(PVOID objectHeader)
 {
 	// Add code here.
 }

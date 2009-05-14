@@ -13,8 +13,7 @@
 typedef struct _MEMORY_BLOCK {
   ULONG Size;
   BOOL IsFree;
-  struct _MEMORY_BLOCK *NextBlock;
-  struct _MEMORY_BLOCK *PreviousBlock;
+  struct _MEMORY_BLOCK *NextBlock, *PreviousBlock, *StartBlock;
   
 } MEMORY_BLOCK, *PMEMORY_BLOCK;
 
