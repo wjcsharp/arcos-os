@@ -112,36 +112,96 @@ PsCreateProcess(
 
 STATUS
 PsKillProcess(
-        PPROCESS process
+        PPROCESS Process
         ) {
     STATUS status;
 
-    status = ObReferenceObject(process, processType);
+    status = ObReferenceObject(Process, processType);
     if (status != 0)
         return status;
 
-    status = KeStopSchedulingProcess(process);
+    status = KeStopSchedulingProcess(Process);
     if (status != 0) return status;
 
-    ObKillProcess(process);
-    MmFree(process->AllocatedMemory);
-    ObDereferenceObject(process);
+    ObKillProcess(Process);
+    MmFree(Process->AllocatedMemory);
+    ObDereferenceObject(Process);
     return STATUS_SUCCESS;
 }
 
 STATUS
 PsGetExitStatus(
-        HANDLE psHandle,
-        PULONG exitStatus
+        HANDLE ProcessHandle,
+        PULONG ExitStatus
         ) {
     //Get process exit status
     PPROCESS process;
     STATUS status;
 
-    status = ObReferenceObjectByHandle(psHandle, processType, (void**) & process);
-    if (status != 0) return status;
+    status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & process);
+    if (status != 0)
+        return status;
 
-    *exitStatus = process->ExitStatus;
+    *ExitStatus = process->ExitStatus;
     ObDereferenceObject(process);
     return STATUS_SUCCESS;
 }
+
+STATUS
+PsGetPriority(
+        HANDLE ProcessHandle,
+        PULONG Priority
+        ) {
+    //Get process PRIORITY
+    PPROCESS process;
+    STATUS status;
+
+    status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & process);
+    if (status != 0)
+        return status;
+
+    *Priority = process->Priority;
+    ObDereferenceObject(process);
+    return STATUS_SUCCESS;
+}
+
+STATUS
+PsGetState(
+        HANDLE ProcessHandle,
+        PULONG State
+        ) {
+    //Get process state
+    PPROCESS process;
+    STATUS status;
+
+    status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & process);
+    if (status != 0)
+        return status;
+
+    *State = process->Priority;
+    ObDereferenceObject(process);
+    return STATUS_SUCCESS;
+}
+
+STATUS
+OpenProcess(
+        ULONG PID,
+        PHANDLE ProcessHandle
+        ) {
+    //STATUS status;
+    PPROCESS process;
+
+    process = (PPROCESS) ObGetFirstObjectOfType(processType);
+    if (process == NULL) {
+        *ProcessHandle = NULL;
+        return STATUS_NO_SUCH_PROCESS;
+    }
+
+
+    
+    return STATUS_SUCCESS;
+}
+
+
+
+

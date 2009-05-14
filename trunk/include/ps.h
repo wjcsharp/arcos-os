@@ -42,5 +42,17 @@ PsGetExitStatus(
         PULONG ExitCode
         );
 
+STATUS
+PsGetPriority(
+	HANDLE  ProcessHandle,
+	PULONG Priority
+	);
+
+STATUS
+PsGetState(
+	HANDLE  ProcessHandle,
+	PULONG State
+	);
+
 #endif	/* _PS_H */
 
