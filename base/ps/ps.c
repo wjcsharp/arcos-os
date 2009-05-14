@@ -184,22 +184,25 @@ PsGetState(
 }
 
 STATUS
-OpenProcess(
+PsOpenProcess(
         ULONG PID,
         PHANDLE ProcessHandle
         ) {
-    //STATUS status;
+    STATUS status;
     PPROCESS process;
 
-    process = (PPROCESS) ObGetFirstObjectOfType(processType);
-    if (process == NULL) {
-        *ProcessHandle = NULL;
-        return STATUS_NO_SUCH_PROCESS;
+    process = ObGetFirstObjectOfType(processType);
+   
+    while (process) {
+        if (process->PID == PID) {
+            status = ObOpenObjectByPointer(process, 0, processType, ProcessHandle);
+            return status;
+        }
+        process = ObGetNextObjectOfType(process);
     }
 
-
-    
-    return STATUS_SUCCESS;
+    *ProcessHandle = NULL;
+    return STATUS_NO_SUCH_PROCESS;
 }
 
 

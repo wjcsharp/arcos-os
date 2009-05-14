@@ -54,5 +54,11 @@ PsGetState(
 	PULONG State
 	);
 
+STATUS
+PsOpenProcess(
+	ULONG PID,
+	PHANDLE ProcessHandle
+	);
+
 #endif	/* _PS_H */
 
