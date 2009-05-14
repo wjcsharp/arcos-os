@@ -49,7 +49,7 @@ PsCreateProcess(
     PVOID createdProcessObject = NULL;
     PPROCESS process = NULL;
 
-    status = ObCreateObject(processType, 0, sizeof (PROCESS), createdProcessObject);
+    status = ObCreateObject(processType, 0, sizeof (PROCESS), &createdProcessObject);
     if (status != 0) return status;
 
     //Cast to PPROCESS before using the new object
