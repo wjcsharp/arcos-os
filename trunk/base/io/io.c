@@ -4,34 +4,85 @@
 #include <ob.h>
 #include <rtl.h>
 
-POBJECT_TYPE    serialType;
-POBJECT_TYPE    LEDType;
+POBJECT_TYPE	fileType;
+PFILE		serialFile;
+PFILE		lcdFile;	// NOT LED! The led-board will not be used, but the LCD-display will.)
+static FIFO 	fifo;	
 
 // Pre-define some functions.
 VOID IoReadSerial();
 VOID IoWriteSerial();
-VOID IoWriteLED();
+VOID IoWriteLcd();
+
+// Added by Olle
+// Stops adding when buffer is full. 
+VOID
+AddCharToBuffer(CHAR c)
+{
+	if (fifo.length + 1 < FIFO_SIZE)		// length + 1
+	{
+		fifo.buffer[fifo.length] = c;
+		fifo.length++;
+	}
+}
+
+// Added by Olle. 
+// Returns first char in fifo buffer, which can be NULL.
+CHAR
+GetFirstCharFromBuffer()
+{
+	CHAR c;
+	ULONG i;
+	c = fifo.buffer[0];
+	for (i = 0; i != fifo.length; i++)		// Move all chars one step. Tested, but not supertested.
+		fifo.buffer[i] = fifo.buffer[i+1];	// Could be optimized. Later.
+	if (fifo.length > 0)				// Decrease fifo length
+		fifo.length--;
+	return c;
+}
 
 STATUS
 IoInitialize()
 {
    	OBJECT_TYPE_INITIALIZER typeInitializer;
     	STATUS status;
-    
-	// Create serialType
+ 
+	fifo.length = 0;
+   
+	// Create fileType
     	typeInitializer.DumpMethod = NULL;	// What is DumpMethod?
     	typeInitializer.DeleteMethod = NULL;	// Can't delete file types in this version of ARCOS.
-    	status = ObCreateObjectType('serial', &typeInitializer, &serialType);
+    	status = ObCreateObjectType('file', &typeInitializer, &fileType);
+	HalDisplayString("Create fileType done\n");
     
 	if (status != STATUS_SUCCESS)	// Abandon procedure, and OS, I guess.
+	{
+  		HalDisplayString("Error: Create fileType\n"); 
 		return status;
-
-	// Create LEDType
-    	typeInitializer.DumpMethod = NULL;
-    	typeInitializer.DeleteMethod = NULL;	// Can't delete file types? 
-    	status = ObCreateObjectType('led', &typeInitializer, &LEDType);
-    
-	return status;    
+	}
+	// Create serialFile and lcdFile
+	HANDLE handle = NULL;
+	/*
+	status = ObCreateObject('file', 0, sizeof(FILE), &serialFile);
+	
+	if (status == STATUS_SUCCESS) 
+	{
+		HalDisplayString("Create serialFile done\n");
+		serialFile->read = IoReadSerial;
+		serialFile->write = IoWriteSerial;
+	}
+	else
+		return status;     
+	
+	status = ObCreateObject(0xf331, 0, sizeof(FILE), &lcdFile);
+	if (status == STATUS_SUCCESS) 
+	{
+		HalDisplayString("Create lcdFile done\n");
+		lcdFile->read = NULL;
+		lcdFile->write = IoWriteLcd;
+	}
+	*/
+	return status;		
 }
 
 HANDLE
@@ -39,37 +90,22 @@ IoCreateFile(			// Error-handling in this function?
         ULONG filename		// Most of the code is from test.c, CreateFoo
         )
 {
-    HANDLE handle = NULL;
-    STATUS status;
-    PFILE file;
+	HANDLE handle = NULL;
+	STATUS status;
 
-    // Pick right type.
-    if (filename == 'serial') 
-    {
-      status = ObCreateObject(serialType, 0, sizeof(FILE), &file);
-      if (status == STATUS_SUCCESS) 
-      {
-	file->read = IoReadSerial;
-	file->write = IoWriteSerial;
-        status = ObOpenObjectByPointer(file, OBJ_INHERIT, serialType, &handle);		// Note to self: This line kind of freaked out when '&handle' was 'handle'.
-        ObDereferenceObject(file);
-	return handle;
-      }        
-    }
-    if (filename == 'led')
-    {
-      status = ObCreateObject(LEDType, 0, sizeof(FILE), &file);
-      if (status == STATUS_SUCCESS) 
-      {
-	file->read = NULL;
-	file->write = IoWriteLED;
-        status = ObOpenObjectByPointer(file, OBJ_INHERIT, LEDType, &handle);
-        ObDereferenceObject(file);
-	return handle;
-      }  
-    }
+	// Pick right type.
+	if (filename == 'serial') 
+	{
+        	status = ObOpenObjectByPointer(serialFile, OBJ_INHERIT, fileType, &handle);
+		return handle;   
+	}
+	if (filename == 'lcd')
+	{
+	        status = ObOpenObjectByPointer(lcdFile, OBJ_INHERIT, fileType, &handle);
+		return handle;
+	}
 
-    return handle;		// Return NULL if everything went ga-ga.
+	return handle;	// Return NULL if everything went ga-ga.
 }
 
 ULONG
@@ -81,7 +117,7 @@ IoWriteFile(
 	STATUS status;
 	PFILE file;
 
-	status = ObReferenceObjectByHandle(handle, LEDType, &file); // How to solve different types here??
+	status = ObReferenceObjectByHandle(handle, fileType, &file); // How to solve different types here??
 	file->write(buffer,bufferSize);
 
         return 0;	// Return what?
@@ -97,19 +133,11 @@ IoReadFile(
 	STATUS status;
 	PFILE file;
 
-	status = ObReferenceObjectByHandle(handle, serialType, &file);	// Only serial type have write capability in this OS.
+	status = ObReferenceObjectByHandle(handle, fileType, &file);	// Only serial type have write capability in this OS.
 	if (file->read != NULL)
 		file->read(buffer,bufferSize);
 	
         return 0;
-}
-
-// Nothing is in here. The fifo-buffer must be in hal/mipsl32/init.c
-VOID
-IoInterruptHandler()
-{
-	// Store read char in buffer done in hal/mipsl32/init.c
-	// Not platform independet, I'm afraid.
 }
 
 // Write string to serial display.
@@ -125,29 +153,33 @@ IoWriteSerial(
 
 // Read characters from the Io-buffer.
 VOID
-IoReadSerial(			
+IoReadSerial(
 	PVOID buffer,
 	ULONG bufferSize)
 {
-	CHAR temp[100];
-	PCHAR b = buffer;
-	*((CHAR*) buffer) = HalGetFirstCharFromBuffer();	// The fifo-buffer in hal/mipsl32/halp.h
+	*((CHAR*) buffer) = GetFirstCharFromBuffer();
 }
 
-// Write up to 8 characters to the ascii-board (NOT the led board), should change name).
+// Write up to 8 characters to the lcd display (NOT the led board), should change name).
 // Only writes 8 chars, even if bufferSize > 8.
 VOID
-IoWriteLED(
+IoWriteLcd(
         PVOID buffer,
         ULONG bufferSize)
 {
 	ULONG i;
 	PCHAR string = buffer;
-	volatile PCHAR ledAddress; 	
-	ledAddress = 0xbf000418;	// Address of first char on ascii-board.
+	volatile PCHAR lcdAddress; 	
+	lcdAddress = 0xbf000418;	// Address of first char on ascii-board.
 	for (i = 0; i < bufferSize && i < 8; i++)
 	{
-		*ledAddress = string[i];
-		ledAddress += 8;
+		*lcdAddress = string[i];
+		lcdAddress += 8;
 	}
+}
+
+VOID
+IoInterruptHandler(CHAR c)
+{
+	AddCharToBuffer(c);
 }
