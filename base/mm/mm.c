@@ -121,18 +121,20 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 		}
 	}
 	
-
+	// Saving "old" header for block to be allocated
 	PVOID TempAllocatedBlock = PMb;
 	PMb->NextBlock = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
 	ReturnAddress = PMb + HeaderSize;
 
-	// Save the NextBlock in the header before moving PMb pointer
+	// Move PMb forward
 	PMb = PMb->NextBlock;
 	PMb->NextBlock = NULL;
 
+	// Is this the first block?
 	if(PMb->PreviousBlock == NULL)
 		StartBlock = PMb;
 
+	// Keep track of used block header
 	PMb->PreviousBlock = TempAllocatedBlock;
 
 	// Point back to the start and "save"
@@ -171,11 +173,24 @@ MmFree(PVOID BlockBody)
 	PVOID BlockHeader = BlockBody - HeaderSize;
 	PMb = BlockHeader;
 	if(PMb->PreviousBlock == NULL) {
+		
+		// Append neighbor block?
+		if(PMb + PMb->Size + HeaderSize == PMb->NextBlock) {
+			PMb->Size = PMb->NextBlock->Size + HeaderSize;
+			PMb->NextBlock = PMb->NextBlock->NextBlock;
+		}
+
 		StartBlock = PMb;
 		MemBlock = PMb;
 	}
 	else
 	{
+		// Append neighbor block?
+		if(PMb + PMb->Size + HeaderSize == PMb->NextBlock) {
+			PMb->Size = PMb->NextBlock->Size + HeaderSize;
+			PMb->NextBlock = PMb->NextBlock->NextBlock;
+		}
+
 		PMb->PreviousBlock->NextBlock = PMb;
 		MemBlock = StartBlock;
 	}
