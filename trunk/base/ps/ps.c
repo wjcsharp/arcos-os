@@ -44,6 +44,8 @@ PsInitialize() {
     typeInitializer.DeleteMethod = NULL;
 
     ObCreateObjectType(0x0CE55, &typeInitializer, &processType);
+    //HANDLE handtag;
+    //PsCreateProcess(&GetPID, 10, *handtag);
 }
 
 BOOL
@@ -73,9 +75,17 @@ GetPID() {
     return PID;
 }
 
+VOID
+MyFirstProcess(){
+    ULONG arb=27;
+    arb = arb +123;
+    HalDisplayString("My first process executed");
+    //PsKillMe();
+}
+
 STATUS
 PsCreateProcess(
-        PVOID(*PStartingAddress)(),
+        VOID (*PStartingAddress)(),
         ULONG Priority,
         PHANDLE ProcessHandle
         ) {
@@ -87,9 +97,11 @@ PsCreateProcess(
 
     status = ObCreateObject(processType, 0, sizeof (PROCESS), &createdProcessObject);
     if (status != 0) return status;
+    ASSERT(createdProcessObject);
 
     //Cast to PPROCESS before using the new object
     process = (PPROCESS) createdProcessObject;
+    ASSERT(process);
 
     //Zero memory of process
     RtlZeroMemory(process, sizeof (PROCESS));
@@ -115,7 +127,7 @@ PsCreateProcess(
     //Initialize CPUTime
     process->CPUTime = 0;
 
-    (process->Context).Pc = (ULONG) PStartingAddress;
+    (process->Context).Pc = (ULONG) &PStartingAddress; 
 
     (process->Context).Sp = (ULONG) (memPointer + PROCESS_MEMORY_SIZE);
 

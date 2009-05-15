@@ -27,12 +27,12 @@ KeInitialize(VOID)
     PsInitialize();
     
     KeRestoreInterrupts(TRUE);
-
+    
     KdPrint("Say %s to %s!", "hello", "ARCOS kernel debugger");
 
     HalDisplayString("Hello world!\n");
 
-    RtlFormatString(temp, sizeof(temp), "First usable address: 0x%x", HalGetFirstUsableMemoryAddress());
+    RtlFormatString(temp, sizeof(temp), "First usable address: 0x%x\n", HalGetFirstUsableMemoryAddress());
 
     HalDisplayString(temp);
 
