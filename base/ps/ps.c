@@ -10,6 +10,7 @@
 #include <ob.h>
 #include <ke.h>
 #include <rtl.h>
+#include <hal.h>
 
 BOOL
 PIDInUse(ULONG PID);
@@ -26,20 +27,23 @@ CreateProcessObjectType(
     //Create Process object type
     OBJECT_TYPE_INITIALIZER typeInitializer;
     STATUS status;
-
     //
     // create a new object type: Process
     //
     typeInitializer.DumpMethod = NULL; //Should be implemented...
     typeInitializer.DeleteMethod = NULL;
     status = ObCreateObjectType(0x0CE55, &typeInitializer, &ProcessType);
-
     return status;
 }
 
 VOID
 PsInitialize() {
-    CreateProcessObjectType(processType);
+    OBJECT_TYPE_INITIALIZER typeInitializer;
+
+    typeInitializer.DumpMethod = NULL; //Should be implemented...
+    typeInitializer.DeleteMethod = NULL;
+
+    ObCreateObjectType(0x0CE55, &typeInitializer, &processType);
 }
 
 BOOL
@@ -59,7 +63,6 @@ PIDInUse(
     return FALSE;
 }
 
-
 ULONG
 GetPID() {
     ULONG PID = 1;
@@ -74,8 +77,7 @@ STATUS
 PsCreateProcess(
         PVOID(*PStartingAddress)(),
         ULONG Priority,
-        PHANDLE ProcessHandle,
-        PCHAR Args
+        PHANDLE ProcessHandle
         ) {
     //Create new process
     STATUS status = 0;
