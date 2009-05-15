@@ -1,0 +1,8 @@
+TARGETNAME=kd
+TARGETPATH=lib
+TARGETTYPE=library
+
+SOURCES= \
+        kdcommand.c \
+        kdinit.c \
+        kdio.c

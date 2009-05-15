@@ -21,7 +21,9 @@ Revision History:
 #include <ke.h>
 #include <hal.h>
 #include <io.h>
+#include <kd.h>
 #include "halp.h"
+
 
 PVOID
 HalGetFirstUsableMemoryAddress(
@@ -57,6 +59,13 @@ HalInitialize(
     tty->ier.field.erbfi = 1; // we want interrupts
     tty->mcr.field.out2 = 1;
 
+#ifdef HAVE_KD
+    volatile PNS16550 tty2 = (PNS16550)0xb80002f8;
+    tty2->lcr.field.wls = 3; // set bit width to 8 bits
+    tty2->ier.field.erbfi = 1; // we want interrupts
+    tty2->mcr.field.out2 = 1;
+#endif
+    
     //
     // initialize exception handling by copying exception handling vector
     // to a hardwired memory location
@@ -108,6 +117,11 @@ HalHandleException(
         if (pFrame->Cause & CP0_CAUSE_UART) {
 
             volatile PNS16550 tty = (PNS16550)UART_BASE;
+
+#ifdef HAVE_KD
+            volatile PNS16550 tty2 = (PNS16550)0xb80002f8;
+            if (tty2->lsr.field.dr) KdCharacterReceived(tty2->rbr);
+#endif
 
             // check if any data is ready in the buffer
             // (if it's not, this interrupt just acknowledges that we finished writing data - ignore it)
