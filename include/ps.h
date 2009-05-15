@@ -20,12 +20,15 @@
 #define PROCESS_MEMORY_SIZE 32768
 
 VOID
+MyFirstProcess();
+
+VOID
 PsInitialize();
 //Setting up the process manager.
 
 STATUS
 PsCreateProcess(
-        PVOID(*PStartingAddress)(),
+        VOID (*PStartingAddress)(),
         ULONG Priority,
         PHANDLE ProcessHandle
         );
