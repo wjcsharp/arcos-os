@@ -24,7 +24,7 @@ AddCharToBuffer(CHAR c)
 		fifo.buffer[fifo.length] = c;
 		fifo.length++;
 	}
-}
+} 
 
 // Added by Olle. 
 // Returns first char in fifo buffer, which can be NULL.
@@ -52,7 +52,7 @@ IoInitialize()
 	// Create fileType
     	typeInitializer.DumpMethod = NULL;	// What is DumpMethod?
     	typeInitializer.DeleteMethod = NULL;	// Can't delete file types in this version of ARCOS.
-    	status = ObCreateObjectType('file', &typeInitializer, &fileType);
+    	status = ObCreateObjectType(0xf331, &typeInitializer, &fileType); // f331 = file
 	HalDisplayString("Create fileType done\n");
     
 	if (status != STATUS_SUCCESS)	// Abandon procedure, and OS, I guess.
@@ -62,8 +62,8 @@ IoInitialize()
 	}
 	// Create serialFile and lcdFile
 	HANDLE handle = NULL;
-	/*
-	status = ObCreateObject('file', 0, sizeof(FILE), &serialFile);
+	
+	status = ObCreateObject(fileType, 0, sizeof(FILE), &serialFile);
 	
 	if (status == STATUS_SUCCESS) 
 	{
@@ -74,20 +74,20 @@ IoInitialize()
 	else
 		return status;     
 	
-	status = ObCreateObject(0xf331, 0, sizeof(FILE), &lcdFile);
+	status = ObCreateObject(fileType, 0, sizeof(FILE), &lcdFile);
 	if (status == STATUS_SUCCESS) 
 	{
 		HalDisplayString("Create lcdFile done\n");
 		lcdFile->read = NULL;
 		lcdFile->write = IoWriteLcd;
 	}
-	*/
+	
 	return status;		
 }
 
 HANDLE
 IoCreateFile(			// Error-handling in this function?
-        ULONG filename		// Most of the code is from test.c, CreateFoo
+        ULONG filename
         )
 {
 	HANDLE handle = NULL;
