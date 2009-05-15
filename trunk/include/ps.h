@@ -25,10 +25,9 @@ PsInitialize();
 
 STATUS
 PsCreateProcess(
-        PVOID (*PStartingAddress)(),
+        PVOID(*PStartingAddress)(),
         ULONG Priority,
-        PHANDLE ProcessHandle,
-        PCHAR Args
+        PHANDLE ProcessHandle
         );
 
 STATUS
@@ -44,27 +43,27 @@ PsGetExitStatus(
 
 STATUS
 PsGetPriority(
-	HANDLE  ProcessHandle,
-	PULONG Priority
-	);
+        HANDLE ProcessHandle,
+        PULONG Priority
+        );
 
 STATUS
 PsGetState(
-	HANDLE  ProcessHandle,
-	PULONG State
-	);
+        HANDLE ProcessHandle,
+        PULONG State
+        );
 
 STATUS
 PsOpenProcess(
-	ULONG PID,
-	PHANDLE ProcessHandle
-	);
+        ULONG PID,
+        PHANDLE ProcessHandle
+        );
 STATUS
 PsGetRunningProcesses(
-	PPROCESS Buffer[],
-	ULONG Buffsize,
-	PULONG NumberRunningProcesses
-	);
+        PPROCESS Buffer[],
+        ULONG Buffsize,
+        PULONG NumberRunningProcesses
+        );
 
 #endif	/* _PS_H */
 
