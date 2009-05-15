@@ -16,8 +16,14 @@
 // First free memory address
 static PVOID FirstMemPointer; 
 
+// Size of the header
+static ULONG HeaderSize = sizeof(MEMORY_BLOCK);
+
 // Memory Block list
 PMEMORY_BLOCK MemBlock;
+
+// Pointer to the first block
+PVOID StartBlock;
 
 //
 // aligns memory pointer at a 4-byte boundary
@@ -32,10 +38,12 @@ MmInitialize()
 
 	//Initialize the first block
 	MemBlock = FirstMemPointer;
-	MemBlock->StartBlock = MemBlock;
+	//MemBlock->StartBlock = MemBlock;
 	MemBlock->Size = MAIN_MEM_SIZE - sizeof(MEMORY_BLOCK);
 	MemBlock->NextBlock = NULL;
 	MemBlock->PreviousBlock = NULL;
+
+	StartBlock = MemBlock;
 }
 
 
@@ -50,9 +58,6 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	
 	// Address to return
 	PVOID ReturnAddress;
-
-	// Size of the header
-	ULONG HeaderSize = sizeof(MEMORY_BLOCK);
 	
 	// Copy of the mb-list
 	PMEMORY_BLOCK PMb = MemBlock;
@@ -68,15 +73,15 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 			if (FragmentSize > HeaderSize) {
 
 				// Alloc the fragment block
-				ReturnAddress = PMb;
+				ReturnAddress = PMb + HeaderSize;
 				PMb = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
 				PMb->Size = FragmentSize;
 
 				// Point back to the start and "save"
-				PMb = PMb->StartBlock;
+				PMb = StartBlock;
 				MemBlock = PMb;
 
-				return ReturnAddress;	
+				return ReturnAddress;
 
 				/*
 				// Create and alloc the fragment block
@@ -97,14 +102,14 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 
 			// ..otherwise alloc the full block (make no fragment block)
 			else {
-				ReturnAddress = PMb;
+				ReturnAddress = PMb + HeaderSize;
 
 				// Remove block from list
 				PMb->NextBlock->PreviousBlock = PMb->PreviousBlock;
 				PMb->PreviousBlock->NextBlock = PMb->NextBlock;
 
 				// Point back to the start and "save"
-				PMb = PMb->StartBlock;
+				PMb = StartBlock;
 				MemBlock = PMb;
 
 				return ReturnAddress;
@@ -117,12 +122,17 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 		}
 	}
 	
-	// All block except last one has been checked, so now alloc from last "big" block
-	ReturnAddress = PMb;
+	ReturnAddress = PMb + HeaderSize;
+
+	// Save the NextBlock in the header before moving PMb pointer
 	PMb = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
+	PMb->NextBlock = PMb;
+	
+	// Set the the "big" blocks NextBlock to NULL;
+	PMb->NextBlock = NULL;
 
 	// Point back to the start and "save"
-	PMb = PMb->StartBlock;
+	PMb = StartBlock;
 	MemBlock = PMb;
 
 	return ReturnAddress;
@@ -134,7 +144,6 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	*/
 
 	/*
-	//*** I'm a bit unsure that these two lines does what I want ***
 	PMb->NextBlock = MemBlock;
 	MemBlock = PMb;
 
@@ -152,7 +161,20 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 
 // I'm on it...
 VOID
-MmFree(PVOID objectHeader)
+MmFree(PVOID BlockBody)
 {
-	// Add code here.
+	PMEMORY_BLOCK PMb = MemBlock;
+	PVOID BlockHeader = BlockBody - HeaderSize;
+	PMb = BlockHeader;
+	if(PMb->PreviousBlock == NULL) {
+		PMb->NextBlock->PreviousBlock = PMb;
+		StartBlock = PMb;
+	}
+	else
+	{
+		
+	}
+
+
+
 }
