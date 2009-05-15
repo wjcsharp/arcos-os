@@ -3,8 +3,7 @@
         Author: Hugo Heyman
 
 
-		Now only free blocks should be in the pointer list.
-		There's a lot of commented code in MmAlloc but I don't want to remove it til I know this is somewhat working
+		// I know I need to comment a lot of things that I've changed lately... will be done in a few mins
 		
 */
 
@@ -122,14 +121,19 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 		}
 	}
 	
+
+	PVOID TempAllocatedBlock = PMb;
+	PMb->NextBlock = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
 	ReturnAddress = PMb + HeaderSize;
 
 	// Save the NextBlock in the header before moving PMb pointer
-	PMb = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
-	PMb->NextBlock = PMb;
-	
-	// Set the the "big" blocks NextBlock to NULL;
+	PMb = PMb->NextBlock;
 	PMb->NextBlock = NULL;
+
+	if(PMb->PreviousBlock == NULL)
+		StartBlock = PMb;
+
+	PMb->PreviousBlock = TempAllocatedBlock;
 
 	// Point back to the start and "save"
 	PMb = StartBlock;
@@ -167,14 +171,13 @@ MmFree(PVOID BlockBody)
 	PVOID BlockHeader = BlockBody - HeaderSize;
 	PMb = BlockHeader;
 	if(PMb->PreviousBlock == NULL) {
-		PMb->NextBlock->PreviousBlock = PMb;
 		StartBlock = PMb;
+		MemBlock = PMb;
 	}
 	else
 	{
-		
+		PMb->PreviousBlock->NextBlock = PMb;
+		MemBlock = StartBlock;
 	}
-
-
-
+	
 }
