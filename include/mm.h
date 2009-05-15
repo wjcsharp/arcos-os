@@ -13,10 +13,9 @@
 typedef struct _MEMORY_BLOCK {
   ULONG Size;
   BOOL IsFree;
-  struct _MEMORY_BLOCK *NextBlock, *PreviousBlock, *StartBlock;
+  struct _MEMORY_BLOCK *NextBlock, *PreviousBlock;
   
 } MEMORY_BLOCK, *PMEMORY_BLOCK;
-
 
 VOID
 MmInitialize();         // NEW! Use this in KeInit to initialize   
