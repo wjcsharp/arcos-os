@@ -3,7 +3,9 @@
         Author: Hugo Heyman
 
 
-		// I know I need to comment a lot of things that I've changed lately... will be done in a few mins
+		A new pointer "PreviousUsedBlock" was added to the struct and some changes in MmAlloc and MmFree
+		Neither MmAlloc or MmFree is fully functioning but I think mallocing a few blocks, 
+		then removing the last block and then adding one again is a working case now :P
 		
 */
 
@@ -39,6 +41,7 @@ MmInitialize()
 	MemBlock = FirstMemPointer;
 	//MemBlock->StartBlock = MemBlock;
 	MemBlock->Size = MAIN_MEM_SIZE - sizeof(MEMORY_BLOCK);
+	MemBlock->PreviousUsedBlock = NULL;
 	MemBlock->NextBlock = NULL;
 	MemBlock->PreviousBlock = NULL;
 
@@ -135,7 +138,7 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 		StartBlock = PMb;
 
 	// Keep track of used block header
-	PMb->PreviousBlock = TempAllocatedBlock;
+	PMb->PreviousUsedBlock = TempAllocatedBlock;
 
 	// Point back to the start and "save"
 	PMb = StartBlock;
@@ -172,27 +175,36 @@ MmFree(PVOID BlockBody)
 	PMEMORY_BLOCK PMb = MemBlock;
 	PVOID BlockHeader = BlockBody - HeaderSize;
 	PMb = BlockHeader;
-	if(PMb->PreviousBlock == NULL) {
-		
-		// Append neighbor block?
-		if(PMb + PMb->Size + HeaderSize == PMb->NextBlock) {
-			PMb->Size = PMb->NextBlock->Size + HeaderSize;
-			PMb->NextBlock = PMb->NextBlock->NextBlock;
-		}
 
+	// Add the block to the free ones
+	PMb->NextBlock->PreviousBlock = PMb;
+
+	// Append neighbor block?
+	if(PMb + PMb->Size + HeaderSize == PMb->NextBlock) {
+		PMb->Size = PMb->NextBlock->Size + HeaderSize;
+		PMb->NextBlock = PMb->NextBlock->NextBlock;
+	}
+
+	if(PMb->PreviousBlock == NULL) {
+
+		// This is the start block since the previous is NULL
 		StartBlock = PMb;
+		
+		// Save
 		MemBlock = PMb;
 	}
 	else
 	{
-		// Append neighbor block?
-		if(PMb + PMb->Size + HeaderSize == PMb->NextBlock) {
-			PMb->Size = PMb->NextBlock->Size + HeaderSize;
-			PMb->NextBlock = PMb->NextBlock->NextBlock;
-		}
-
+		// Add the block to the free ones
+		PMb->NextBlock = PMb->PreviousBlock->NextBlock;
 		PMb->PreviousBlock->NextBlock = PMb;
+
+		// Save
 		MemBlock = StartBlock;
 	}
+
+
+
+		
 	
 }
