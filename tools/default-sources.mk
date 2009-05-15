@@ -82,6 +82,13 @@ endif # $(FREEBUILD)
 DEFINES:=$(DEFINES) $(TARGET_DEFINES)
 
 #
+# Enable kernel debugger
+#
+ifeq "$(KD)" "1"
+DEFINES:=$(DEFINES) HAVE_KD
+endif
+
+#
 # Add main include directory
 #
 INCLUDES+=$(BASEDIR)/include

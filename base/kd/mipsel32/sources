@@ -1,0 +1,2 @@
+SOURCES+= \
+        printchar.c

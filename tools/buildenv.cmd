@@ -70,5 +70,8 @@ cd %BASEDIR%
 rem when set = checked build, when unset = free build
 set OSDEBUG=1
 
+rem when set to 1 = kernel debugger will become a part of build
+set KD=1
+
 cmd /k title Build Window: %TARGET%/chk
 

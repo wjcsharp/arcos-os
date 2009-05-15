@@ -6,6 +6,8 @@
 #include <io.h>
 #include <ps.h>
 
+#include <kd.h>
+
 VOID
 KeInitialize(VOID)
 {
@@ -13,6 +15,10 @@ KeInitialize(VOID)
     PROCESS initProcess;
     
     HalInitialize();
+
+#ifdef HAVE_KD
+    KdInitialize();
+#endif
     
     MmInitialize();
 
@@ -21,6 +27,8 @@ KeInitialize(VOID)
     PsInitialize();
     
     KeRestoreInterrupts(TRUE);
+
+    KdPrint("Say %s to %s!", "hello", "ARCOS kernel debugger");
 
     HalDisplayString("Hello world!\n");
 
