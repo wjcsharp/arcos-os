@@ -38,11 +38,35 @@ CreateProcessObjectType(
 
 VOID
 PsInitialize() {
+
+    PVOID createdProcessObject = NULL;
+    PPROCESS process = NULL;
+
+    //Create Process Object Type
     OBJECT_TYPE_INITIALIZER typeInitializer;
     typeInitializer.DumpMethod = NULL; //Should be implemented...
     typeInitializer.DeleteMethod = NULL;
-
     ObCreateObjectType(0x0CE55, &typeInitializer, &processType);
+    //
+    //Create initial process
+    //
+    ObCreateObject(processType, 0, sizeof (PROCESS), &createdProcessObject);
+    ASSERT(createdProcessObject);
+
+    //Cast to PPROCESS before using the new object
+    process = (PPROCESS) createdProcessObject;
+    ASSERT(process);
+
+    //Zero memory of process
+    RtlZeroMemory(process, sizeof (PROCESS));
+
+    //Set quantum
+    process->Quantum = 1;
+
+    //Initialize handletable
+    ObInitProcess(NULL, process);
+    //Set current process to the newly created
+    KeCurrentProcess = process;
 }
 
 BOOL
@@ -131,7 +155,7 @@ PsCreateProcess(
     process->PID = GetPID();
     process->Priority = Priority;
     process->CPUTime = 0;
-    process->ExitStatus = 654321;//Runningprocess (CRASH exit status)
+    process->ExitStatus = 654321; //Runningprocess (CRASH exit status)
     //---Initialize Context what needs to be init?
     (process->Context).Pc = (ULONG) & PStartingAddress;
     (process->Context).Sp = (ULONG) (memPointer + PROCESS_MEMORY_SIZE);
@@ -215,7 +239,7 @@ PsGetExitStatus(
     PPROCESS process;
     STATUS status;
 
-    status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) &process);
+    status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & process);
     if (status != 0)
         return status;
 
@@ -273,7 +297,6 @@ PsOpenProcess(
     while (process) {
         if (process->PID == PID) {
             status = ObOpenObjectByPointer(process, 0, processType, ProcessHandle);
-            KdPrint("found process");
             return status;
         }
         process = ObGetNextObjectOfType(processType);
@@ -281,7 +304,6 @@ PsOpenProcess(
 
     return STATUS_NO_SUCH_PROCESS;
 }
-
 
 STATUS
 PsGetRunningProcesses(

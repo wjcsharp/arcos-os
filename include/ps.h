@@ -70,6 +70,13 @@ PsOpenProcess(
         );
 
 STATUS
+PsReferenceProcess(
+        ULONG PID,
+        PPROCESS *ProcessHandle
+        );
+
+
+STATUS
 PsGetRunningProcesses(
         PPROCESS Buffer[],
         ULONG Buffsize,

@@ -24,6 +24,7 @@ KeInitialize(VOID) {
     //IoInitialize();
 
     PsInitialize();
+    ASSERT(KeCurrentProcess);
 
     KeRestoreInterrupts(TRUE);
 
