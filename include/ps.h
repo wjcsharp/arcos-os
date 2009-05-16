@@ -15,9 +15,11 @@
 #include <rtl.h>
 
 //
-// Defines size of memory to be allocated for a process
+// Defines size of default memory to be allocated for a process
 //
 #define PROCESS_MEMORY_SIZE 32768
+
+POBJECT_TYPE processType;
 
 VOID
 MyFirstProgram();

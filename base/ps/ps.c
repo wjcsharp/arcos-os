@@ -20,8 +20,6 @@ PIDInUse(ULONG PID);
 ULONG
 GetPID();
 
-POBJECT_TYPE processType;
-
 STATUS
 CreateProcessObjectType(
         POBJECT_TYPE ProcessType
@@ -133,6 +131,7 @@ PsCreateProcess(
     process->PID = GetPID();
     process->Priority = Priority;
     process->CPUTime = 0;
+    process->ExitStatus = 654321;//Runningprocess (CRASH exit status)
     //---Initialize Context what needs to be init?
     (process->Context).Pc = (ULONG) & PStartingAddress;
     (process->Context).Sp = (ULONG) (memPointer + PROCESS_MEMORY_SIZE);
