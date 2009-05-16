@@ -21,6 +21,12 @@ POBJECT_TYPE ObTypeObjectListHead = NULL;
 
 #define OBJECT_BODY_TO_HEADER(pBody)   ((POBJECT_HEADER)CONTAINING_RECORD((pBody), OBJECT_HEADER, Body))
 
+//
+// checks the object header for corruption
+//
+#define ASSERT_OBJECT(pHeader)  ASSERT((pHeader)->Magic == 0x0BEC0BEC)
+
+
 STATUS
 ObCreateObject(
     POBJECT_TYPE ObjectType,
@@ -49,6 +55,7 @@ ObCreateObject(
     //
     // initialize fields in the object header
     //
+    objectHeader->Magic = 0x0BEC0BEC;
     objectHeader->HandleCount = 0;
     objectHeader->PointerCount = 1;   // compensate for the returned pointer
     objectHeader->Attributes = ObjectAttributes;
@@ -129,6 +136,8 @@ ObpUnlinkObjectFromTypeList(
     )
 {
     POBJECT_HEADER currentObject;
+
+    ASSERT_OBJECT(objectHeader);
     
     //
     // make sure object has a type associated
@@ -190,6 +199,8 @@ ObDereferenceObject(
     // get a pointer to object header
     //
     objectHeader = OBJECT_BODY_TO_HEADER(Object);
+
+    ASSERT_OBJECT(objectHeader);
 
     //
     // crash if someone did extra ObDereferenceObject calls and
@@ -312,6 +323,9 @@ ObOpenObjectByPointer(
     
     ASSERT(Object);
     ASSERT(Handle);
+    ASSERT(KeCurrentProcess);
+
+    ASSERT_OBJECT(objectHeader);
 
     *Handle = NULL;
 
@@ -319,7 +333,7 @@ ObOpenObjectByPointer(
     // if a type object was specified, check it
     //
     if (ObjectType) {
-        
+       
         if (objectHeader->Type != ObjectType) {
             return STATUS_OBJECT_TYPE_MISMATCH;
         }
@@ -368,6 +382,8 @@ ObReferenceObject(
 
     objectHeader = OBJECT_BODY_TO_HEADER(Object);
 
+    ASSERT_OBJECT(objectHeader);
+
     //
     // if a type object was specified, check it
     //
@@ -407,6 +423,8 @@ ObReferenceObjectByHandle(
 
         objectHeader = OBJECT_BODY_TO_HEADER(KeCurrentProcess->HandleTable[(ULONG)Handle].Object);
 
+        ASSERT_OBJECT(objectHeader);
+
         //
         // if a type object was specified, check it
         //
@@ -442,6 +460,8 @@ ObCloseHandle(
 
         POBJECT_HEADER objectHeader = OBJECT_BODY_TO_HEADER(KeCurrentProcess->HandleTable[(ULONG)Handle].Object);
 
+        ASSERT_OBJECT(objectHeader);
+
         objectHeader->HandleCount--;
 
         ObDereferenceObject(KeCurrentProcess->HandleTable[(ULONG)Handle].Object);
@@ -461,6 +481,8 @@ ObGetFirstObjectOfType(
     )
 {
     ASSERT(ObjectType);
+
+    ASSERT_OBJECT(OBJECT_BODY_TO_HEADER(ObjectType));
 
     //
     // is there an object of this type?
@@ -482,6 +504,7 @@ ObGetNextObjectOfType(
     POBJECT_HEADER objectHeader = OBJECT_BODY_TO_HEADER(Object);
 
     ASSERT(Object);
+    ASSERT_OBJECT(objectHeader);
 
     //
     // is there a next object?
@@ -506,6 +529,7 @@ ObDumpObject(
 
     ASSERT(Object);
     ASSERT(Buffer);
+    ASSERT_OBJECT(objectHeader);
 
     if (objectHeader->Type) {
         if (objectHeader->Type->Dump) {
@@ -514,3 +538,4 @@ ObDumpObject(
         }
     }
 }
+

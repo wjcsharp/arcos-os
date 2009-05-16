@@ -16,6 +16,7 @@ struct _OBJECT_TYPE;
 // object header definition
 //
 typedef struct _OBJECT_HEADER {
+    ULONG Magic;
     ULONG HandleCount;
     ULONG PointerCount;
     ULONG Attributes;

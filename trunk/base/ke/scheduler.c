@@ -19,6 +19,7 @@ Revision History:
 #include <arcos.h>
 #include <ke.h>
 #include <ob.h>
+#include <rtl.h>
 
 //
 // Ready queues: one queue for each priority level
@@ -149,6 +150,53 @@ KepDequeueProcess(
     KeBugCheck("KepDequeueProcess: process is not in the priority queue");
 }
 
+VOID
+KepReschedule(
+    VOID
+    )
+{
+    ULONG i;
+    
+    //
+    // if the current process is not blocked, add it to ready queue
+    // (if it's blocked, someone else already put it where it belongs)
+    //
+    if (KeCurrentProcess->State != blocked) {
+        KepEnqueueProcess(KeCurrentProcess);
+    }
+
+    KeCurrentProcess = NULL;
+
+    //
+    // scan the ready queue and find the first non-empty slot
+    //
+    for (i = PROCESS_PRIORITY_LEVELS - 1; i >= 0; i--) {
+
+        //
+        // is the queue non-empty?
+        //
+        if (KepReadyQueues[i].First) {
+
+            //
+            // lets schedule the first process in this queue
+            //
+            KeCurrentProcess = KepReadyQueues[i].First;
+            KepDequeueProcess(KeCurrentProcess);
+        }
+    }
+
+    //
+    // if no process could be scheduled, someone killed process 0 - too bad!
+    //
+    if (KeCurrentProcess == NULL)
+        KeBugCheck("Critical system process terminated or blocked unexpectedly");
+
+    //
+    // reset quantum for this process
+    //
+    KeCurrentProcess->Quantum = 5;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  KeStartSchedulingProcess
@@ -258,6 +306,15 @@ KeStopSchedulingProcess(
 
         case running:
             // TODO: currently running - what now???
+            //
+            // mark as blocked so that it won't get scheduled again
+            //
+            Process->State = blocked;
+
+            //
+            // choose a different process to run
+            //
+            KepReschedule();
             break;
             
         case ready:
@@ -307,7 +364,10 @@ KeBlockProcess(
     KeCurrentProcess->NextPCB = KepBlockedList;
     KepBlockedList = KeCurrentProcess;
 
-    // TODO: schedule next
+    //
+    // schedule another process
+    //
+    KepReschedule();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -338,6 +398,13 @@ KeResumeProcess(
     // add process to the scheduling queue
     //
     KepEnqueueProcess(Process);
+
+    //
+    // reschedule if this process has higher priority than the current process
+    //
+    if (Process->Priority > KeCurrentProcess->Priority) {
+        KepReschedule();
+    }   
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -371,45 +438,6 @@ KeChangeProcessPriority(
         default:
             KeBugCheck("KeChangeProcessPriority: unhandled process state");
     }
-}
-
-VOID
-KepReschedule(
-    VOID
-    )
-{
-    ULONG i;
-    
-    //
-    // if the current process is not blocked, add it to ready queue
-    // (if it's blocked, someone else already put it where it belongs)
-    //
-    if (KeCurrentProcess->State != blocked) {
-        KepEnqueueProcess(KeCurrentProcess);
-    }
-
-    KeCurrentProcess = NULL;
-
-    //
-    // scan the ready queue and find the first non-empty slot
-    //
-    for (i = PROCESS_PRIORITY_LEVELS - 1; i >= 0; i--) {
-
-        //
-        // is the queue non-empty?
-        //
-        if (KepReadyQueues[i].First) {
-
-            //
-            // lets schedule the first process in this queue
-            //
-            KeCurrentProcess = KepReadyQueues[i].First;
-            KepDequeueProcess(KeCurrentProcess);
-        }
-    }
-
-    // TODO: what should I do if no process is ready?
-    ASSERT(KeCurrentProcess);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -473,7 +501,7 @@ KeSuspendProcess(
         current->NextPCB = KeCurrentProcess;
     }
 
-    // TODO: reschedule
+    KepReschedule();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -481,7 +509,7 @@ KeSuspendProcess(
 //  KeGetTickCount
 //
 //      Returns the number of milliseconds that have elapsed since the system
-//      was started, up to 49.7 days. (Then it overflows and wraps.)
+//      was started, up to 49.7 days.
 //
 ULONG
 KeGetTickCount(
@@ -491,4 +519,78 @@ KeGetTickCount(
     return KepTickCount;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KeCaptureContext
+//
+//      Stores context passed as a parameter as current process's context.
+//
+VOID
+KeCaptureContext(
+    PCONTEXT context
+    )
+{
+    ASSERT(KeCurrentProcess);
+    ASSERT(context);
+        
+    RtlCopyMemory(&KeCurrentProcess->Context, context, sizeof(CONTEXT));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KeRestoreContext
+//
+//      Copies context of the current process to specified buffer.
+//
+VOID
+KeRestoreContext(
+    PCONTEXT context
+    )
+{
+    ASSERT(KeCurrentProcess);
+    ASSERT(context);
+    
+    RtlCopyMemory(context, &KeCurrentProcess->Context, sizeof(CONTEXT));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//  KeHandleTimer
+//
+//      Handles timer interrupts.
+//
+VOID
+KeHandleTimer(
+    VOID
+    )
+{
+    ASSERT(KeCurrentProcess);
+    ASSERT(KeCurrentProcess->Quantum > 0);
+
+    //
+    // increment tick counter
+    //
+    // TODO: use hal to determine timer frequency?
+    KepTickCount += 10;
+    KeCurrentProcess->CPUTime += 10;
+
+    //
+    // wake up any sleeping processes that need a wakeup
+    //
+    KepWakeUpSleepers();
+
+    //
+    // decrement quantum for current process
+    //
+    KeCurrentProcess->Quantum--;
+
+    //
+    // if allocated time expired, reschedule
+    //
+    if (KeCurrentProcess->Quantum == 0) {
+        KepReschedule();
+    }
+
+
+}
 
