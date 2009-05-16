@@ -161,6 +161,7 @@ typedef struct _PROCESS {
     PVOID AllocatedMemory;//Assume only one allocation per process
     ULONG CPUTime;
     ULONG WakeUpTime;
+    ULONG Quantum;
     // PMESSAGEQUEUE MessageQueue; MessageQUEUE not in any header
     // PMESSAGEQUEUE Supervisor;
     struct _PROCESS *NextPCB;
