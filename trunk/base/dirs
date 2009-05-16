@@ -2,6 +2,7 @@ DIRS = \
     rtl \
     mm\
     ps\
+    mess \
     io \
     hal \
     ob \
