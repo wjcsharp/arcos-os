@@ -52,7 +52,7 @@ IoInitialize()
 	// Create fileType
     	typeInitializer.DumpMethod = NULL;	// What is DumpMethod?
     	typeInitializer.DeleteMethod = NULL;	// Can't delete file types in this version of ARCOS.
-    	status = ObCreateObjectType(0xf331, &typeInitializer, &fileType); // f331 = file
+    	status = ObCreateObjectType('file', &typeInitializer, &fileType); // f331 = file
 	HalDisplayString("Create fileType done\n");
     
 	if (status != STATUS_SUCCESS)	// Abandon procedure, and OS, I guess.
