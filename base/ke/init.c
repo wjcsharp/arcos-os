@@ -11,7 +11,7 @@
 VOID
 KeInitialize(VOID) {
     CHAR temp[260];
-    PROCESS initProcess;
+    //Should be removed? PROCESS initProcess;
 
     HalInitialize();
 
@@ -23,6 +23,7 @@ KeInitialize(VOID) {
 
     //IoInitialize();
 
+    //Initialize ps manager, create initial process
     PsInitialize();
     ASSERT(KeCurrentProcess);
 
@@ -38,7 +39,7 @@ KeInitialize(VOID) {
 
     HalDisplayString("\x1B[D"); // ANSI cursor back by one character
 
-    KeCurrentProcess = &initProcess;
+    //Should be removed? KeCurrentProcess = &initProcess;
 
     //HANDLE handle = IoCreateFile('serial');
 
