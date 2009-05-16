@@ -1,6 +1,7 @@
 #include <arcos.h>
 #include <mm.h>
 #include <mess.h>
+#include <rtl.h>
 
 STATUS
 MessSend(
@@ -21,6 +22,7 @@ MessSend(
 	message->messageType = messageType;
 	message->bufferSize = bufferSize;
     
+		// Copy buffer to message->buffer, that is after the message "header"
 		// Typecasting to PCHAR because of memory size?
 	RtlCopyMemory((PCHAR)message + sizeof(MESSAGE), buffer, bufferSize);
 
@@ -38,4 +40,6 @@ MessSend(
         KeResumeProcess(receiver);
     }
 	*/
+
+	return STATUS_SUCCESS;
 }
