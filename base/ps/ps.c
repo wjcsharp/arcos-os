@@ -349,7 +349,7 @@ PsGetRunningProcesses(
             } else //buffer is full
                 numRunProcesses++;
         }
-        process = ObGetNextObjectOfType(processType);
+        process = ObGetNextObjectOfType(process);
     }
     *NumberRunningProcesses = numRunProcesses;
     return STATUS_SUCCESS;
