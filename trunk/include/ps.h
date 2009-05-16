@@ -68,6 +68,7 @@ PsOpenProcess(
         ULONG PID,
         PHANDLE ProcessHandle
         );
+
 STATUS
 PsGetRunningProcesses(
         PPROCESS Buffer[],

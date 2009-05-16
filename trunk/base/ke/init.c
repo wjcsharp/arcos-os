@@ -39,34 +39,6 @@ KeInitialize(VOID) {
 
     KeCurrentProcess = &initProcess;
 
-//#define PSTEST
-#ifdef PSTEST
-    //BUGBUGBUGBUGBUGBUGBUGBUG
-    //REMOVE REMOVE REMOVE REMOVE
-    //Temporary to test PsCreate
-    HANDLE handtag;
-    HANDLE handtag2;
-    PVOID mstempp;
-    PPROCESS gurkproc1;
-    PPROCESS gurkproc2;
-    PsCreateProcess(MyFirstProgram, 14, &handtag, NULL);
-    ObReferenceObjectByHandle(handtag, processType, &mstempp);
-    gurkproc1 = (PPROCESS) mstempp;
-    
-    PsCreateProcess(MyFirstProgram, 24, &handtag2, NULL);
-    ObReferenceObjectByHandle(handtag2, processType, &mstempp);
-    gurkproc2 = (PPROCESS) mstempp;
-
-
-
-    KdPrint("prio1: %d\n", gurkproc1->Priority);
-    KdPrint("prio2: %d\n", gurkproc2->Priority);
-    KdPrint("PID1: %d\n", gurkproc1->PID);
-    KdPrint("PID2: %d\n", gurkproc2->PID);
-    KdPrint("ExitStatus1: %d\n", gurkproc1->ExitStatus);
-    KdPrint("ExitStatus2: %d\n", gurkproc2->ExitStatus);
-    //End test ps
-#endif
     //HANDLE handle = IoCreateFile('serial');
 
     while (1) {

@@ -215,7 +215,7 @@ PsGetExitStatus(
     PPROCESS process;
     STATUS status;
 
-    status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & process);
+    status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) &process);
     if (status != 0)
         return status;
 
@@ -273,6 +273,7 @@ PsOpenProcess(
     while (process) {
         if (process->PID == PID) {
             status = ObOpenObjectByPointer(process, 0, processType, ProcessHandle);
+            KdPrint("found process");
             return status;
         }
         process = ObGetNextObjectOfType(processType);
@@ -280,6 +281,7 @@ PsOpenProcess(
 
     return STATUS_NO_SUCH_PROCESS;
 }
+
 
 STATUS
 PsGetRunningProcesses(
