@@ -11,6 +11,8 @@
 #include <ke.h>
 #include <rtl.h>
 #include <hal.h>
+#include <kd.h>
+//#define DEBUG_PS
 
 BOOL
 PIDInUse(ULONG PID);
@@ -39,13 +41,10 @@ CreateProcessObjectType(
 VOID
 PsInitialize() {
     OBJECT_TYPE_INITIALIZER typeInitializer;
-
     typeInitializer.DumpMethod = NULL; //Should be implemented...
     typeInitializer.DeleteMethod = NULL;
 
     ObCreateObjectType(0x0CE55, &typeInitializer, &processType);
-    //HANDLE handtag;
-    //PsCreateProcess(&GetPID, 10, *handtag);
 }
 
 BOOL
@@ -76,25 +75,33 @@ GetPID() {
 }
 
 VOID
-MyFirstProcess(){
-    ULONG arb=27;
-    arb = arb +123;
+MyFirstProgram() {
+    ULONG arb = 27;
+    arb = arb + 123;
     HalDisplayString("My first process executed");
     //PsKillMe();
 }
 
+VOID
+PsKillMe() {
+    STATUS status;
+    status = PsKillProcess(KeCurrentProcess, 0);
+    if (0 != status)
+        KdPrint("KillMe failed");
+}
+
 STATUS
 PsCreateProcess(
-        VOID (*PStartingAddress)(),
+        VOID(*PStartingAddress)(),
         ULONG Priority,
-        PHANDLE ProcessHandle
+        PHANDLE ProcessHandle,
+        PCHAR Args
         ) {
     //Create new process
     STATUS status = 0;
     PVOID memPointer;
     PVOID createdProcessObject = NULL;
     PPROCESS process = NULL;
-
     status = ObCreateObject(processType, 0, sizeof (PROCESS), &createdProcessObject);
     if (status != 0) return status;
     ASSERT(createdProcessObject);
@@ -106,6 +113,9 @@ PsCreateProcess(
     //Zero memory of process
     RtlZeroMemory(process, sizeof (PROCESS));
 
+#ifdef DEBUG_PS
+    KdPrint("after zero memory");
+#endif
     //Set process status to created
     process->State = created;
 
@@ -115,21 +125,21 @@ PsCreateProcess(
         ObDereferenceObject(createdProcessObject);
         return STATUS_NO_MEMORY;
     }
+#ifdef DEBUG_PS
+    KdPrint("malloc done");
+#endif
     //Attach memory block
     process->AllocatedMemory = memPointer;
-
-    //Generate PID
     process->PID = GetPID();
-
-    //---Initialize Context what needs to be init?
-    //Set priority
     process->Priority = Priority;
-    //Initialize CPUTime
     process->CPUTime = 0;
-
-    (process->Context).Pc = (ULONG) &PStartingAddress; 
-
+    //---Initialize Context what needs to be init?
+    (process->Context).Pc = (ULONG) & PStartingAddress;
     (process->Context).Sp = (ULONG) (memPointer + PROCESS_MEMORY_SIZE);
+
+#ifdef DEBUG_PS
+    KdPrint("attach mem init pobject, context");
+#endif
 
     //Initialize handletable
     status = ObInitProcess(KeCurrentProcess, process);
@@ -138,7 +148,10 @@ PsCreateProcess(
         MmFree(memPointer);
         return status;
     }
-
+#ifdef DEBUG_PS
+    KdPrint("initialized handletable");
+#endif
+    //Create Handle to object
     status = ObOpenObjectByPointer(createdProcessObject, 0, processType, ProcessHandle);
     if (status != 0) {
         ObDereferenceObject(createdProcessObject);
@@ -146,6 +159,9 @@ PsCreateProcess(
         return status;
     }
     process->State = ready;
+#ifdef DEBUG_PS
+    KdPrint("attached handle");
+#endif
 
     //Schedule process
     status = KeStartSchedulingProcess(process);
@@ -154,14 +170,20 @@ PsCreateProcess(
         MmFree(memPointer);
         return status;
     }
-
-    ObDereferenceObject(createdProcessObject);
+#ifdef DEBUG_PS
+    KdPrint("scheduled process");
+#endif
+    ObDereferenceObject(process/*createdProcessObject*/);
+#ifdef DEBUG_PS
+    KdPrint("dereferenced object");
+#endif
     return STATUS_SUCCESS;
 }
 
 STATUS
 PsKillProcess(
-        PPROCESS Process
+        PPROCESS Process,
+        ULONG ExitStatus
         ) {
     STATUS status;
 
@@ -174,7 +196,14 @@ PsKillProcess(
 
     ObKillProcess(Process);
     MmFree(Process->AllocatedMemory);
+#ifdef DEBUG_PS
+    KdPrint("PsKillP freed memory");
+#endif
+    Process->ExitStatus = ExitStatus;
     ObDereferenceObject(Process);
+#ifdef DEBUG_PS
+    KdPrint("PsKillP done");
+#endif
     return STATUS_SUCCESS;
 }
 
