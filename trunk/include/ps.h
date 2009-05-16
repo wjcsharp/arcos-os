@@ -72,7 +72,7 @@ PsOpenProcess(
 STATUS
 PsReferenceProcess(
         ULONG PID,
-        PPROCESS *ProcessHandle
+        PPROCESS *ProcessPtr
         );
 
 

@@ -21,9 +21,7 @@ ULONG
 GetPID();
 
 STATUS
-CreateProcessObjectType(
-        POBJECT_TYPE ProcessType
-        ) {
+CreateProcessObjectType() {
     //Create Process object type
     OBJECT_TYPE_INITIALIZER typeInitializer;
     STATUS status;
@@ -32,7 +30,7 @@ CreateProcessObjectType(
     //
     typeInitializer.DumpMethod = NULL; //Should be implemented...
     typeInitializer.DeleteMethod = NULL;
-    status = ObCreateObjectType(0x0CE55, &typeInitializer, &ProcessType);
+    status = ObCreateObjectType(0x0CE55, &typeInitializer, &processType);
     return status;
 }
 
@@ -299,9 +297,29 @@ PsOpenProcess(
             status = ObOpenObjectByPointer(process, 0, processType, ProcessHandle);
             return status;
         }
-        process = ObGetNextObjectOfType(processType);
+        process = ObGetNextObjectOfType(process);
     }
+    return STATUS_NO_SUCH_PROCESS;
+}
 
+STATUS
+PsReferenceProcess(
+        ULONG PID,
+        PPROCESS *ProcessPtr
+        ) {
+    PPROCESS process;
+
+    process = ObGetFirstObjectOfType(processType);
+
+    while (process) {
+        if (process->PID == PID) {
+            *ProcessPtr = process;
+            ObReferenceObject(process, processType);
+            return STATUS_SUCCESS;
+        }
+        process = ObGetNextObjectOfType(process);
+    }
+    *ProcessPtr = NULL;
     return STATUS_NO_SUCH_PROCESS;
 }
 
