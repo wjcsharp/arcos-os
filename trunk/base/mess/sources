@@ -1,0 +1,6 @@
+TARGETNAME=mess
+TARGETPATH=lib
+TARGETTYPE=library
+
+SOURCES= \
+        mess.c
