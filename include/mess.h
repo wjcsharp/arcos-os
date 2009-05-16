@@ -18,8 +18,9 @@ typedef struct _MESSAGE {
 	ULONG	receiverPid;
 	ULONG	priority;
 	ULONG	messageType;
-	PVOID	buffer;
+	//PVOID	buffer;
 	ULONG	bufferSize;
+	struct _MESSAGE *next;
 } MESSAGE, *PMESSAGE;
 
 // Simple single-linked list for message queue.
