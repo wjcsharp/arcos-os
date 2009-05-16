@@ -20,7 +20,7 @@
 #define PROCESS_MEMORY_SIZE 32768
 
 VOID
-MyFirstProcess();
+MyFirstProgram();
 
 VOID
 PsInitialize();
@@ -28,14 +28,16 @@ PsInitialize();
 
 STATUS
 PsCreateProcess(
-        VOID (*PStartingAddress)(),
+        VOID(*PStartingAddress)(),
         ULONG Priority,
-        PHANDLE ProcessHandle
+        PHANDLE ProcessHandle,
+        PCHAR Args
         );
 
 STATUS
 PsKillProcess(
-        PPROCESS Process
+        PPROCESS Process,
+        ULONG ExitStatus
         );
 
 STATUS
@@ -49,6 +51,9 @@ PsGetPriority(
         HANDLE ProcessHandle,
         PULONG Priority
         );
+
+VOID
+PsKillMe();
 
 STATUS
 PsGetState(
