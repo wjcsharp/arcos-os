@@ -3,6 +3,7 @@
 
 #include <types.h>
 #include <status.h>
+#include <mess.h>
 
 //
 // helper macro for conversion to string literals
@@ -162,8 +163,8 @@ typedef struct _PROCESS {
     ULONG CPUTime;
     ULONG WakeUpTime;
     ULONG Quantum;
-    // PMESSAGEQUEUE MessageQueue; MessageQUEUE not in any header
-    // PMESSAGEQUEUE Supervisor;
+    PMESSAGE MessageQueue; 	// Added by Olle
+    PMESSAGE Supervisor;	// Added by Lars Karlsson från Kättismeåla
     struct _PROCESS *NextPCB;
 } PROCESS, *PPROCESS;
 
