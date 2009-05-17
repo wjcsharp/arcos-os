@@ -14,7 +14,7 @@ Author:
 
 Revision History:
 
-*/
+ */
 
 #ifndef __STATUS_H__
 #define __STATUS_H__
@@ -53,4 +53,5 @@ typedef ULONG STATUS, *PSTATUS;
 
 #define STATUS_NO_SUCH_PROGRAM          ((STATUS)0x0000000E)
 
+#define STATUS_INVALID_APPLICATION_ADRESS ((STATUS)0x0000000F)
 #endif
