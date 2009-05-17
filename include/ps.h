@@ -31,7 +31,7 @@ typedef struct _PROCESS_INFO {
 
 typedef struct _PROGRAM {
     PCHAR Name;
-    VOID (*Execute)(PCHAR Parameters);
+    VOID(*Execute)(PCHAR Parameters);
 } PROGRAM, *PPROGRAM;
 
 //List of all available PROGRAMS
@@ -99,5 +99,10 @@ PsGetProcessesInfo(
         PULONG NumberProcesses
         );
 
-#endif	/* _PS_H */
+STATUS
+PsGetPidFromHandle(
+        PHANDLE PHandle,
+        PULONG PPid
+        );
 
+#endif	/* _PS_H */
