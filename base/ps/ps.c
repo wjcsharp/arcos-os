@@ -135,13 +135,13 @@ PsKillMe() {
         KdPrint("KillMe failed");
 }
 
-ULONG
+PVOID
 GetProgramAdress(PCHAR ProgramName) {
     ULONG index = 0;
 
     for (index = 0; index < (sizeof (PsAvailApps) / sizeof (APPLICATION)); ++index) {
         if (0 == (RtlCompareStrings(PsAvailApps[index].Name, ProgramName)))
-            return (ULONG) PsAvailApps[index].Execute;
+            return PsAvailApps[index].Execute;
     }
     return 0;
 }
@@ -154,295 +154,294 @@ PsCreateProcessByName(
         PCHAR Args
         ) {
     STATUS status;
-    status = PsCreateProcess((PVOID)GetProgramAdress(ProgramName),Priority,ProcessHandle,Args);
+    status = PsCreateProcess(GetProgramAdress(ProgramName), Priority, ProcessHandle, Args);
     return status;
 }
 
-    STATUS
-    PsCreateProcess(
-            VOID(*PStartingAddress)(),
-            ULONG Priority,
-            PHANDLE ProcessHandle,
-            PCHAR Args
-            ) {
-        //Create new process
-        STATUS status = 0;
-        PVOID memPointer;
-        PVOID createdProcessObject = NULL;
-        PPROCESS process = NULL;
-        //
-        //Get rid of warning BUGBUGBUGBUGBUGBUGBUGBUG
-        //
-        //UNREFERENCED_PARAMETER(Args);
+STATUS
+PsCreateProcess(
+        VOID(*PStartingAddress)(),
+        ULONG Priority,
+        PHANDLE ProcessHandle,
+        PCHAR Args
+        ) {
+    //Create new process
+    STATUS status = 0;
+    PVOID memPointer;
+    PVOID createdProcessObject = NULL;
+    PPROCESS process = NULL;
 
-        //Create process object
-        status = ObCreateObject(processType, 0, sizeof (PROCESS), &createdProcessObject);
-        if (status != 0) return status;
-        ASSERT(createdProcessObject);
+    //Create process object
+    status = ObCreateObject(processType, 0, sizeof (PROCESS), &createdProcessObject);
+    if (status != 0) return status;
+    ASSERT(createdProcessObject);
 
-        //Cast to PPROCESS before using the new object
-        process = (PPROCESS) createdProcessObject;
-        ASSERT(process);
+    //Cast to PPROCESS before using the new object
+    process = (PPROCESS) createdProcessObject;
+    ASSERT(process);
 
-        //Zero memory of process
-        RtlZeroMemory(process, sizeof (PROCESS));
+    //Zero memory of process
+    RtlZeroMemory(process, sizeof (PROCESS));
 
 #ifdef DEBUG_PS
-        KdPrint("after zero memory");
+    KdPrint("after zero memory");
 #endif
-        //Set process status to created
-        process->State = created;
+    //Set process status to created
+    process->State = created;
 
-        //Ask mamory manager for a chunk of memory to be attached to the process
-        memPointer = MmAlloc(PROCESS_MEMORY_SIZE);
-        if (memPointer == NULL) {
-            ObDereferenceObject(createdProcessObject);
-            return STATUS_NO_MEMORY;
+    //Ask mamory manager for a chunk of memory to be attached to the process
+    memPointer = MmAlloc(PROCESS_MEMORY_SIZE);
+    if (memPointer == NULL) {
+        ObDereferenceObject(createdProcessObject);
+        return STATUS_NO_MEMORY;
+    }
+#ifdef DEBUG_PS
+    KdPrint("malloc done");
+#endif
+    //Attach memory block
+    process->AllocatedMemory = memPointer;
+    process->PID = GetPID();
+    process->Priority = Priority;
+    process->CPUTime = 0;
+    process->Args = Args;
+    process->ExitStatus = 654321; //Runningprocess (CRASH exit status)
+    //---Initialize Context what needs to be init?
+    (process->Context).Pc = (ULONG) PStartingAddress;
+    (process->Context).Sp = (ULONG) ((PCHAR) memPointer + PROCESS_MEMORY_SIZE);
+
+#ifdef DEBUG_PS
+    KdPrint("attach mem init pobject, context");
+#endif
+
+    //Initialize handletable
+    status = ObInitProcess(KeCurrentProcess, process);
+    if (status != 0) {
+        ObDereferenceObject(createdProcessObject);
+        MmFree(memPointer);
+        return status;
+    }
+#ifdef DEBUG_PS
+    KdPrint("initialized handletable");
+#endif
+    //Create Handle to object
+    status = ObOpenObjectByPointer(createdProcessObject, 0, processType, ProcessHandle);
+    if (status != 0) {
+        ObDereferenceObject(createdProcessObject);
+        MmFree(memPointer);
+        return status;
+    }
+    process->State = ready;
+#ifdef DEBUG_PS
+    KdPrint("attached handle");
+#endif
+
+    //Schedule process
+    status = KeStartSchedulingProcess(process);
+    if (status != 0) {
+        ObDereferenceObject(createdProcessObject);
+        MmFree(memPointer);
+        return status;
+    }
+#ifdef DEBUG_PS
+    KdPrint("scheduled process");
+#endif
+    ObDereferenceObject(process/*createdProcessObject*/);
+#ifdef DEBUG_PS
+    KdPrint("dereferenced object");
+#endif
+    return STATUS_SUCCESS;
+}
+
+STATUS
+PsKillProcess(
+        PPROCESS PProcess,
+        ULONG ExitStatus
+        ) {
+    STATUS status;
+
+    status = ObReferenceObject(PProcess, processType);
+    if (status != 0)
+        return status;
+
+    status = KeStopSchedulingProcess(PProcess);
+    if (status != 0) return status;
+
+    ObKillProcess(PProcess);
+    MmFree(PProcess->AllocatedMemory);
+
+#ifdef DEBUG_PS
+    KdPrint("PsKillP freed memory");
+#endif
+    PProcess->ExitStatus = ExitStatus;
+    //BUGBUGBUGBUGBUGBUG
+    //Free message-queue
+    ObDereferenceObject(PProcess);
+#ifdef DEBUG_PS
+    KdPrint("PsKillP done");
+#endif
+    return STATUS_SUCCESS;
+}
+
+STATUS
+PsGetExitStatus(
+        HANDLE ProcessHandle,
+        PULONG ExitStatus
+        ) {
+    //Get process exit status
+    PPROCESS process;
+    STATUS status;
+
+    status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & process);
+    if (status != 0)
+        return status;
+
+    *ExitStatus = process->ExitStatus;
+    ObDereferenceObject(process);
+    return STATUS_SUCCESS;
+}
+
+STATUS
+PsGetPriority(
+        HANDLE ProcessHandle,
+        PULONG Priority
+        ) {
+    //Get process PRIORITY
+    PPROCESS process;
+    STATUS status;
+
+    status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & process);
+    if (status != 0)
+        return status;
+
+    *Priority = process->Priority;
+    ObDereferenceObject(process);
+    return STATUS_SUCCESS;
+}
+
+STATUS
+PsGetState(
+        HANDLE ProcessHandle,
+        PPROCESS_STATE PState
+        ) {
+    //Get process state
+    PPROCESS pprocess;
+    STATUS status;
+
+    status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & pprocess);
+    if (status != 0)
+        return status;
+
+    *PState = pprocess->State;
+    ObDereferenceObject(pprocess);
+    return STATUS_SUCCESS;
+}
+
+STATUS
+PsGetPid(
+        PHANDLE PHandle,
+        PULONG PPid
+        ) {
+    PPROCESS pprocess;
+    STATUS status;
+
+    status = ObReferenceObjectByHandle(PHandle, processType, (void**) & pprocess);
+    if (status != 0)
+        return status;
+
+    *PPid = pprocess->PID;
+    ObDereferenceObject(pprocess);
+    return STATUS_SUCCESS;
+};
+
+STATUS
+PsOpenProcess(
+        ULONG PID,
+        PHANDLE ProcessHandle
+        ) {
+    STATUS status;
+    PPROCESS process;
+
+    process = ObGetFirstObjectOfType(processType);
+
+    while (process) {
+        if (process->PID == PID) {
+            status = ObOpenObjectByPointer(process, 0, processType, ProcessHandle);
+            return status;
         }
-#ifdef DEBUG_PS
-        KdPrint("malloc done");
-#endif
-        //Attach memory block
-        process->AllocatedMemory = memPointer;
-        process->PID = GetPID();
-        process->Priority = Priority;
-        process->CPUTime = 0;
-        process->Args = Args;
-        process->ExitStatus = 654321; //Runningprocess (CRASH exit status)
-        //---Initialize Context what needs to be init?
-        (process->Context).Pc = (ULONG) PStartingAddress;
-        (process->Context).Sp = (ULONG) ((PCHAR) memPointer + PROCESS_MEMORY_SIZE);
+        process = ObGetNextObjectOfType(process);
+    }
+    return STATUS_NO_SUCH_PROCESS;
+}
 
-#ifdef DEBUG_PS
-        KdPrint("attach mem init pobject, context");
-#endif
+STATUS
+PsReferenceProcess(
+        ULONG PID,
+        PPROCESS * ProcessPtr
+        ) {
+    PPROCESS process;
 
-        //Initialize handletable
-        status = ObInitProcess(KeCurrentProcess, process);
-        if (status != 0) {
-            ObDereferenceObject(createdProcessObject);
-            MmFree(memPointer);
-            return status;
+    process = ObGetFirstObjectOfType(processType);
+
+    while (process) {
+        if (process->PID == PID) {
+            *ProcessPtr = process;
+            ObReferenceObject(process, processType);
+            return STATUS_SUCCESS;
         }
-#ifdef DEBUG_PS
-        KdPrint("initialized handletable");
-#endif
-        //Create Handle to object
-        status = ObOpenObjectByPointer(createdProcessObject, 0, processType, ProcessHandle);
-        if (status != 0) {
-            ObDereferenceObject(createdProcessObject);
-            MmFree(memPointer);
-            return status;
-        }
-        process->State = ready;
-#ifdef DEBUG_PS
-        KdPrint("attached handle");
-#endif
-
-        //Schedule process
-        status = KeStartSchedulingProcess(process);
-        if (status != 0) {
-            ObDereferenceObject(createdProcessObject);
-            MmFree(memPointer);
-            return status;
-        }
-#ifdef DEBUG_PS
-        KdPrint("scheduled process");
-#endif
-        ObDereferenceObject(process/*createdProcessObject*/);
-#ifdef DEBUG_PS
-        KdPrint("dereferenced object");
-#endif
-        return STATUS_SUCCESS;
+        process = ObGetNextObjectOfType(process);
     }
+    *ProcessPtr = NULL;
+    return STATUS_NO_SUCH_PROCESS;
+}
 
-    STATUS
-    PsKillProcess(
-            PPROCESS Process,
-            ULONG ExitStatus
-            ) {
-        STATUS status;
 
-        status = ObReferenceObject(Process, processType);
-        if (status != 0)
-            return status;
+STATUS
+CopyPInfo(
+        PPROCESS Process,
+        PPROCESS_INFO Info
+        );
 
-        status = KeStopSchedulingProcess(Process);
-        if (status != 0) return status;
+STATUS
+CopyPInfo(
+        PPROCESS Process,
+        PPROCESS_INFO Info) {
+    if (NULL == Process)
+        return STATUS_INVALID_PARAMETER;
 
-        ObKillProcess(Process);
-        MmFree(Process->AllocatedMemory);
-#ifdef DEBUG_PS
-        KdPrint("PsKillP freed memory");
-#endif
-        Process->ExitStatus = ExitStatus;
-        ObDereferenceObject(Process);
-#ifdef DEBUG_PS
-        KdPrint("PsKillP done");
-#endif
-        return STATUS_SUCCESS;
-    }
+    Info->CPUTime = Process->CPUTime;
+    Info->Priority = Process->Priority;
 
-    STATUS
-    PsGetExitStatus(
-            HANDLE ProcessHandle,
-            PULONG ExitStatus
-            ) {
-        //Get process exit status
-        PPROCESS process;
-        STATUS status;
+    Info->State = Process->State;
+    Info->RunningProgram = Process->RunningProgram;
+    Info->PID = Process->PID;
+    return STATUS_NO_SUCH_PROCESS;
+};
 
-        status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & process);
-        if (status != 0)
-            return status;
+STATUS
+PsGetProcessesInfo(
+        PROCESS_INFO Buffer[],
+        ULONG BufferSize,
+        PULONG NumberProcesses
+        ) {
+    PROCESS_INFO pinfo;
+    PPROCESS pprocess;
+    ULONG foundProc = 0;
+    STATUS status;
 
-        *ExitStatus = process->ExitStatus;
-        ObDereferenceObject(process);
-        return STATUS_SUCCESS;
-    }
+    //Get first process object
+    pprocess = ObGetFirstObjectOfType(processType);
 
-    STATUS
-    PsGetPriority(
-            HANDLE ProcessHandle,
-            PULONG Priority
-            ) {
-        //Get process PRIORITY
-        PPROCESS process;
-        STATUS status;
-
-        status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & process);
-        if (status != 0)
-            return status;
-
-        *Priority = process->Priority;
-        ObDereferenceObject(process);
-        return STATUS_SUCCESS;
-    }
-
-    STATUS
-    PsGetState(
-            HANDLE ProcessHandle,
-            PPROCESS_STATE PState
-            ) {
-        //Get process state
-        PPROCESS pprocess;
-        STATUS status;
-
-        status = ObReferenceObjectByHandle(ProcessHandle, processType, (void**) & pprocess);
-        if (status != 0)
-            return status;
-
-        *PState = pprocess->State;
-        ObDereferenceObject(pprocess);
-        return STATUS_SUCCESS;
-    }
-
-    STATUS
-    PsGetPid(
-            PHANDLE PHandle,
-            PULONG PPid
-            ) {
-        PPROCESS pprocess;
-        STATUS status;
-
-        status = ObReferenceObjectByHandle(PHandle, processType, (void**) & pprocess);
-        if (status != 0)
-            return status;
-
-        *PPid = pprocess->PID;
-        ObDereferenceObject(pprocess);
-        return STATUS_SUCCESS;
-    };
-
-    STATUS
-    PsOpenProcess(
-            ULONG PID,
-            PHANDLE ProcessHandle
-            ) {
-        STATUS status;
-        PPROCESS process;
-
-        process = ObGetFirstObjectOfType(processType);
-
-        while (process) {
-            if (process->PID == PID) {
-                status = ObOpenObjectByPointer(process, 0, processType, ProcessHandle);
+    while (pprocess) {
+        if (BufferSize > foundProc) {
+            status = CopyPInfo(pprocess, &pinfo);
+            if (0 != status)
                 return status;
-            }
-            process = ObGetNextObjectOfType(process);
         }
-        return STATUS_NO_SUCH_PROCESS;
+        Buffer[foundProc] = pinfo;
+        foundProc++;
+        pprocess = ObGetNextObjectOfType(pprocess);
     }
-
-    STATUS
-    PsReferenceProcess(
-            ULONG PID,
-            PPROCESS * ProcessPtr
-            ) {
-        PPROCESS process;
-
-        process = ObGetFirstObjectOfType(processType);
-
-        while (process) {
-            if (process->PID == PID) {
-                *ProcessPtr = process;
-                ObReferenceObject(process, processType);
-                return STATUS_SUCCESS;
-            }
-            process = ObGetNextObjectOfType(process);
-        }
-        *ProcessPtr = NULL;
-        return STATUS_NO_SUCH_PROCESS;
-    }
-
-
-    STATUS
-    CopyPInfo(
-            PPROCESS Process,
-            PPROCESS_INFO Info
-            );
-
-    STATUS
-    CopyPInfo(
-            PPROCESS Process,
-            PPROCESS_INFO Info) {
-        if (NULL == Process)
-            return STATUS_INVALID_PARAMETER;
-
-        Info->CPUTime = Process->CPUTime;
-        Info->Priority = Process->Priority;
-
-        Info->State = Process->State;
-        Info->RunningProgram = Process->RunningProgram;
-        Info->PID = Process->PID;
-        return STATUS_NO_SUCH_PROCESS;
-    };
-
-    STATUS
-    PsGetProcessesInfo(
-            PROCESS_INFO Buffer[],
-            ULONG BufferSize,
-            PULONG NumberProcesses
-            ) {
-        PROCESS_INFO pinfo;
-        PPROCESS pprocess;
-        ULONG foundProc = 0;
-        STATUS status;
-
-        //Get first process object
-        pprocess = ObGetFirstObjectOfType(processType);
-
-        while (pprocess) {
-            if (BufferSize > foundProc) {
-                status = CopyPInfo(pprocess, &pinfo);
-                if (0 != status)
-                    return status;
-            }
-            Buffer[foundProc] = pinfo;
-            foundProc++;
-            pprocess = ObGetNextObjectOfType(pprocess);
-        }
-        *NumberProcesses = foundProc;
-        return STATUS_SUCCESS;
-    }
+    *NumberProcesses = foundProc;
+    return STATUS_SUCCESS;
+}
 
