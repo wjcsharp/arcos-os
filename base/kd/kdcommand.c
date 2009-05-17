@@ -25,4 +25,5 @@ KdpExecuteCommand(
     PCHAR command
     )
 {
+    UNREFERENCED_PARAMETER(command);
 }

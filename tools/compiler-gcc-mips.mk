@@ -22,7 +22,7 @@ ifneq "$(INCLUDES)" ""
 INCLUDES:=$(addprefix -I,$(INCLUDES))
 endif
 
-CFLAGS:=-ggdb -EL -G0 -mips32 -Wall
+CFLAGS:=-ggdb -EL -G0 -mips32 -Wall -Wextra -Wpointer-arith -Wdeclaration-after-statement
 CPPFLAGS:=$(INCLUDES) $(DEFINES)
 
 #

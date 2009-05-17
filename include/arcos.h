@@ -21,6 +21,8 @@
 #define ASSERT(X) ((void)0)
 #endif
 
+#define UNREFERENCED_PARAMETER(X)   ((void)(X))
+
 #ifdef MIPS32
 
 //
