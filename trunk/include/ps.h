@@ -16,10 +16,10 @@
 
 //
 // Defines size of default memory to be allocated for a process
-//
 #define PROCESS_MEMORY_SIZE 32768
 
-POBJECT_TYPE processType;
+
+
 
 typedef struct _PROCESS_INFO {
     PROCESS_STATE State;
@@ -31,22 +31,32 @@ typedef struct _PROCESS_INFO {
 
 typedef struct _PROGRAM {
     PCHAR Name;
-    VOID(*Execute)(PCHAR Parameters);
-} PROGRAM, *PPROGRAM;
-
-//List of all available PROGRAMS
-PROGRAM programs[10];
+    VOID(*Execute)();
+} APPLICATION, PAPPLICATION;
 
 VOID
 MyFirstProgram();
 
 VOID
+PSTestProcess3();
+
+VOID
 PsInitialize();
 //Setting up the process manager.
+
 
 STATUS
 PsCreateProcess(
         VOID(*PStartingAddress)(),
+        ULONG Priority,
+        PHANDLE ProcessHandle,
+        PCHAR Args
+        );
+
+
+STATUS
+PsCreateProcessByName(
+        PCHAR ProgramName,
         ULONG Priority,
         PHANDLE ProcessHandle,
         PCHAR Args
@@ -76,7 +86,7 @@ PsKillMe();
 STATUS
 PsGetState(
         HANDLE ProcessHandle,
-        PULONG State
+        PPROCESS_STATE PState
         );
 
 STATUS

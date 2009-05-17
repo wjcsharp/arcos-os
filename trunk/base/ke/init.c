@@ -5,7 +5,6 @@
 #include <mm.h>
 #include <io.h>
 #include <ps.h>
-
 #include <kd.h>
 
 VOID
@@ -38,7 +37,7 @@ TestProcess2(PCHAR args)
 
 VOID
 KeInitialize(VOID) {
-    HANDLE testProcess, testProcess2;
+    HANDLE testProcess, testProcess2, testProcess3;
 
     HalInitialize();
 
@@ -63,6 +62,7 @@ KeInitialize(VOID) {
 
     PsCreateProcess(TestProcess, 1, &testProcess, NULL);
     PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
+    PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
 
     KeRestoreInterrupts(TRUE);
 

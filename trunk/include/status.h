@@ -51,4 +51,6 @@ typedef ULONG STATUS, *PSTATUS;
 
 #define STATUS_NO_SUCH_PROCESS          ((STATUS)0x0000000D)
 
+#define STATUS_NO_SUCH_PROGRAM          ((STATUS)0x0000000E)
+
 #endif
