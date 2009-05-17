@@ -39,7 +39,6 @@ MmInitialize()
 
 	//Initialize the first block
 	MemBlock = FirstMemPointer;
-	//MemBlock->StartBlock = MemBlock;
 	MemBlock->Size = MAIN_MEM_SIZE - sizeof(MEMORY_BLOCK);
 	MemBlock->PreviousUsedBlock = NULL;
 	MemBlock->NextBlock = NULL;
@@ -63,6 +62,8 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	
 	// Copy of the mb-list
 	PMEMORY_BLOCK PMb = MemBlock;
+
+	PVOID TempAllocatedBlock;
 	
 	// Search for a free block to use
 	while (PMb->NextBlock != NULL) {
@@ -125,7 +126,7 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	}
 	
 	// Saving "old" header for block to be allocated
-	PVOID TempAllocatedBlock = PMb;
+	TempAllocatedBlock = PMb;
 	PMb->NextBlock = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
 	ReturnAddress = PMb + HeaderSize;
 
@@ -173,7 +174,7 @@ VOID
 MmFree(PVOID BlockBody)
 {
 	PMEMORY_BLOCK PMb = MemBlock;
-	PVOID BlockHeader = BlockBody - HeaderSize;
+	PVOID BlockHeader = (PCHAR)BlockBody - HeaderSize;
 	PMb = BlockHeader;
 
 	// Add the block to the free ones
