@@ -62,8 +62,11 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	
 	// Copy of the mb-list
 	PMEMORY_BLOCK PMb = MemBlock;
-
+	
+	// A temporary pointer to save block header
 	PVOID TempAllocatedBlock;
+	PVOID TempNextBlock;
+	ULONG TempSize;
 	
 	// Search for a free block to use
 	while (PMb->NextBlock != NULL) {
@@ -74,45 +77,60 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 
 			// Is the fragment block bigger than the header?
 			if (FragmentSize > HeaderSize) {
-
-				// Alloc the fragment block
+				
+				// Saving "old" header fro block to be allocated
+				TempAllocatedBlock = PMb;
+				TempNextBlock = PMb->NextBlock;
+				PMb->NextBlock = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
+				PMb->Size = SizeToBeAllocated;
+				
+				// Set return address
 				ReturnAddress = PMb + HeaderSize;
-				PMb = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
+
+				// Move PMb forward
+				PMb = PMb->NextBlock;
+
+				// Keep track of used block header
+				PMb->PreviousUsedBlock = TempAllocatedBlock;
+
+				// Set properties of the new block
+				PMb->NextBlock = TempNextBlock;
 				PMb->Size = FragmentSize;
 
-				// Point back to the start and "save"
-				PMb = StartBlock;
+
+				// Is this the first block?
+				if(PMb->PreviousBlock == NULL)
+					StartBlock = PMb;
+				else
+					// Point back to the start
+					PMb = StartBlock;
+
+				// Save
 				MemBlock = PMb;
 
 				return ReturnAddress;
 
-				/*
-				// Create and alloc the fragment block
-				PMEMORY_BLOCK FragmentMb;
-				FragmentMb= ALIGN_MEMORY((ULONG)PMb + FragmentSize);
-				FragmentMb->NextBlock = PMb->NextBlock;
-				FragmentMb->PreviousBlock = PMb;
-				FragmentMb->IsFree = 1;
-				*/
-				
-				/*
-				// Put the fragment block in the list and make it free
-				PMb->NextBlock = FragmentMb;
-				PMb->IsFree = 0;
-				return PMb;
-				*/
 			}
 
 			// ..otherwise alloc the full block (make no fragment block)
 			else {
 				ReturnAddress = PMb + HeaderSize;
+				
+				// Save header
+				PMb->NextBlock->PreviousUsedBlock = PMb;
 
 				// Remove block from list
 				PMb->NextBlock->PreviousBlock = PMb->PreviousBlock;
 				PMb->PreviousBlock->NextBlock = PMb->NextBlock;
+				
+				// Is this the first block?
+				if(PMb->PreviousBlock == NULL)
+					StartBlock = PMb;
+				else
+					// Point back to the start
+					PMb = StartBlock;
 
-				// Point back to the start and "save"
-				PMb = StartBlock;
+				// Save
 				MemBlock = PMb;
 
 				return ReturnAddress;
@@ -126,23 +144,32 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	}
 	
 	// Saving "old" header for block to be allocated
+	TempSize = PMb->Size;
 	TempAllocatedBlock = PMb;
 	PMb->NextBlock = ALIGN_MEMORY((ULONG)PMb + SizeToBeAllocated + HeaderSize);
+	PMb->Size = SizeToBeAllocated;
+
+	// Set addres to return
 	ReturnAddress = PMb + HeaderSize;
 
 	// Move PMb forward
 	PMb = PMb->NextBlock;
-	PMb->NextBlock = NULL;
-
-	// Is this the first block?
-	if(PMb->PreviousBlock == NULL)
-		StartBlock = PMb;
 
 	// Keep track of used block header
 	PMb->PreviousUsedBlock = TempAllocatedBlock;
 
-	// Point back to the start and "save"
-	PMb = StartBlock;
+	// Set properties of the new block
+	PMb->NextBlock = NULL;
+	PMb->Size = TempSize;
+
+	// Is this the first block?
+	if(PMb->PreviousBlock == NULL)
+		StartBlock = PMb;
+	else
+		// Point back to the start
+		PMb = StartBlock;
+
+	// Save
 	MemBlock = PMb;
 
 	return ReturnAddress;
