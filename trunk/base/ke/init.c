@@ -9,9 +9,36 @@
 #include <kd.h>
 
 VOID
+TestProcess(PCHAR args)
+{
+    ULONG i;
+    UNREFERENCED_PARAMETER(args);
+    
+    KdPrint("Hello from testprocess");
+    
+    while (1) {
+        for (i = 0; i < 0xFFFFFF; i++);
+        KdPrint("testprocess heartbeat");        
+    }
+}
+
+VOID
+TestProcess2(PCHAR args)
+{
+    ULONG i;
+    UNREFERENCED_PARAMETER(args);
+
+    KdPrint("Hello from testprocess2");
+    
+    while (1) {
+        for (i = 0; i < 0x1FFFFFF; i++);
+        KdPrint("testprocess2 heartbeat");        
+    }
+}
+
+VOID
 KeInitialize(VOID) {
-    CHAR temp[260];
-    //Should be removed? PROCESS initProcess;
+    HANDLE testProcess, testProcess2;
 
     HalInitialize();
 
@@ -27,21 +54,17 @@ KeInitialize(VOID) {
     PsInitialize();
     ASSERT(KeCurrentProcess);
 
-    KeRestoreInterrupts(TRUE);
 
     KdPrint("Say %s to %s!", "hello", "ARCOS kernel debugger");
 
     HalDisplayString("Hello world!\n");
 
-    RtlFormatString(temp, sizeof (temp), "First usable address: 0x%x\n", HalGetFirstUsableMemoryAddress());
-
-    HalDisplayString(temp);
-
-    HalDisplayString("\x1B[D"); // ANSI cursor back by one character
-
-    //Should be removed? KeCurrentProcess = &initProcess;
-
     //HANDLE handle = IoCreateFile('serial');
+
+    PsCreateProcess(TestProcess, 1, &testProcess, NULL);
+    PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
+
+    KeRestoreInterrupts(TRUE);
 
     while (1) {
         // wait for something interesting to happen

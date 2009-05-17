@@ -156,21 +156,17 @@ KepReschedule(
     )
 {
     LONG i;
+
+    //
+    // look for a process with higher priority than the current one
+    // (but if current process got blocked, don't limit the search)
+    //
+    LONG bottomPriority = (KeCurrentProcess->State == blocked) ? 0 : (LONG)KeCurrentProcess->Priority;
     
-    //
-    // if the current process is not blocked, add it to ready queue
-    // (if it's blocked, someone else already put it where it belongs)
-    //
-    if (KeCurrentProcess->State != blocked) {
-        KepEnqueueProcess(KeCurrentProcess);
-    }
-
-    KeCurrentProcess = NULL;
-
     //
     // scan the ready queue and find the first non-empty slot
     //
-    for (i = PROCESS_PRIORITY_LEVELS - 1; i >= 0; i--) {
+    for (i = PROCESS_PRIORITY_LEVELS - 1; i >= bottomPriority; i--) {
 
         //
         // is the queue non-empty?
@@ -178,17 +174,26 @@ KepReschedule(
         if (KepReadyQueues[i].First) {
 
             //
+            // if the current process is not blocked, add it to ready queue
+            // (if it's blocked, someone else already put it where it belongs)
+            //
+            if (KeCurrentProcess->State != blocked) {
+                KepEnqueueProcess(KeCurrentProcess);
+            }
+
+            //
             // lets schedule the first process in this queue
             //
             KeCurrentProcess = KepReadyQueues[i].First;
             KepDequeueProcess(KeCurrentProcess);
+            break;
         }
     }
 
     //
     // if no process could be scheduled, someone killed process 0 - too bad!
     //
-    if (KeCurrentProcess == NULL)
+    if (KeCurrentProcess->State == blocked)
         KeBugCheck("Critical system process terminated or blocked unexpectedly");
 
     //
@@ -534,8 +539,6 @@ KeCaptureContext(
     PCONTEXT context
     )
 {
-    // BUGBUG: remove
-    //if (KeCurrentProcess == NULL) return;
     ASSERT(KeCurrentProcess);
     ASSERT(context);
         
@@ -553,9 +556,6 @@ KeRestoreContext(
     PCONTEXT context
     )
 {
-    // BUGBUG: remove
-    //if (KeCurrentProcess == NULL) return;
-    
     ASSERT(KeCurrentProcess);
     ASSERT(context);
     
