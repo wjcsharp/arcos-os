@@ -26,8 +26,8 @@ HalDisplayString(
     PCHAR string
     )
 {
-    if (string == NULL)		// Just to get rid of that exception.
-	return;
+//    if (string == NULL)		// Just to get rid of that exception.
+//	return;
 
     volatile PNS16550 tty = (PNS16550)UART_BASE;
 

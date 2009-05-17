@@ -39,7 +39,7 @@ RtlCompareStrings(
 {
     int result = 0 ;
 
-    while (!(*dest && (result = (*(PUCHAR)src - *(PUCHAR)dest))))
+    while (*dest && !((result = (*(PUCHAR)src - *(PUCHAR)dest))))
         ++src, ++dest;
 
     if (result < 0)

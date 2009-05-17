@@ -23,6 +23,11 @@
 
 #define UNREFERENCED_PARAMETER(X)   ((void)(X))
 
+//
+// Gets number of elements in an array
+//
+#define COUNTOF(X) (sizeof(X) / sizeof(*(X)))
+
 #ifdef MIPS32
 
 //

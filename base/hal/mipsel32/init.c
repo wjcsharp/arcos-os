@@ -55,16 +55,16 @@ HalInitialize(
     // initialize UART for HalDisplayString to work
     //
     volatile PNS16550 tty = (PNS16550)UART_BASE;
-    tty->lcr.field.wls = 3; // set bit width to 8 bits
-    tty->ier.field.erbfi = 1; // we want interrupts
-    tty->mcr.field.out2 = 1;
-
 #ifdef HAVE_KD
     volatile PNS16550 tty2 = (PNS16550)0xb80002f8;
     tty2->lcr.field.wls = 3; // set bit width to 8 bits
     tty2->ier.field.erbfi = 1; // we want interrupts
     tty2->mcr.field.out2 = 1;
 #endif
+    
+    tty->lcr.field.wls = 3; // set bit width to 8 bits
+    tty->ier.field.erbfi = 1; // we want interrupts
+    tty->mcr.field.out2 = 1;
     
     //
     // initialize exception handling by copying exception handling vector
@@ -76,7 +76,7 @@ HalInitialize(
     //
     // reset the system timer to fire in specified time
     //
-    HalResetTimer(67000 * 5000);
+    HalResetTimer(67000 * 10);
 
     //
     // set buffer fifo length (IO)
@@ -92,25 +92,39 @@ HalHandleException(
     // fetch exception code from the exception frame
     //
     ULONG exceptionCode = (pFrame->Cause & CP0_CAUSE_EXCEPTION_CODE_MASK) >> CP0_CAUSE_EXCEPTION_CODE_SHIFT;
+    
+    //
+    // Capture current process context
+    //
+    KeCaptureContext(&pFrame->Context);
 
     if (exceptionCode) {
-        
+
+        //
         // syscall exception?
+        //
         if (exceptionCode == CP0_CAUSE_SYSCALL) {
             HalDisplayString("SYSCALL\n");
         } else {
+            KdPrint("Unexpected exception code: %d", exceptionCode);
             KeBugCheck("Unexpected exception occured");
         }
     } else {
 
+        //
         // timer interrupt?
+        //
         if (pFrame->Cause & CP0_CAUSE_TIMER) {
 
-            HalDisplayString("TICK\n");
+            //
+            // call the scheduler
+            //
+            KeHandleTimer();
+            
             //
             // reset timer so that it fires next time again
             //
-            HalResetTimer(67000 * 5000);
+            HalResetTimer(67000 * 10);
         } 
 
         // serial device interrupt?
@@ -126,14 +140,19 @@ HalHandleException(
             // check if any data is ready in the buffer
             // (if it's not, this interrupt just acknowledges that we finished writing data - ignore it)
             if (tty->lsr.field.dr) {
-		IoInterruptHandler(tty->rbr);
-                //HalAddCharToBuffer(tty->rbr);	// Old, fifo moved to IO
+                IoInterruptHandler(tty->rbr);
+
                 //
                 // HACKHACK: Simics voodoo to acknowledge interrupt
                 //
                 pFrame->Cause &= ~0x1000;
-            } else return;
+            }
         }
     }
+
+    //
+    // restore current process context
+    //
+    KeRestoreContext(&pFrame->Context);
 }
 

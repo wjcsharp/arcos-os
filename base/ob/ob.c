@@ -2,6 +2,7 @@
 #include <ob.h>
 #include <ke.h>
 #include <mm.h>
+#include <rtl.h>
 
 //
 // head of type objects list
@@ -526,15 +527,19 @@ ObDumpObject(
     )
 {
     POBJECT_HEADER objectHeader = OBJECT_BODY_TO_HEADER(Object);
+    ULONG length;
 
     ASSERT(Object);
     ASSERT(Buffer);
     ASSERT_OBJECT(objectHeader);
 
+    RtlFormatString(Buffer, BufferSize, "Refs: %d Handles: %d ", objectHeader->PointerCount, objectHeader->HandleCount);
+    length = RtlStringLength(Buffer);
+
     if (objectHeader->Type) {
         if (objectHeader->Type->Dump) {
 
-            objectHeader->Type->Dump(Object, Buffer, BufferSize);
+            objectHeader->Type->Dump(Object, Buffer + length, BufferSize - length);
         }
     }
 }
