@@ -236,5 +236,3 @@ MmFree(PVOID BlockBody)
 		
 	
 }
-
-MmAlloc(ULONG * 10);
