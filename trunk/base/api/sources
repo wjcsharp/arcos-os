@@ -1,0 +1,4 @@
+TARGETNAME=api
+TARGETPATH=lib
+TARGETTYPE=library
+

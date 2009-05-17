@@ -7,16 +7,19 @@
 #include <ps.h>
 #include <kd.h>
 
+
+// remove this when removing the test processes
+#include <api.h>
+
 VOID
 TestProcess(PCHAR args)
 {
-    ULONG i;
     UNREFERENCED_PARAMETER(args);
     
-    KdPrint("Hello from testprocess");
+    KdPrint("Hello from testprocess. My PID is %d.", GetProcessId());
     
     while (1) {
-        for (i = 0; i < 0xFFFFFF; i++);
+        Sleep(5000);
         KdPrint("testprocess heartbeat");        
     }
 }
@@ -24,13 +27,12 @@ TestProcess(PCHAR args)
 VOID
 TestProcess2(PCHAR args)
 {
-    ULONG i;
     UNREFERENCED_PARAMETER(args);
 
-    KdPrint("Hello from testprocess2");
+    KdPrint("Hello from testprocess2. My PID is %d.", GetProcessId());
     
     while (1) {
-        for (i = 0; i < 0x1FFFFFF; i++);
+        Sleep(10000);
         KdPrint("testprocess2 heartbeat");        
     }
 }
