@@ -12,7 +12,6 @@
 //
 typedef struct _MEMORY_BLOCK {
   ULONG Size;
-  BOOL IsFree;
   PVOID PreviousUsedBlock;
   struct _MEMORY_BLOCK *NextBlock, *PreviousBlock;
 } MEMORY_BLOCK, *PMEMORY_BLOCK;
