@@ -122,6 +122,12 @@ PsCreateProcess(
     PVOID memPointer;
     PVOID createdProcessObject = NULL;
     PPROCESS process = NULL;
+    //
+    //Get rid of warning BUGBUGBUGBUGBUGBUGBUGBUG
+    //
+    //UNREFERENCED_PARAMETER(Args);
+
+    //Create process object
     status = ObCreateObject(processType, 0, sizeof (PROCESS), &createdProcessObject);
     if (status != 0) return status;
     ASSERT(createdProcessObject);
@@ -153,10 +159,11 @@ PsCreateProcess(
     process->PID = GetPID();
     process->Priority = Priority;
     process->CPUTime = 0;
+    process->Args = Args;
     process->ExitStatus = 654321; //Runningprocess (CRASH exit status)
     //---Initialize Context what needs to be init?
     (process->Context).Pc = (ULONG) & PStartingAddress;
-    (process->Context).Sp = (ULONG) (memPointer + PROCESS_MEMORY_SIZE);
+    (process->Context).Sp = (ULONG) ((PCHAR)memPointer + PROCESS_MEMORY_SIZE);
 
 #ifdef DEBUG_PS
     KdPrint("attach mem init pobject, context");
