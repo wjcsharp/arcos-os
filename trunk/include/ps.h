@@ -94,7 +94,7 @@ PsReferenceProcess(
 
 STATUS
 PsGetProcessesInfo(
-        PPROCESS_INFO Buffer[],
+        PROCESS_INFO Buffer[],
         ULONG Buffsize,
         PULONG NumberProcesses
         );
