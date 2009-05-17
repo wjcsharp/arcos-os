@@ -46,13 +46,14 @@ IoInitialize()
 {
    	OBJECT_TYPE_INITIALIZER typeInitializer;
     	STATUS status;
+	HANDLE handle;
  
 	fifo.length = 0;
    
 	// Create fileType
     	typeInitializer.DumpMethod = NULL;	// What is DumpMethod?
     	typeInitializer.DeleteMethod = NULL;	// Can't delete file types in this version of ARCOS.
-    	status = ObCreateObjectType('file', &typeInitializer, &fileType); // f331 = file
+    	status = ObCreateObjectType('f', &typeInitializer, &fileType); // f331 = file
 	HalDisplayString("Create fileType done\n");
     
 	if (status != STATUS_SUCCESS)	// Abandon procedure, and OS, I guess.
@@ -61,9 +62,8 @@ IoInitialize()
 		return status;
 	}
 	// Create serialFile and lcdFile
-	HANDLE handle = NULL;
-	
-	status = ObCreateObject(fileType, 0, sizeof(FILE), &serialFile);
+	handle = NULL;
+	status = ObCreateObject(fileType, 0, sizeof(FILE), (PVOID) &serialFile);
 	
 	if (status == STATUS_SUCCESS) 
 	{
@@ -74,7 +74,7 @@ IoInitialize()
 	else
 		return status;     
 	
-	status = ObCreateObject(fileType, 0, sizeof(FILE), &lcdFile);
+	status = ObCreateObject(fileType, 0, sizeof(FILE), (PVOID) &lcdFile);
 	if (status == STATUS_SUCCESS) 
 	{
 		HalDisplayString("Create lcdFile done\n");
@@ -94,12 +94,12 @@ IoCreateFile(			// Error-handling in this function?
 	STATUS status;
 
 	// Pick right type.
-	if (filename == 'serial') 
+	if (filename == 's') 
 	{
         	status = ObOpenObjectByPointer(serialFile, OBJ_INHERIT, fileType, &handle);
 		return handle;   
 	}
-	if (filename == 'lcd')
+	if (filename == 'l')
 	{
 	        status = ObOpenObjectByPointer(lcdFile, OBJ_INHERIT, fileType, &handle);
 		return handle;
@@ -117,7 +117,7 @@ IoWriteFile(
 	STATUS status;
 	PFILE file;
 
-	status = ObReferenceObjectByHandle(handle, fileType, &file); // How to solve different types here??
+	status = ObReferenceObjectByHandle(handle, fileType, (PVOID) &file); // How to solve different types here??
 	file->write(buffer,bufferSize);
 
         return 0;	// Return what?
@@ -133,7 +133,7 @@ IoReadFile(
 	STATUS status;
 	PFILE file;
 
-	status = ObReferenceObjectByHandle(handle, fileType, &file);	// Only serial type have write capability in this OS.
+	status = ObReferenceObjectByHandle(handle, fileType, (PVOID) &file);	// Only serial type have write capability in this OS.
 	if (file->read != NULL)
 		file->read(buffer,bufferSize);
 	
@@ -147,7 +147,11 @@ IoWriteSerial(
         ULONG bufferSize)
 {
 	// Insert multitasking routin here.
-	PCHAR string = (PCHAR) buffer;
+	ULONG p;		// To get rid of warning.
+	PCHAR string;
+	
+	p = bufferSize;
+	string = (PCHAR) buffer;
 	HalDisplayString(string);
 }
 
@@ -155,8 +159,11 @@ IoWriteSerial(
 VOID
 IoReadSerial(
 	PVOID buffer,
-	ULONG bufferSize)
+	ULONG bufferSize)		// Is bufferSize needed here?
 {
+	ULONG p;		// To get rid of warning.
+	p = bufferSize;
+
 	*((CHAR*) buffer) = GetFirstCharFromBuffer();
 }
 
@@ -170,7 +177,7 @@ IoWriteLcd(
 	ULONG i;
 	PCHAR string = buffer;
 	volatile PCHAR lcdAddress; 	
-	lcdAddress = 0xbf000418;	// Address of first char on ascii-board.
+	lcdAddress = (PCHAR) 0xbf000418;	// Address of first char on ascii-board.
 	for (i = 0; i < bufferSize && i < 8; i++)
 	{
 		*lcdAddress = string[i];
