@@ -171,6 +171,10 @@ PsCreateProcess(
     PVOID createdProcessObject = NULL;
     PPROCESS process = NULL;
 
+    // Sanitycheck process Adress
+    if (NULL == PStartingAddress)
+        return STATUS_INVALID_APPLICATION_ADRESS;
+
     //Create process object
     status = ObCreateObject(processType, 0, sizeof (PROCESS), &createdProcessObject);
     if (status != 0) return status;
