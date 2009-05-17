@@ -47,4 +47,16 @@ KeResumeProcess(PPROCESS Process);
 VOID
 KeSuspendProcess(ULONG Milliseconds);
 
+ULONG
+KeGetTickCount(VOID);
+
+VOID
+KeCaptureContext(PCONTEXT context);
+
+VOID
+KeRestoreContext(PCONTEXT context);
+
+VOID
+KeHandleTimer(VOID);
+
 #endif

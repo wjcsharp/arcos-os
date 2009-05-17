@@ -155,7 +155,7 @@ KepReschedule(
     VOID
     )
 {
-    ULONG i;
+    LONG i;
     
     //
     // if the current process is not blocked, add it to ready queue
@@ -195,6 +195,11 @@ KepReschedule(
     // reset quantum for this process
     //
     KeCurrentProcess->Quantum = 5;
+
+    //
+    // set state to running
+    //
+    KeCurrentProcess->State = running;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -305,7 +310,6 @@ KeStopSchedulingProcess(
     switch (Process->State) {
 
         case running:
-            // TODO: currently running - what now???
             //
             // mark as blocked so that it won't get scheduled again
             //
@@ -530,6 +534,8 @@ KeCaptureContext(
     PCONTEXT context
     )
 {
+    // BUGBUG: remove
+    //if (KeCurrentProcess == NULL) return;
     ASSERT(KeCurrentProcess);
     ASSERT(context);
         
@@ -547,6 +553,9 @@ KeRestoreContext(
     PCONTEXT context
     )
 {
+    // BUGBUG: remove
+    //if (KeCurrentProcess == NULL) return;
+    
     ASSERT(KeCurrentProcess);
     ASSERT(context);
     
