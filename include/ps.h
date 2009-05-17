@@ -21,14 +21,21 @@
 
 POBJECT_TYPE processType;
 
-struct _PROCESS_INFO {
+typedef struct _PROCESS_INFO {
     PROCESS_STATE State;
     ULONG RunningProgram;
     ULONG PID;
     ULONG Priority;
     ULONG CPUTime;
-} PROCESSINFO, *PPROCESSINFO;
+} PROCESS_INFO, *PPROCESS_INFO;
 
+typedef struct _PROGRAM {
+    PCHAR Name;
+    VOID (*Execute)(PCHAR Parameters);
+} PROGRAM, *PPROGRAM;
+
+//List of all available PROGRAMS
+PROGRAM programs[10];
 
 VOID
 MyFirstProgram();
@@ -86,10 +93,10 @@ PsReferenceProcess(
 
 
 STATUS
-PsGetRunningProcesses(
-        PPROCESS Buffer[],
+PsGetProcessesInfo(
+        PPROCESS_INFO Buffer[],
         ULONG Buffsize,
-        PULONG NumberRunningProcesses
+        PULONG NumberProcesses
         );
 
 #endif	/* _PS_H */

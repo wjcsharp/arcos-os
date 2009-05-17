@@ -167,7 +167,7 @@ typedef struct _PROCESS {
     ULONG Quantum;
     PCHAR Args;
     PMESSAGE MessageQueue; 	// Added by Olle
-    PMESSAGE Supervisor;	// Added by Lars Karlsson fr�n K�ttisme�la
+    ULONG Supervisor;	//PID of supervisor
     struct _PROCESS *NextPCB;
 } PROCESS, *PPROCESS;
 
