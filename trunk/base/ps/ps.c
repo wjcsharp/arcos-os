@@ -330,6 +330,7 @@ PsReferenceProcess(
     return STATUS_NO_SUCH_PROCESS;
 }
 
+
 STATUS
 CopyPInfo(
         PPROCESS Process,
@@ -380,3 +381,19 @@ PsGetProcessesInfo(
     return STATUS_SUCCESS;
 }
 
+STATUS
+PsGetPid(
+        PHANDLE PHandle,
+        PULONG PPid
+        ) {
+    PPROCESS pprocess;
+    STATUS status;
+
+    status = ObReferenceObjectByHandle(PHandle, processType, (void**) &pprocess);
+    if (status != 0)
+        return status;
+
+    *PPid = pprocess->PID;
+    ObDereferenceObject(pprocess);
+    return STATUS_SUCCESS;
+};
