@@ -21,6 +21,15 @@
 
 POBJECT_TYPE processType;
 
+struct _PROCESS_INFO {
+    PROCESS_STATE State;
+    ULONG RunningProgram;
+    ULONG PID;
+    ULONG Priority;
+    ULONG CPUTime;
+} PROCESSINFO, *PPROCESSINFO;
+
+
 VOID
 MyFirstProgram();
 

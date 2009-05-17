@@ -165,8 +165,9 @@ typedef struct _PROCESS {
     ULONG CPUTime;
     ULONG WakeUpTime;
     ULONG Quantum;
+    PCHAR Args;
     PMESSAGE MessageQueue; 	// Added by Olle
-    PMESSAGE Supervisor;	// Added by Lars Karlsson från Kättismeåla
+    PMESSAGE Supervisor;	// Added by Lars Karlsson frï¿½n Kï¿½ttismeï¿½la
     struct _PROCESS *NextPCB;
 } PROCESS, *PPROCESS;
 
