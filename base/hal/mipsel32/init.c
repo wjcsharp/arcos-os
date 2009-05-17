@@ -24,6 +24,22 @@ Revision History:
 #include <kd.h>
 #include "halp.h"
 
+static const PCHAR HalTrapCodeNames[] = {
+    "Interrupt",
+    "TLB modify trap",
+    "TLB miss on load",
+    "TLB miss on store",
+    "Address error on load",
+    "Address error on store",
+    "Bus error on code",
+    "Bus error on data",
+    "System call",
+    "Break instruction",
+    "Illegal instruction",
+    "Coprocessor unusable",
+    "Arithmetic overflow",
+    "Trap exception",
+    };
 
 PVOID
 HalGetFirstUsableMemoryAddress(
@@ -104,10 +120,24 @@ HalHandleException(
         // syscall exception?
         //
         if (exceptionCode == CP0_CAUSE_SYSCALL) {
-            HalDisplayString("SYSCALL\n");
+
+            //
+            // before doing anything, advance PC
+            //
+            KeCurrentProcess->Context.Pc += 4;
+
+            KeSystemService(
+                KeCurrentProcess->Context.V0,
+                KeCurrentProcess->Context.A0,
+                KeCurrentProcess->Context.A1,
+                KeCurrentProcess->Context.A2,
+                KeCurrentProcess->Context.A3);
+
         } else {
-            KdPrint("Unexpected exception code: %d", exceptionCode);
-            KeBugCheck("Unexpected exception occured");
+            if (exceptionCode < COUNTOF(HalTrapCodeNames))
+                KeBugCheck(HalTrapCodeNames[exceptionCode]);
+            else
+                KeBugCheck("Unknown exception.");
         }
     } else {
 

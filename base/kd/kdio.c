@@ -144,6 +144,7 @@ KdPrint(
 
     KdpPrintChar('\n');
     KdpPrintDebuggerPrompt();
+    commandBuffer[commandBufferPosition] = 0;
     KdpPrintString(commandBuffer);
 }
 

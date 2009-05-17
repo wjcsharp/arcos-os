@@ -5,7 +5,8 @@ TARGETTYPE=executable
 SOURCES = \
         init.c \
         scheduler.c \
-        bugcheck.c
+        bugcheck.c \
+        syscall.c
 
 
 #
@@ -15,6 +16,7 @@ SOURCES = \
 # 
 #
 LIBS = \
+        $(BASEDIR)/build/lib/*/api \
         $(BASEDIR)/build/lib/*/hal \
         $(BASEDIR)/build/lib/*/kd \
         $(BASEDIR)/build/lib/*/ps \

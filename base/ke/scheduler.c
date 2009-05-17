@@ -254,11 +254,20 @@ KepRemoveFromProcessList(
     PPROCESS currentProcess;
 
     //
+    // check if there is something in the queue
+    //
+    if (*ListHead == NULL)
+        return FALSE;
+
+    //
     // handle special case where Process is the list head
     //
     if (*ListHead == Process) {
         
         *ListHead = Process->NextPCB;
+        Process->NextPCB = NULL;
+        return TRUE;
+        
     } else {
             
         currentProcess = *ListHead;
@@ -584,14 +593,14 @@ KeHandleTimer(
     KeCurrentProcess->CPUTime += 10;
 
     //
-    // wake up any sleeping processes that need a wakeup
-    //
-    KepWakeUpSleepers();
-
-    //
     // decrement quantum for current process
     //
     KeCurrentProcess->Quantum--;
+
+    //
+    // wake up any sleeping processes that need a wakeup
+    //
+    KepWakeUpSleepers();
 
     //
     // if allocated time expired, reschedule

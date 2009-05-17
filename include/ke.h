@@ -59,4 +59,10 @@ KeRestoreContext(PCONTEXT context);
 VOID
 KeHandleTimer(VOID);
 
+VOID
+KeSetSyscallResult(PPROCESS Process, ULONG Result);
+
+VOID
+KeSystemService(ULONG ServiceNumber, ULONG Arg0, ULONG Arg1, ULONG Arg2, ULONG Arg3);
+
 #endif
