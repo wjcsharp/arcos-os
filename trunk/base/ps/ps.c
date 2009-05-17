@@ -162,7 +162,7 @@ PsCreateProcess(
     process->Args = Args;
     process->ExitStatus = 654321; //Runningprocess (CRASH exit status)
     //---Initialize Context what needs to be init?
-    (process->Context).Pc = (ULONG) & PStartingAddress;
+    (process->Context).Pc = (ULONG) PStartingAddress;
     (process->Context).Sp = (ULONG) ((PCHAR)memPointer + PROCESS_MEMORY_SIZE);
 
 #ifdef DEBUG_PS
@@ -331,35 +331,41 @@ PsReferenceProcess(
 }
 
 STATUS
-PsGetRunningProcesses(
-        PPROCESS Buffer[],
+CopyPInfo(
+        PPROCESS Process,
+        PROCESS_INFO Info
+);
+/*
+CopyPInfo(
+        PPROCESS Process,
+        PROCESS_INFO Info){
+    if (NULL == PPROCESS)
+        return STATUS_INVALID_PARAMETER;
+    Info->CPUTime = Process->CPUTime;
+            Info->Priority = Process->Priority;
+            Info->RunningProgram = Process->RunningProgram;
+            Info->State = Process->State;
+            Info- = Process-;
+};
+
+STATUS
+PsGetProcessesInfo(
+        PPROCESS_INFO Buffer[],
         ULONG BufferSize,
-        PULONG NumberRunningProcesses
+        PULONG NumberProcesses
         ) {
+    PROCESS_INFO pinfo;
     PPROCESS process;
-    ULONG numRunProcesses = 0;
+    ULONG foundProc = 0;
     STATUS status;
 
     //Get first process object
     process = ObGetFirstObjectOfType(processType);
 
     while (process) {
-        if (process->State == running) {
 
-            if (BufferSize > numRunProcesses) {
-                status = ObReferenceObject(process, processType);
-                //If reference was created add to buffer otherwise disregard
-                if (status == STATUS_SUCCESS) {
-                    Buffer[numRunProcesses] = process;
-                    numRunProcesses++;
-                }
-            } else //buffer is full
-                numRunProcesses++;
-        }
-        process = ObGetNextObjectOfType(process);
     }
-    *NumberRunningProcesses = numRunProcesses;
     return STATUS_SUCCESS;
 }
-
+*/
 
