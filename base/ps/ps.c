@@ -163,7 +163,7 @@ PsCreateProcess(
     process->ExitStatus = 654321; //Runningprocess (CRASH exit status)
     //---Initialize Context what needs to be init?
     (process->Context).Pc = (ULONG) PStartingAddress;
-    (process->Context).Sp = (ULONG) ((PCHAR)memPointer + PROCESS_MEMORY_SIZE);
+    (process->Context).Sp = (ULONG) ((PCHAR) memPointer + PROCESS_MEMORY_SIZE);
 
 #ifdef DEBUG_PS
     KdPrint("attach mem init pobject, context");
@@ -333,39 +333,50 @@ PsReferenceProcess(
 STATUS
 CopyPInfo(
         PPROCESS Process,
-        PROCESS_INFO Info
-);
-/*
+        PPROCESS_INFO Info
+        );
+
+STATUS
 CopyPInfo(
         PPROCESS Process,
-        PROCESS_INFO Info){
-    if (NULL == PPROCESS)
+        PPROCESS_INFO Info) {
+    if (NULL == Process)
         return STATUS_INVALID_PARAMETER;
+
     Info->CPUTime = Process->CPUTime;
-            Info->Priority = Process->Priority;
-            Info->RunningProgram = Process->RunningProgram;
-            Info->State = Process->State;
-            Info- = Process-;
+    Info->Priority = Process->Priority;
+
+    Info->State = Process->State;
+    Info->RunningProgram = Process->RunningProgram;
+    Info->PID = Process->PID;
+    return STATUS_NO_SUCH_PROCESS;
 };
 
 STATUS
 PsGetProcessesInfo(
-        PPROCESS_INFO Buffer[],
+        PROCESS_INFO Buffer[],
         ULONG BufferSize,
         PULONG NumberProcesses
         ) {
     PROCESS_INFO pinfo;
-    PPROCESS process;
+    PPROCESS pprocess;
     ULONG foundProc = 0;
     STATUS status;
 
     //Get first process object
-    process = ObGetFirstObjectOfType(processType);
+    pprocess = ObGetFirstObjectOfType(processType);
 
-    while (process) {
-
+    while (pprocess) {
+        if (BufferSize > foundProc) {
+            status = CopyPInfo(pprocess, &pinfo);
+            if (0 != status)
+                return status;
+        }
+        Buffer[foundProc] = pinfo;
+        foundProc++;
+        pprocess = ObGetNextObjectOfType(pprocess);
     }
+    *NumberProcesses = foundProc;
     return STATUS_SUCCESS;
 }
-*/
 

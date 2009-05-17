@@ -21,7 +21,7 @@ KeInitialize(VOID) {
 
     MmInitialize();
 
-    //IoInitialize();
+    IoInitialize();
 
     //Initialize ps manager, create initial process
     PsInitialize();
