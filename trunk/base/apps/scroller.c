@@ -5,6 +5,40 @@
  *  Author: Sam Eskandari
  */
 
+#include <arcos.h>
+#include <io.h>
+#include <rtl.h>
+
+HANDLE handle;
+PCHAR text = "Denna scrollas...";	// Test text.
+PCHAR pek;				// Point on same stuff.
+ULONG length, moreLength;
+
+void scrollerInit()
+{
+	handle = IoCreateFile('l');
+	moreLength = length = RtlStringLength(text);
+	pek = text;
+}
+
+void scrollText()
+{
+
+	IoWriteFile(handle,"hej",3);			
+	/*
+	pek++;
+	length--;
+
+	if (length == 0)	// Back to the beginning.
+	{
+		length = moreLength;		
+		pek = text;
+	}
+	*/
+}
+
+/****************************
+
 //#include <stdio.h>
 #include <arcos.h>
 #include <io.h>
@@ -90,3 +124,5 @@ void scrollText()
 			i=0;
 	}
 }
+
+*************************/
