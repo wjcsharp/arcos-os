@@ -70,7 +70,8 @@ PsKillProcess(
 
 STATUS
 PsKillByPID(
-        ULONG PID
+        ULONG PID,
+        ULONG ExitStatus
         );
 
 VOID

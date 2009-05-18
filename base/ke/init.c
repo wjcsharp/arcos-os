@@ -12,28 +12,26 @@
 #include <api.h>
 
 VOID
-TestProcess(PCHAR args)
-{
+TestProcess(PCHAR args) {
     UNREFERENCED_PARAMETER(args);
-    
+
     KdPrint("Hello from testprocess. My PID is %d.", GetProcessId());
-    
+
     while (1) {
         Sleep(5000);
-        KdPrint("testprocess heartbeat");        
+        KdPrint("testprocess heartbeat");
     }
 }
 
 VOID
-TestProcess2(PCHAR args)
-{
+TestProcess2(PCHAR args) {
     UNREFERENCED_PARAMETER(args);
 
     KdPrint("Hello from testprocess2. My PID is %d.", GetProcessId());
-    
+
     while (1) {
         Sleep(10000);
-        KdPrint("testprocess2 heartbeat");        
+        KdPrint("testprocess2 heartbeat");
     }
 }
 
@@ -64,7 +62,9 @@ KeInitialize(VOID) {
 
     PsCreateProcess(TestProcess, 1, &testProcess, NULL);
     PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
-    PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
+
+//CRASHES with MmFree revision 103
+//    PsCreateProcessByName("TestProcess3", 5, &testProcess3, NULL);
 
     KeRestoreInterrupts(TRUE);
 

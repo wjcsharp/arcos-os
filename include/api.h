@@ -7,6 +7,9 @@ Sleep(ULONG Milliseconds);
 ULONG
 GetProcessId();
 
+VOID
+KillMe();
+
 //put your own function names here
 //CreateProcess(...)
 
