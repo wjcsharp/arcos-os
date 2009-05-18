@@ -64,7 +64,7 @@ KeInitialize(VOID) {
     PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
 
 //CRASHES with MmFree revision 103
-//    PsCreateProcessByName("TestProcess3", 5, &testProcess3, NULL);
+    PsCreateProcessByName("TestProcess3", 5, &testProcess3, NULL);
 
     KeRestoreInterrupts(TRUE);
 
