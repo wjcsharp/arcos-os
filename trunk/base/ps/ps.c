@@ -12,6 +12,7 @@
 #include <rtl.h>
 #include <hal.h>
 #include <kd.h>
+#include <api.h> //for userprogram syscall
 //#define DEBUG_PS
 //
 //List of all available applications in the OS
@@ -29,6 +30,29 @@ PIDInUse(ULONG PID);
 
 ULONG
 GetPID();
+
+
+VOID
+MyFirstProgram() {
+    ULONG arb = 27;
+    arb = arb + 123;
+    KdPrint("My first process executed %d", arb);
+    //PsKillMe();
+}
+
+VOID
+PSTestProcess3() {
+    ULONG i;
+
+    KdPrint("Hello from testprocess3");
+
+        for (i = 0; i < 5 ; i++){;
+        KdPrint("testprocess3 heartbeat");
+    }
+    KillMe();
+}
+
+
 
 STATUS
 CreateProcessObjectType() {
@@ -107,33 +131,8 @@ GetPID() {
     return PID;
 }
 
-VOID
-MyFirstProgram() {
-    ULONG arb = 27;
-    arb = arb + 123;
-    KdPrint("My first process executed %d", arb);
-    //PsKillMe();
-}
 
-VOID
-PSTestProcess3() {
-    ULONG i;
 
-    KdPrint("Hello from testprocess2");
-
-    while (1) {
-        for (i = 0; i < 0x1FFFFFF; i++);
-        KdPrint("testprocess3 heartbeat");
-    }
-}
-
-VOID
-PsKillMe() {
-    STATUS status;
-    status = PsKillProcess(KeCurrentProcess, 0);
-    if (0 != status)
-        KdPrint("KillMe failed");
-}
 
 PVOID
 GetProgramAdress(PCHAR ProgramName) {
@@ -255,15 +254,41 @@ PsCreateProcess(
 #endif
     return STATUS_SUCCESS;
 }
-/*
+
+VOID
+PsKillMe() {
+    STATUS status;
+    status = PsKillProcess(KeCurrentProcess, 0);
+    if (0 != status)
+        KdPrint("KillMe failed");
+}
+
+
 STATUS
-PsKillByPID(ULONG PID)
-*/
+PsKillByPID(
+        ULONG PID,
+        ULONG ExitStatus
+        ) {
+    PPROCESS PProcess;
+    STATUS status;
+//Get process
+    status = PsReferenceProcess(PID, &PProcess);
+    if (0 == status)
+        return status;
+    ASSERT(PProcess);
 
-
+    status = PsKillProcess(PProcess, ExitStatus);
+    if (0 == status){
+        ObDereferenceObject(PProcess);
+        return status;
+    }
+    ObDereferenceObject(PProcess);
+    return status;
+};
+#define DEBUG_PS
 STATUS
 PsKillProcess(
-        PPROCESS PProcess,//remove
+        PPROCESS PProcess, //remove
         ULONG ExitStatus
         ) {
     STATUS status;
@@ -274,7 +299,9 @@ PsKillProcess(
 
     status = KeStopSchedulingProcess(PProcess);
     if (status != 0) return status;
-
+#ifdef DEBUG_PS
+    KdPrint("descheduled process");
+#endif
     ObKillProcess(PProcess);
     MmFree(PProcess->AllocatedMemory);
 

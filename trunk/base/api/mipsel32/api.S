@@ -14,8 +14,8 @@ GetProcessId:
     syscall
     jr      ra
 
-.globl  KillByPid
-KillByPid:
+.globl  KillMe
+KillMe:
     addi    v0, zero, 2
     syscall
     jr      ra
