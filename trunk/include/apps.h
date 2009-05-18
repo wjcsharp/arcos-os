@@ -12,4 +12,7 @@ MyFirstProgram();
 VOID
 PSTestProcess3();
 
+VOID
+scrollText();
+
 #endif

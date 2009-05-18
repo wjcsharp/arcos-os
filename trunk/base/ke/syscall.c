@@ -38,12 +38,14 @@ KeSystemService(
             PsKillMe();
             break;
 
-            case 3:
-            status = PsCreateProcessByName((PCHAR) Arg0, Arg1,(PHANDLE) Arg2, (PCHAR) Arg3);
+        case 3:
+            status = PsCreateProcessByName((PCHAR) Arg0, Arg1, (PHANDLE) Arg2, (PCHAR) Arg3);
             KeSetSyscallResult(KeCurrentProcess, status);
             break;
 
-
+        case 4:
+            KeSetSyscallResult(KeCurrentProcess, KeCurrentProcess->Priority);
+            break;
 
         default:
             // probably a bugcheck is overreacting but what the hell
