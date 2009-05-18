@@ -14,6 +14,12 @@ GetProcessId:
     syscall
     jr      ra
 
+.globl  KillByPid
+KillByPid:
+    addi    v0, zero, 2
+    syscall
+    jr      ra
+
     # Put your own syscalls here. Just change the name and increment the 0.
 
     
