@@ -255,10 +255,15 @@ PsCreateProcess(
 #endif
     return STATUS_SUCCESS;
 }
+/*
+STATUS
+PsKillByPID(ULONG PID)
+*/
+
 
 STATUS
 PsKillProcess(
-        PPROCESS PProcess,
+        PPROCESS PProcess,//remove
         ULONG ExitStatus
         ) {
     STATUS status;

@@ -64,9 +64,17 @@ PsCreateProcessByName(
 
 STATUS
 PsKillProcess(
-        PPROCESS Process,
+        PPROCESS PProcess,
         ULONG ExitStatus
         );
+
+STATUS
+PsKillByPID(
+        ULONG PID
+        );
+
+VOID
+PsKillMe();
 
 STATUS
 PsGetExitStatus(
@@ -80,8 +88,7 @@ PsGetPriority(
         PULONG Priority
         );
 
-VOID
-PsKillMe();
+
 
 STATUS
 PsGetState(
