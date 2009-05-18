@@ -11,7 +11,7 @@
 #include <api.h>
 
 HANDLE handle;
-PCHAR text = "  Look mam! I'm scrolling!       ";	// Test text.
+PCHAR text = "       Look mom! I'm scrolling!       "; // Test text.
 PCHAR pek;				// Point on same stuff.
 ULONG length, moreLength;
 

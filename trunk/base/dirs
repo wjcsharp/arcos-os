@@ -1,13 +1,13 @@
 DIRS = \
     rtl \
     apps \
-    mm\
-    ps\
+    mm \
+    ps \
     mess \
     io \
     hal \
     ob \
     kd \
     api \
-    ke 
+    ke \
 
