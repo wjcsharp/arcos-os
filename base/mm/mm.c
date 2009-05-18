@@ -3,8 +3,7 @@
         Author: Hugo Heyman
 
 
-		A lot of bugfixing and cleaning up has been done.
-		I've done some tests and everything so far seems to be working! =)
+		Some commenting.. allso removed an annoying KdPrint saying "ketchup!" once in a while ^^
 
 		
 */
@@ -66,7 +65,6 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 		// Block big enough and free?
 		if(PMb->Size > (ULONG)ALIGN_MEMORY(SizeToBeAllocated + HeaderSize) && PMb->IsFree == TRUE) {
 			ULONG FragmentSize = (ULONG)ALIGN_MEMORY(PMb->Size - (SizeToBeAllocated + HeaderSize));
-			KdPrint("ketchup!");
 			// Is the fragment block bigger than the header?
 			if (FragmentSize > HeaderSize) {
 				// Return block body
@@ -89,14 +87,12 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 					// Point back to the start
 					PMb = StartBlock;
 
-				// Save
+				// Save block list and return block body
 				MemBlock = PMb;
-
 				return ReturnAddress;
-
 			}
 
-			// ..otherwise alloc the full block (make no fragment block)
+			// Otherwise alloc the full block (make no fragment block)
 			else {
 				ReturnAddress = ALIGN_MEMORY(PMb + HeaderSize);
 				PMb->IsFree = FALSE;
@@ -108,9 +104,8 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 					// Point back to the start
 					PMb = StartBlock;
 
-				// Save
+				// Save block list and return block body
 				MemBlock = PMb;
-
 				return ReturnAddress;
 			}
 		}
@@ -141,9 +136,8 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 		// Point back to the start
 		PMb = StartBlock;
 
-	// Save
+	// Save block list and return block body
 	MemBlock = PMb;
-
 	return ReturnAddress;
 }
 
@@ -153,8 +147,9 @@ VOID MmFree(PVOID BlockBody) {
 	// Find block header
 	PVOID PHeader = ALIGN_MEMORY((PCHAR)BlockBody - HeaderSize);
 	PMEMORY_BLOCK PMb = PHeader;
+
+	// That's what I do!
 	PMb->IsFree = TRUE;
-	
 	
 	// Append next neighbor block?
 	if(PMb->NextBlock->IsFree == TRUE) {
@@ -164,7 +159,6 @@ VOID MmFree(PVOID BlockBody) {
 		if(PMb->NextBlock != NULL)
 			PMb->NextBlock->PreviousBlock = PMb;
 	}
-	
 	
 	// Append previous block?
 	if(PMb->PreviousBlock != NULL) { 
@@ -179,6 +173,8 @@ VOID MmFree(PVOID BlockBody) {
 	}
 	
 	KdPrint("Now I'm free! (0x%x)", ALIGN_MEMORY((ULONG)PMb + HeaderSize));
+
+	// Save the block list
 	PMb = StartBlock;
 	MemBlock = PMb;
 	
