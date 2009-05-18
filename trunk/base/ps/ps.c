@@ -22,7 +22,8 @@ POBJECT_TYPE processType;
 
 APPLICATION PsAvailApps[] = {
     {"MyFirstProgram", MyFirstProgram},
-    {"TestProcess3", PSTestProcess3}
+    {"TestProcess3", PSTestProcess3},
+    {"Kill", KillP}
 };
 
 
@@ -31,6 +32,12 @@ PIDInUse(ULONG PID);
 
 ULONG
 GetPID();
+
+VOID
+KillP(){
+    KdPrint("KILL PID %x", KeCurrentProcess->Args);
+    KillMe();
+}
 
 VOID
 MyFirstProgram() {

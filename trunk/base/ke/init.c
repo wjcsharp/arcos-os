@@ -76,10 +76,10 @@ KeInitialize(VOID) {
 
     PsCreateProcess(TestProcess, 1, &testProcess, NULL);
     PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
-    PsCreateProcess(TestScrollerProcess, 8, &testScrollerProcess, NULL);
+    PsCreateProcess(TestScrollerProcess, 31, &testScrollerProcess, NULL);
 
 
-PsCreateProcessByName("TestProcess3", 5, &testProcess3, NULL);
+PsCreateProcessByName("Kill", 5, &testProcess3, NULL);
 
     KeRestoreInterrupts(TRUE);
 
