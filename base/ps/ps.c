@@ -199,7 +199,7 @@ PsCreateProcess(
         ObDereferenceObject(createdProcessObject);
         return STATUS_NO_MEMORY;
     }
-//#ifdef DEBUG_PS
+#ifdef DEBUG_PS
     KdPrint("malloc done");
 #endif
     //Attach memory block
@@ -286,7 +286,7 @@ PsKillByPID(
     ObDereferenceObject(PProcess);
     return status;
 };
-#define DEBUG_PS
+//#define DEBUG_PS
 STATUS
 PsKillProcess(
         PPROCESS PProcess, //remove
