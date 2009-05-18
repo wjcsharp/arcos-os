@@ -24,6 +24,7 @@ KeSystemService(
         ULONG Arg2,
         ULONG Arg3
         ) {
+    STATUS status;
     switch (ServiceNumber) {
         case 0:
             KeSuspendProcess(Arg0);
@@ -35,6 +36,11 @@ KeSystemService(
 
         case 2:
             PsKillMe();
+            break;
+
+            case 3:
+            status = PsCreateProcessByName((PCHAR) Arg0, Arg1,(PHANDLE) Arg2, (PCHAR) Arg3);
+            KeSetSyscallResult(KeCurrentProcess, status);
             break;
 
 

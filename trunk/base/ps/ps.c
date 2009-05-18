@@ -32,28 +32,28 @@ PIDInUse(ULONG PID);
 ULONG
 GetPID();
 
-
 VOID
 MyFirstProgram() {
-    ULONG arb = 27;
-    arb = arb + 123;
-    KdPrint("My first process executed %d", arb);
-    //PsKillMe();
+    KdPrint("My first process executed and DIES");
+    KillMe();
 }
 
 VOID
 PSTestProcess3() {
     ULONG i;
+    HANDLE handtag;
 
-    KdPrint("Hello from testprocess3");
-
-        for (i = 0; i < 5 ; i++){;
+    KdPrint("Hello from testprocess3 My PID is %d.", GetProcessId());
+    for (i = 0; i < 5; i++) {
         KdPrint("testprocess3 heartbeat");
     }
+    Sleep(20000);
+    KdPrint("testprocess3 Creates new PROCESS");
+    CreateProcess("MyFirstProgram", 8, &handtag, NULL);
+    Sleep(30000);
+    KdPrint("testprocess3 DIES");
     KillMe();
 }
-
-
 
 STATUS
 CreateProcessObjectType() {
@@ -132,9 +132,6 @@ GetPID() {
     return PID;
 }
 
-
-
-
 PVOID
 GetProgramAdress(PCHAR ProgramName) {
     ULONG index = 0;
@@ -170,6 +167,8 @@ PsCreateProcess(
     PVOID memPointer;
     PVOID createdProcessObject = NULL;
     PPROCESS process = NULL;
+    ULONG argsLength;
+    PCHAR argtmp;
 
     // Sanitycheck process Adress
     if (NULL == PStartingAddress)
@@ -227,6 +226,19 @@ PsCreateProcess(
 #ifdef DEBUG_PS
     KdPrint("initialized handletable");
 #endif
+    //Allocate space for and copy Args.
+    if (Args != NULL) {
+        argsLength = RtlStringLength(Args);
+        if (argsLength > 0) {
+            argtmp = (PCHAR) MmAlloc(argsLength * sizeof (CHAR));
+            RtlCopyString(argtmp, Args);
+            process->Args = argtmp;
+            process->Context.A0 = (ULONG) argtmp;
+        } else
+            Args = NULL;
+    }
+
+
     //Create Handle to object
     status = ObOpenObjectByPointer(createdProcessObject, 0, processType, ProcessHandle);
     if (status != 0) {
@@ -264,7 +276,6 @@ PsKillMe() {
         KdPrint("KillMe failed");
 }
 
-
 STATUS
 PsKillByPID(
         ULONG PID,
@@ -272,21 +283,21 @@ PsKillByPID(
         ) {
     PPROCESS PProcess;
     STATUS status;
-//Get process
+    //Get process
     status = PsReferenceProcess(PID, &PProcess);
     if (0 == status)
         return status;
     ASSERT(PProcess);
 
     status = PsKillProcess(PProcess, ExitStatus);
-    if (0 == status){
+    if (0 == status) {
         ObDereferenceObject(PProcess);
         return status;
     }
     ObDereferenceObject(PProcess);
     return status;
 };
-//#define DEBUG_PS
+
 STATUS
 PsKillProcess(
         PPROCESS PProcess, //remove
@@ -303,12 +314,17 @@ PsKillProcess(
 #ifdef DEBUG_PS
     KdPrint("descheduled process");
 #endif
+
     ObKillProcess(PProcess);
     MmFree(PProcess->AllocatedMemory);
 
 #ifdef DEBUG_PS
     KdPrint("PsKillP freed memory");
 #endif
+    //Free memory allocated for Args
+    if (PProcess->Args != NULL)
+        MmFree(PProcess->Args);
+
     PProcess->ExitStatus = ExitStatus;
     //BUGBUGBUGBUGBUGBUG
     //Free message-queue
