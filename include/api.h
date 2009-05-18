@@ -10,6 +10,15 @@ GetProcessId();
 VOID
 KillMe();
 
+STATUS
+CreateProcess(
+        PCHAR ProgramName,
+        ULONG Priority,
+        PHANDLE ProcessHandle,
+        PCHAR Args
+        );
+
+
 //put your own function names here
 //CreateProcess(...)
 

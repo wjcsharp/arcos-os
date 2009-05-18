@@ -2,8 +2,8 @@
 #define __APPS_H__
 #include <arcos.h>
 #include <api.h>
-//ALL APPS SHOULD HAVE VOID RETURN AND NO ARGUMENTS
-//  Arguments is passed via PCHAR Args in PROCESS
+//ALL APPS SHOULD HAVE VOID RETURN AND USE KillMe() for graceful exit.
+//Arguments is passed via PCHAR Args in PROCESS
 
 
 VOID
