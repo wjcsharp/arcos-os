@@ -17,6 +17,7 @@ SOURCES = \
 #
 LIBS = \
         $(BASEDIR)/build/lib/*/api \
+        $(BASEDIR)/build/lib/*/apps \
         $(BASEDIR)/build/lib/*/hal \
         $(BASEDIR)/build/lib/*/kd \
         $(BASEDIR)/build/lib/*/ps \
