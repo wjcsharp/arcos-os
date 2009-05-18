@@ -19,6 +19,6 @@ VOID
 scrollText();
 
 VOID
-KillP();
+Kill();
 
 #endif
