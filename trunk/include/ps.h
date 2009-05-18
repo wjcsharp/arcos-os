@@ -34,11 +34,7 @@ typedef struct _PROGRAM {
     VOID(*Execute)();
 } APPLICATION, PAPPLICATION;
 
-VOID
-MyFirstProgram();
 
-VOID
-PSTestProcess3();
 
 VOID
 PsInitialize();
