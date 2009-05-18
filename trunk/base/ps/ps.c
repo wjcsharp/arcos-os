@@ -23,7 +23,7 @@ POBJECT_TYPE processType;
 APPLICATION PsAvailApps[] = {
     {"MyFirstProgram", MyFirstProgram},
     {"TestProcess3", PSTestProcess3},
-    {"Kill", KillP}
+    {"Kill", Kill}
 };
 
 
@@ -34,8 +34,16 @@ ULONG
 GetPID();
 
 VOID
-KillP(){
-    KdPrint("KILL PID %x", KeCurrentProcess->Args);
+Kill() {
+    ULONG PID = 1;
+    STATUS status;
+     
+    status = KillByPID(1, 1);
+    if (0 == status)
+        KdPrint("Killed %d", PID);
+    else
+        KdPrint("Failed to kill %d", PID);
+
     KillMe();
 }
 
@@ -305,20 +313,26 @@ PsKillByPID(
         ULONG PID,
         ULONG ExitStatus
         ) {
-    PPROCESS PProcess;
+    PPROCESS pprocess=NULL;
     STATUS status;
-    //Get process
-    status = PsReferenceProcess(PID, &PProcess);
-    if (0 == status)
-        return status;
-    ASSERT(PProcess);
 
-    status = PsKillProcess(PProcess, ExitStatus);
+    KdPrint("PsKillByPID PID: %d ", PID);
+    //Get process
+    status = PsReferenceProcess(PID, &pprocess);
+    KdPrint("refstatus: %d", status);
+    if (0 != status)
+        return status;
+
+    ASSERT(pprocess);
+    
+    KdPrint("kuljul: %x", pprocess);
+
+    status = PsKillProcess(pprocess, ExitStatus);
     if (0 == status) {
-        ObDereferenceObject(PProcess);
+        ObDereferenceObject(pprocess);
         return status;
     }
-    ObDereferenceObject(PProcess);
+    ObDereferenceObject(pprocess);
     return status;
 };
 
@@ -436,16 +450,16 @@ PsOpenProcess(
         PHANDLE ProcessHandle
         ) {
     STATUS status;
-    PPROCESS process;
+    PPROCESS pprocess;
 
-    process = ObGetFirstObjectOfType(processType);
+    pprocess = ObGetFirstObjectOfType(processType);
 
-    while (process) {
-        if (process->PID == PID) {
-            status = ObOpenObjectByPointer(process, 0, processType, ProcessHandle);
+    while (pprocess) {
+        if (pprocess->PID == PID) {
+            status = ObOpenObjectByPointer(pprocess, 0, processType, ProcessHandle);
             return status;
         }
-        process = ObGetNextObjectOfType(process);
+        pprocess = ObGetNextObjectOfType(pprocess);
     }
     return STATUS_NO_SUCH_PROCESS;
 }
@@ -453,19 +467,19 @@ PsOpenProcess(
 STATUS
 PsReferenceProcess(
         ULONG PID,
-        PPROCESS * ProcessPtr
+        PPROCESS *ProcessPtr
         ) {
-    PPROCESS process;
+    PPROCESS pprocess;
 
-    process = ObGetFirstObjectOfType(processType);
+    pprocess = ObGetFirstObjectOfType(processType);
 
-    while (process) {
-        if (process->PID == PID) {
-            *ProcessPtr = process;
-            ObReferenceObject(process, processType);
+    while (pprocess) {
+        if (pprocess->PID == PID) {
+            *ProcessPtr = pprocess;
+            ObReferenceObject(pprocess, processType);
             return STATUS_SUCCESS;
         }
-        process = ObGetNextObjectOfType(process);
+        pprocess = ObGetNextObjectOfType(pprocess);
     }
     *ProcessPtr = NULL;
     return STATUS_NO_SUCH_PROCESS;

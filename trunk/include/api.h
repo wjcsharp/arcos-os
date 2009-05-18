@@ -36,4 +36,10 @@ ReadFile(
 	PVOID buffer,
 	ULONG bufferSize);
 
+STATUS
+KillByPID(
+        ULONG PID,
+        ULONG ExitStatus
+        );
+
 #endif
