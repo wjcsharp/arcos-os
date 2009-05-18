@@ -26,6 +26,12 @@ CreateProcess:
     syscall
     jr      ra
 
+.globl  GetProcessPriority
+GetProcessPriority:
+    addi    v0, zero, 4
+    syscall
+    jr      ra
+
     # Put your own syscalls here. Just change the name and increment the 0.
 
     

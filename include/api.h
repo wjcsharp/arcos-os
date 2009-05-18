@@ -7,6 +7,9 @@ Sleep(ULONG Milliseconds);
 ULONG
 GetProcessId();
 
+ULONG
+GetProcessPriority();
+
 VOID
 KillMe();
 

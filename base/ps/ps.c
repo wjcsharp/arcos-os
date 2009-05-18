@@ -5,7 +5,7 @@
  */
 
 #include <arcos.h>
-#include <apps.h> //for userprogram
+#include <apps.h> //for userprograms
 #include <ps.h>
 #include <mm.h>
 #include <ob.h>
@@ -34,6 +34,7 @@ GetPID();
 
 VOID
 MyFirstProgram() {
+    KdPrint("My first process My Prio is %d.", GetProcessPriority());
     KdPrint("My first process executed and DIES");
     KillMe();
 }
@@ -41,14 +42,16 @@ MyFirstProgram() {
 VOID
 PSTestProcess3() {
     ULONG i;
-    HANDLE handtag;
+    HANDLE handtag, handtag2;
 
     KdPrint("Hello from testprocess3 My PID is %d.", GetProcessId());
+    KdPrint("Hello from testprocess3 My Prio is %d.", GetProcessPriority());
     for (i = 0; i < 5; i++) {
         KdPrint("testprocess3 heartbeat");
     }
     Sleep(20000);
     KdPrint("testprocess3 Creates new PROCESS");
+    CreateProcess("CreateProcess", 8, &handtag2, NULL);
     CreateProcess("MyFirstProgram", 8, &handtag, NULL);
     Sleep(30000);
     KdPrint("testprocess3 DIES");
