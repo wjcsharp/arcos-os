@@ -31,7 +31,7 @@ typedef struct _PROCESS_INFO {
 
 typedef struct _PROGRAM {
     PCHAR Name;
-    VOID(*Execute)();
+    VOID(*Execute)(PCHAR Args);
 } APPLICATION, PAPPLICATION;
 
 

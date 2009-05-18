@@ -18,4 +18,8 @@ scrollerInit();
 VOID
 scrollText();
 
+
+VOID
+Kill(PCHAR Args);
+
 #endif
