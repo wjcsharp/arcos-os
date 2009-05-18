@@ -6,32 +6,36 @@
 #include <ke.h>
 
 STATUS
-MessSend(
-    ULONG senderPid,
+MessSendMessage(
     ULONG receiverPid,
-    ULONG priority,
     ULONG messageType,
     PVOID buffer,
     ULONG bufferSize		// Is bufferSize in bytes?
     )
 {
-	PPROCESS pprocess;
+	PHANDLE pprocessHandle;
 	PMESSAGE message = (PMESSAGE) MmAlloc(sizeof(MESSAGE) + bufferSize);
 	STATUS status;
 
-	message->senderPid = senderPid;
+	ASSERT(buffer);
+
+	message->senderPid = KeCurrentProcess->PID;
 	message->receiverPid = receiverPid;
-	message->priority = priority;
+	//message->priority = priority;
+	message->priority = 1;		// NOTE TO SELF: FIX THIS!
 	message->messageType = messageType;
 	message->bufferSize = bufferSize;
+
     
-	// Copy buffer to message->buffer, that is after the message "header"
-	// Typecasting to PCHAR because of memory size?
 	RtlCopyMemory((PCHAR)message + sizeof(MESSAGE), buffer, bufferSize);
 
-	//add message to the receiver's message list;
-	status = PsReferenceProcess(receiverPid,&pprocess);	
-	pprocess->MessageQueue = message;
+	//status = PsReferenceProcess(receiverPid,&&process);	// Get receiver process.
+	status = PsOpenProcess(receiverPid,&pprocessHandle);
+/*
+	ASSERT(pprocess);
+	pprocess->MessageQueue = message;			// Add message.
+
+*/
 
 	/*****
     if (receiver is waiting for a message) 
