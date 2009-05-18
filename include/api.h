@@ -21,11 +21,19 @@ CreateProcess(
         PCHAR Args
         );
 
+HANDLE
+CreateFile(ULONG filename);	// 's' for serial, 'l' for lcd. Serial is used for input also.
 
-//put your own function names here
-//CreateProcess(...)
+ULONG
+WriteFile(
+	HANDLE handle,
+	PVOID buffer,
+	ULONG bufferSize);
 
-//CreateFile(...)
-
+ULONG
+ReadFile(
+	HANDLE handle,
+	PVOID buffer,
+	ULONG bufferSize);
 
 #endif

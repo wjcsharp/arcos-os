@@ -32,6 +32,24 @@ GetProcessPriority:
     syscall
     jr      ra
 
+.globl  CreateFile
+CreateFile:
+    addi    v0, zero, 5
+    syscall
+    jr      ra
+
+.globl  WriteFile
+WriteFile:
+    addi    v0, zero, 6
+    syscall
+    jr      ra
+
+.globl  ReadFile
+ReadFile:
+    addi    v0, zero, 7
+    syscall
+    jr      ra
+
     # Put your own syscalls here. Just change the name and increment the 0.
 
     
