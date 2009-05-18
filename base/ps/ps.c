@@ -5,6 +5,7 @@
  */
 
 #include <arcos.h>
+#include <apps.h> //for userprogram
 #include <ps.h>
 #include <mm.h>
 #include <ob.h>
@@ -12,7 +13,7 @@
 #include <rtl.h>
 #include <hal.h>
 #include <kd.h>
-#include <api.h> //for userprogram syscall
+
 //#define DEBUG_PS
 //
 //List of all available applications in the OS
