@@ -44,14 +44,17 @@ PSTestProcess3() {
     ULONG i;
     HANDLE handtag, handtag2;
 
-    KdPrint("Hello from testprocess3 My PID is %d.", GetProcessId());
-    KdPrint("Hello from testprocess3 My Prio is %d.", GetProcessPriority());
+    //KdPrint("Hello from testprocess3 My PID is %d.", GetProcessId());
+    //KdPrint("Hello from testprocess3 My Prio is %d.", GetProcessPriority());
     for (i = 0; i < 5; i++) {
         KdPrint("testprocess3 heartbeat");
     }
-    Sleep(20000);
+    Sleep(5000);
     KdPrint("testprocess3 Creates new PROCESS");
-    CreateProcess("CreateProcess", 8, &handtag2, NULL);
+
+    KdPrint("createstatus: %d", CreateProcess("MyFirstProgra", 8, &handtag2, NULL));
+    KdPrint("createstatus: %d", CreateProcess("MyFirstProgram", 7, &handtag2, NULL));
+    Sleep(15000);
     CreateProcess("MyFirstProgram", 8, &handtag, NULL);
     Sleep(30000);
     KdPrint("testprocess3 DIES");
@@ -137,13 +140,18 @@ GetPID() {
 
 PVOID
 GetProgramAdress(PCHAR ProgramName) {
-    ULONG index = 0;
+    ULONG index;
+
+    if (NULL == ProgramName)
+        return NULL;
 
     for (index = 0; index < (sizeof (PsAvailApps) / sizeof (APPLICATION)); ++index) {
-        if (0 == (RtlCompareStrings(PsAvailApps[index].Name, ProgramName)))
-            return PsAvailApps[index].Execute;
+        if (RtlStringLength(PsAvailApps[index].Name) == RtlStringLength(ProgramName)) {
+            if (0 == RtlCompareStrings(PsAvailApps[index].Name, ProgramName))
+                return PsAvailApps[index].Execute;
+        }
     }
-    return 0;
+    return NULL;
 }
 
 STATUS
@@ -154,7 +162,14 @@ PsCreateProcessByName(
         PCHAR Args
         ) {
     STATUS status;
-    status = PsCreateProcess(GetProgramAdress(ProgramName), Priority, ProcessHandle, Args);
+    PVOID programAdress;
+
+    //Get program adress
+    programAdress = GetProgramAdress(ProgramName);
+    if (NULL == programAdress)
+        return STATUS_NO_SUCH_PROGRAM;
+
+    status = PsCreateProcess(programAdress, Priority, ProcessHandle, Args);
     return status;
 }
 
