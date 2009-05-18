@@ -10,6 +10,7 @@
 
 // remove this when removing the test processes
 #include <api.h>
+#include <apps.h>
 
 VOID
 TestProcess(PCHAR args) {
@@ -36,8 +37,20 @@ TestProcess2(PCHAR args) {
 }
 
 VOID
+TestScrollerProcess()
+{
+    scrollerInit(); 
+
+    while (1) {
+	//KdPrint("Hello from text scroller");
+	scrollText();
+        Sleep(1000);
+    }
+}
+
+VOID
 KeInitialize(VOID) {
-    HANDLE testProcess, testProcess2, testProcess3;
+    HANDLE testProcess, testProcess2, testProcess3, testScrollerProcess;
 
     HalInitialize();
 
@@ -60,11 +73,13 @@ KeInitialize(VOID) {
 
     //HANDLE handle = IoCreateFile('serial');
 
-    //PsCreateProcess(TestProcess, 1, &testProcess, NULL);
-    //PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
 
-//CRASHES with MmFree revision 103
-    PsCreateProcessByName("TestProcess3", 5, &testProcess3, NULL);
+    PsCreateProcess(TestProcess, 1, &testProcess, NULL);
+    PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
+    PsCreateProcess(TestScrollerProcess, 1, &testScrollerProcess, NULL);
+
+    //CRASHES with MmFree revision 103
+    //PsCreateProcessByName("TestProcess3", 5, &testProcess3, NULL);
 
     KeRestoreInterrupts(TRUE);
 

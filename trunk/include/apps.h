@@ -12,6 +12,9 @@ MyFirstProgram();
 VOID
 PSTestProcess3();
 
+VOID		// Should return status.
+scrollerInit();
+
 VOID
 scrollText();
 

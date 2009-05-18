@@ -8,15 +8,16 @@
 #include <arcos.h>
 #include <io.h>
 #include <rtl.h>
+#include <api.h>
 
 HANDLE handle;
-PCHAR text = "Denna scrollas...";	// Test text.
+PCHAR text = "  Look mam! I'm scrolling!       ";	// Test text.
 PCHAR pek;				// Point on same stuff.
 ULONG length, moreLength;
 
 void scrollerInit()
 {
-	handle = IoCreateFile('l');
+	handle = CreateFile('l');
 	moreLength = length = RtlStringLength(text);
 	pek = text;
 }
@@ -24,17 +25,12 @@ void scrollerInit()
 void scrollText()
 {
 
-	IoWriteFile(handle,"hej",3);			
-	/*
-	pek++;
-	length--;
-
-	if (length == 0)	// Back to the beginning.
+	IoWriteFile(handle,pek++,length--);			
+	if (length == 5)	// Back to the beginning.
 	{
 		length = moreLength;		
 		pek = text;
 	}
-	*/
 }
 
 /****************************
