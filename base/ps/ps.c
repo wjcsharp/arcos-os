@@ -5,7 +5,8 @@
  */
 
 #include <arcos.h>
-#include <apps.h> //for userprograms
+#include <api.h> //for userprograms
+#include <apps.h>
 #include <ps.h>
 #include <mm.h>
 #include <ob.h>
@@ -22,7 +23,8 @@ POBJECT_TYPE processType;
 
 APPLICATION PsAvailApps[] = {
     {"MyFirstProgram", MyFirstProgram},
-    {"TestProcess3", PSTestProcess3}
+    {"TestProcess3", PSTestProcess3}/*,
+    {"Kill" , Kill(PCHAR Args)}*/
 };
 
 
@@ -52,8 +54,7 @@ PSTestProcess3() {
     Sleep(5000);
     KdPrint("testprocess3 Creates new PROCESS");
 
-    KdPrint("createstatus: %d", CreateProcess("MyFirstProgra", 8, &handtag2, NULL));
-    KdPrint("createstatus: %d", CreateProcess("MyFirstProgram", 7, &handtag2, NULL));
+    KdPrint("createstatus: %d", CreateProcess("MyFirstProgram", 8, &handtag2, NULL));
     Sleep(15000);
     CreateProcess("MyFirstProgram", 8, &handtag, NULL);
     Sleep(30000);
