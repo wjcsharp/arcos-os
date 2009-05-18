@@ -5,15 +5,14 @@
  */
 
 #include <arcos.h>
-#include <api.h> //for userprograms
 #include <apps.h>
 #include <ps.h>
 #include <mm.h>
 #include <ob.h>
 #include <ke.h>
 #include <rtl.h>
-#include <hal.h>
 #include <kd.h>
+#include <api.h>//SYSCALLS FOR USERPROGRAMS
 
 //#define DEBUG_PS
 //
@@ -23,8 +22,7 @@ POBJECT_TYPE processType;
 
 APPLICATION PsAvailApps[] = {
     {"MyFirstProgram", MyFirstProgram},
-    {"TestProcess3", PSTestProcess3}/*,
-    {"Kill" , Kill(PCHAR Args)}*/
+    {"TestProcess3", PSTestProcess3}
 };
 
 
