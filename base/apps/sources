@@ -1,0 +1,6 @@
+TARGETNAME=apps
+TARGETPATH=lib
+TARGETTYPE=library
+
+SOURCES= \
+	scroller.c
