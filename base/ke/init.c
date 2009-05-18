@@ -60,8 +60,8 @@ KeInitialize(VOID) {
 
     //HANDLE handle = IoCreateFile('serial');
 
-    PsCreateProcess(TestProcess, 1, &testProcess, NULL);
-    PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
+    //PsCreateProcess(TestProcess, 1, &testProcess, NULL);
+    //PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
 
 //CRASHES with MmFree revision 103
     PsCreateProcessByName("TestProcess3", 5, &testProcess3, NULL);
