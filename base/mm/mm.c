@@ -52,7 +52,7 @@ ULONG MmGetUsedMemSum() {
 	ULONG UsedMemSum = 0;
 	
 	// Go through all blocks
-	while(PMb->NextBlock != NULL) {
+	while(PMb != NULL) {
 		if(PMb->IsFree == FALSE)
 			UsedMemSum = UsedMemSum + PMb->Size + HeaderSize;
 
@@ -70,9 +70,9 @@ VOID MmPrintBlocks() {
 	// Go through all blocks
 	while(PMb != NULL) {
 		if(PMb->IsFree == TRUE) 
-			KdPrint("F\t - Block 0x%x\t - Size %d \n", PMb, PMb->Size);	
+			KdPrint("F\t - Block 0x%x\t - Size %d \n", ALIGN_MEMORY((ULONG)PMb + HeaderSize), PMb->Size);	
 		else
-			KdPrint("U\t - Block 0x%x\t - Size %d \n", PMb, PMb->Size);
+			KdPrint("U\t - Block 0x%x\t - Size %d \n", ALIGN_MEMORY((ULONG)PMb + HeaderSize), PMb->Size);
 
 		PMb = PMb->NextBlock;
 	}
