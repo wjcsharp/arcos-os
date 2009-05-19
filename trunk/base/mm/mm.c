@@ -3,7 +3,7 @@
         Author: Hugo Heyman
 
 
-		Some commenting.. allso removed an annoying KdPrint saying "ketchup!" once in a while ^^
+		bab!
 
 		
 */
@@ -62,6 +62,23 @@ ULONG MmGetUsedMemSum() {
 	return UsedMemSum;
 }
 
+VOID MmPrintBlocks() {
+	
+	// Copy of the mb-list
+	PMEMORY_BLOCK PMb = MemBlock;
+
+	// Go through all blocks
+	while(PMb != NULL) {
+		if(PMb->IsFree == TRUE) 
+			KdPrint("F\t - Block 0x%x\t - Size %d \n", PMb, PMb->Size);	
+		else
+			KdPrint("U\t - Block 0x%x\t - Size %d \n", PMb, PMb->Size);
+
+		PMb = PMb->NextBlock;
+	}
+}
+
+
 PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	
 	// Address to return
@@ -109,7 +126,10 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 
 			// Otherwise alloc the full block (make no fragment block)
 			else {
+				// Return block body
 				ReturnAddress = ALIGN_MEMORY(PMb + HeaderSize);
+
+				// The only block property to be set
 				PMb->IsFree = FALSE;
 
 				// Is this the first block?
@@ -168,17 +188,17 @@ VOID MmFree(PVOID BlockBody) {
 	
 	// Append next neighbor block?
 	if(PMb->NextBlock->IsFree == TRUE) {
-		KdPrint("...appending with my next neighbor");
+		//KdPrint("...appending with my next neighbor");
 		PMb->Size = (ULONG)ALIGN_MEMORY(PMb->Size + PMb->NextBlock->Size + HeaderSize); 
 		PMb->NextBlock = PMb->NextBlock->NextBlock;
 		if(PMb->NextBlock != NULL)
 			PMb->NextBlock->PreviousBlock = PMb;
 	}
 	
-	// Append previous block?
+	// Append previous neighbor block?
 	if(PMb->PreviousBlock != NULL) { 
 		if(PMb->PreviousBlock->IsFree == TRUE) {
-			KdPrint("...appending with my previous neighbor");
+			//KdPrint("...appending with my previous neighbor");
 			PMb = PMb->PreviousBlock;
 			PMb->Size = (ULONG)ALIGN_MEMORY(PMb->Size + PMb->NextBlock->Size + HeaderSize);
 			PMb->NextBlock = PMb->NextBlock->NextBlock;
@@ -187,7 +207,7 @@ VOID MmFree(PVOID BlockBody) {
 		}
 	}
 	
-	KdPrint("Now I'm free! (0x%x)", ALIGN_MEMORY((ULONG)PMb + HeaderSize));
+	//KdPrint("Now I'm free! (0x%x)", ALIGN_MEMORY((ULONG)PMb + HeaderSize));
 
 	// Save the block list
 	PMb = StartBlock;
