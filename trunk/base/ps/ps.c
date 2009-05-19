@@ -41,7 +41,7 @@ appisdigit(CHAR c) {
 
 VOID
 ChangePrio() {
-    ULONG pid, prio;
+    ULONG pid, prio, status;
     PCHAR first, second;
     PCHAR pek = KeCurrentProcess->Args;
     //THE FOLLOWING IS REALLY UGLY so look away!
@@ -79,9 +79,13 @@ ChangePrio() {
 
     pid = RtlAtoUL(first);
     prio = RtlAtoUL(second);
-    
-    ChangePriority(pid, prio);
-    
+
+    status = ChangePriority(pid, prio);
+    if (0 != status) {
+        KdPrint("The pid:%d is not in use", pid);
+        KillMe();
+    }
+
     KdPrint("Changed Priority of PID = %s", first);
     KdPrint("Changed priority to: %s", second);
     KillMe();
@@ -445,7 +449,6 @@ PsChangePriority(
     ASSERT(pprocess);
     //Change priority
     KeChangeProcessPriority(pprocess, NewPriority);
-    KdPrint("PsChangePrioority");
     return STATUS_SUCCESS;
 };
 
