@@ -20,13 +20,14 @@ VOID
 MmInitialize();         // NEW! Use this in KeInit to initialize   
 			// the memory manager (freeMemPointer etc).
 
-PULONG
-MmGetMemPointer();	// NEW! Return freeMemPointer.
-
 // Returns the size of all allocated blocks
 ULONG
 MmGetUsedMemSum(); 
-                       
+       
+// Prints out all blocks
+VOID 
+MmPrintBlocks();
+
 PVOID
 MmAlloc(ULONG size);	// CHANGED! Function now return POBJECT_HEADER
 			// as used in ObCreateObject in ob.c. See
