@@ -61,6 +61,53 @@ ChangePriority:
     addi    v0, zero, 9
     syscall
     jr      ra
+
+.globl  SendMessage
+SendMessage:
+    addi    v0, zero, 10
+    syscall
+    jr      ra
+
+.globl  ReceiveFirst
+ReceiveFirst:
+    addi    v0, zero, 11
+    syscall
+    jr      ra
+
+.globl  ReceiveHighestPriority
+ReceiveHighestPriority:
+    addi    v0, zero, 12
+    syscall
+    jr      ra
+
+.globl  ReceiveByType
+ReceiveByType:
+    addi    v0, zero, 13
+    syscall
+    jr      ra
+
+.globl  GetMessageSize
+GetMessagesize:
+    addi    v0, zero, 14
+    syscall
+    jr      ra
+
+.globl  CopyMessage
+CopyMessage:
+    addi    v0, zero, 15
+    syscall
+    jr      ra
+
+.globl  DeleteMessage
+DeleteMessage:
+    addi    v0, zero, 16
+    syscall
+    jr      ra
+
+
+
+
+
     # Put your own syscalls here. Just change the name and increment the 0.
 
     
