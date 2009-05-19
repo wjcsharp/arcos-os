@@ -12,6 +12,7 @@
 #include <ke.h>
 #include <rtl.h>
 #include <kd.h>
+#include <mess.h>
 #include <api.h>//SYSCALLS FOR USERPROGRAMS
 
 //#define DEBUG_PS
@@ -277,9 +278,6 @@ PsCreateProcess(
     //Zero memory of process
     RtlZeroMemory(process, sizeof (PROCESS));
 
-#ifdef DEBUG_PS
-    KdPrint("after zero memory");
-#endif
     //Set process status to created
     process->State = created;
 
@@ -289,9 +287,7 @@ PsCreateProcess(
         ObDereferenceObject(createdProcessObject);
         return STATUS_NO_MEMORY;
     }
-#ifdef DEBUG_PS
-    KdPrint("malloc done");
-#endif
+
     //Attach memory block
     process->AllocatedMemory = memPointer;
     process->PID = GetPID();
@@ -303,10 +299,6 @@ PsCreateProcess(
     (process->Context).Pc = (ULONG) PStartingAddress;
     (process->Context).Sp = (ULONG) ((PCHAR) memPointer + PROCESS_MEMORY_SIZE);
 
-#ifdef DEBUG_PS
-    KdPrint("attach mem init pobject, context");
-#endif
-
     //Initialize handletable
     status = ObInitProcess(KeCurrentProcess, process);
     if (status != 0) {
@@ -315,9 +307,6 @@ PsCreateProcess(
         return status;
     }
 
-#ifdef DEBUG_PS
-    KdPrint("initialized handletable");
-#endif
     //Allocate space for and copy Args.
     if (Args != NULL) {
         argsLength = RtlStringLength(Args);
@@ -339,9 +328,7 @@ PsCreateProcess(
         return status;
     }
     process->State = ready;
-#ifdef DEBUG_PS
-    KdPrint("attached handle");
-#endif
+
 
     //Schedule process
     status = KeStartSchedulingProcess(process);
@@ -350,13 +337,9 @@ PsCreateProcess(
         MmFree(memPointer);
         return status;
     }
-#ifdef DEBUG_PS
-    KdPrint("scheduled process");
-#endif
+
     ObDereferenceObject(createdProcessObject);
-#ifdef DEBUG_PS
-    KdPrint("dereferenced object");
-#endif
+
     return STATUS_SUCCESS;
 }
 
@@ -389,7 +372,6 @@ PsKillByPID(
         ObDereferenceObject(pprocess);
         return status;
     }
-    // ObDereferenceObject(pprocess); BUGBUGBUG?
     return status;
 };
 
@@ -406,27 +388,23 @@ PsKillProcess(
 
     status = KeStopSchedulingProcess(PProcess);
     if (status != 0) return status;
-#ifdef DEBUG_PS
-    KdPrint("descheduled process");
-#endif
 
+    //Clear hadletable
     ObKillProcess(PProcess);
+
+    //Free allocated memory BUGBUGBUG
     MmFree(PProcess->AllocatedMemory);
 
-#ifdef DEBUG_PS
-    KdPrint("PsKillP freed memory");
-#endif
     //Free memory allocated for Args
     if (PProcess->Args != NULL)
         MmFree(PProcess->Args);
 
     PProcess->ExitStatus = ExitStatus;
-    //BUGBUGBUGBUGBUGBUG
+
     //Free message-queue
+    MessDeleteMessageQueue();
+    //Dereference process
     ObDereferenceObject(PProcess);
-#ifdef DEBUG_PS
-    KdPrint("PsKillP done");
-#endif
     return STATUS_SUCCESS;
 }
 
