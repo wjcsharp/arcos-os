@@ -3,7 +3,7 @@
         Author: Hugo Heyman
 
 
-		bab!
+		MmVirtualAlloc and MmVirtualFree has not yet been tested... 
 
 		
 */
@@ -13,11 +13,14 @@
 #include <hal.h>        // For HalGetFirstUsableMemoryAdress().
 #include <kd.h>
 
-// First free memory address
-static PVOID FirstMemPointer; 
-
 // Size of the header
 static ULONG HeaderSize = sizeof(MEMORY_BLOCK);
+
+// Size of header for the virtual blocks
+static ULONG VHeaderSize = sizeof(VIRTUAL_MEMORY_BLOCK);
+
+// First free memory address
+static PVOID FirstMemPointer; 
 
 // Memory Block list
 PMEMORY_BLOCK MemBlock;
@@ -78,6 +81,35 @@ VOID MmPrintBlocks() {
 	}
 }
 
+PVOID MmVirtualAlloc(PPROCESS BlockOwner, ULONG Size) {
+
+	// Get the block list
+	PVIRTUAL_MEMORY_BLOCK PVMb = (PVOID)BlockOwner;
+
+	// Create a new block
+	PVIRTUAL_MEMORY_BLOCK NewBlock;
+	NewBlock = MmAlloc(Size);
+
+	// Add it to the list
+	NewBlock->NextBlock = PVMb;
+	PVMb = NewBlock;
+	return ALIGN_MEMORY(PVMb + VHeaderSize);
+}
+
+VOID MmVirtualFree(PPROCESS BlockOwner, PVOID BlockBody) {
+
+	// Get the block list
+	PVIRTUAL_MEMORY_BLOCK PVMb = (PVOID)BlockOwner;
+
+	// Find the block to be freed in the list
+	while(ALIGN_MEMORY((ULONG)BlockBody - VHeaderSize) != PVMb->NextBlock)
+		PVMb = PVMb->NextBlock;
+	
+	// Free it and remove it from the list
+	MmFree(PVMb->NextBlock);
+	PVMb->NextBlock = PVMb->NextBlock->NextBlock;
+
+}
 
 PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	

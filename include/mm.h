@@ -7,14 +7,18 @@
 // Main memory for memory manager
 #define MAIN_MEM_SIZE 6144000
 
-//
-// memory block struct
-//
+// Memory block struct
 typedef struct _MEMORY_BLOCK {
-  ULONG Size;
-  BOOL IsFree;
-  struct _MEMORY_BLOCK *NextBlock, *PreviousBlock;
+	ULONG Size;
+	BOOL IsFree;
+	struct _MEMORY_BLOCK *NextBlock, *PreviousBlock;
 } MEMORY_BLOCK, *PMEMORY_BLOCK;
+
+// Virtual block struct
+typedef struct _VIRTUAL_MEMORY_BLOCK {
+	struct _VIRTUAL_MEMORY_BLOCK *NextBlock;
+} VIRTUAL_MEMORY_BLOCK, *PVIRTUAL_MEMORY_BLOCK;
+
 
 VOID
 MmInitialize();         // NEW! Use this in KeInit to initialize   
@@ -29,15 +33,15 @@ VOID
 MmPrintBlocks();
 
 PVOID
-MmAlloc(ULONG size);	// CHANGED! Function now return POBJECT_HEADER
-			// as used in ObCreateObject in ob.c. See
-			// ob.h for definition of _OBJECT_HEADER.
+MmVirtualAlloc(PPROCESS Proc, ULONG Size);
 
 VOID
-MmFree(
-	PVOID m
-	);				
-					// CHANGED PARAMETER!
-					// Before: PBLOCK
-					// Now: Pointer to beginning of objects memory address
+MmVirtualFree(PPROCESS Proc, PVOID BlockBody);
+
+PVOID
+MmAlloc(ULONG Size);
+
+VOID
+MmFree(PVOID BlockBody);				
+
 #endif
