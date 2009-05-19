@@ -15,6 +15,9 @@ HalClearDisplay(VOID);
 VOID
 HalDisplayString(PCHAR string);
 
+STATUS	
+HalDisplayChar(PCHAR c);
+
 VOID
 HalInitialize(VOID);
 
