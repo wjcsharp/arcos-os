@@ -55,6 +55,12 @@ KillByPID:
     addi    v0, zero, 8
     syscall
     jr      ra
+
+.globl  ChangePriority
+ChangePriority:
+    addi    v0, zero, 9
+    syscall
+    jr      ra
     # Put your own syscalls here. Just change the name and increment the 0.
 
     

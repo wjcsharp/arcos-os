@@ -38,7 +38,7 @@ Kill() {
     ULONG PID;
     STATUS status;
     PID = RtlAtoUL(KeCurrentProcess->Args);
-         
+
     status = KillByPID(PID, 1);
     if (0 == status)
         KdPrint("Killed %d", PID);
@@ -50,7 +50,10 @@ Kill() {
 
 VOID
 MyFirstProgram() {
+    KdPrint("Hello from my first program");
+    Sleep(15000);
     KdPrint("My first process My Prio is %d.", GetProcessPriority());
+    Sleep(15000);
     KdPrint("My first process executed and DIES %d", RtlAtoUL("   123"));
     KillMe();
 }
@@ -65,13 +68,12 @@ PSTestProcess3() {
     for (i = 0; i < 5; i++) {
         KdPrint("testprocess3 heartbeat");
     }
-    Sleep(5000);
-    KdPrint("testprocess3 Creates new PROCESS");
 
-    KdPrint("createstatus: %d", CreateProcess("MyFirstProgram", 8, &handtag2, NULL));
-    Sleep(15000);
-    CreateProcess("MyFirstProgram", 8, &handtag, NULL);
-    Sleep(30000);
+    KdPrint("testprocess3 Creates new PROCESSES");
+    CreateProcess("MyFirstProgram", 15, &handtag2, NULL);
+    CreateProcess("MyFirstProgram", 15, &handtag, NULL);
+
+    Sleep(45000);
     KdPrint("testprocess3 DIES");
     KillMe();
 }
@@ -256,6 +258,7 @@ PsCreateProcess(
         MmFree(memPointer);
         return status;
     }
+
 #ifdef DEBUG_PS
     KdPrint("initialized handletable");
 #endif
@@ -294,7 +297,7 @@ PsCreateProcess(
 #ifdef DEBUG_PS
     KdPrint("scheduled process");
 #endif
-    ObDereferenceObject(process/*createdProcessObject*/);
+    ObDereferenceObject(createdProcessObject);
 #ifdef DEBUG_PS
     KdPrint("dereferenced object");
 #endif
@@ -314,13 +317,12 @@ PsKillByPID(
         ULONG PID,
         ULONG ExitStatus
         ) {
-    PPROCESS pprocess=NULL;
+    PPROCESS pprocess = NULL;
     STATUS status;
 
-    
+
     //Get process
     status = PsReferenceProcess(PID, &pprocess);
-   
     if (0 != status)
         return status;
 
@@ -331,13 +333,13 @@ PsKillByPID(
         ObDereferenceObject(pprocess);
         return status;
     }
-    ObDereferenceObject(pprocess);
+   // ObDereferenceObject(pprocess); BUGBUGBUG?
     return status;
 };
 
 STATUS
 PsKillProcess(
-        PPROCESS PProcess, //remove
+        PPROCESS PProcess,
         ULONG ExitStatus
         ) {
     STATUS status;
@@ -371,6 +373,28 @@ PsKillProcess(
 #endif
     return STATUS_SUCCESS;
 }
+
+STATUS
+PsChangePriority(
+        ULONG PID,
+        ULONG NewPriority
+        ) {
+    PPROCESS pprocess = NULL;
+    STATUS status;
+
+    // Check args
+    if (PID < 1 || NewPriority > 31)
+        return STATUS_INVALID_PARAMETER;
+
+    //Get process
+    status = PsReferenceProcess(PID, &pprocess);
+    if (0 != status)
+        return status;
+    ASSERT(pprocess);
+//Change priority
+    KeChangeProcessPriority(pprocess, NewPriority);
+    return STATUS_SUCCESS;
+};
 
 STATUS
 PsGetExitStatus(
@@ -483,13 +507,6 @@ PsReferenceProcess(
     *ProcessPtr = NULL;
     return STATUS_NO_SUCH_PROCESS;
 }
-
-
-STATUS
-CopyPInfo(
-        PPROCESS Process,
-        PPROCESS_INFO Info
-        );
 
 STATUS
 CopyPInfo(

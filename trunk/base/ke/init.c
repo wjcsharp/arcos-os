@@ -39,6 +39,7 @@ TestProcess2(PCHAR args) {
 VOID
 TestScrollerProcess() {
     KdPrint("SCROLLER PID is %d.", GetProcessId());
+
     scrollerInit();
 
     while (1) {
@@ -74,12 +75,12 @@ KeInitialize(VOID) {
     //HANDLE handle = IoCreateFile('serial');
 
 
-    PsCreateProcess(TestProcess, 1, &testProcess, NULL);
-    PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
-    PsCreateProcess(TestScrollerProcess, 31, &testScrollerProcess, NULL);
+    //    PsCreateProcess(TestProcess, 1, &testProcess, NULL);
+    //  PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
+    // PsCreateProcess(TestScrollerProcess, 31, &testScrollerProcess, NULL);
 
 
-    PsCreateProcessByName("Kill", 1, &testProcess3, " 3");
+    PsCreateProcessByName("TestProcess3", 15, &testProcess3, NULL);
 
     KeRestoreInterrupts(TRUE);
 
