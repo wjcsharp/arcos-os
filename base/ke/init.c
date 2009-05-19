@@ -32,13 +32,13 @@ TestProcess2(PCHAR args) {
 
     while (1) {
         Sleep(10000);
-        KdPrint("testprocess2 heartbeat");
+        KdPrint("testprocess2 heartbeat Prio is: %d", GetProcessPriority());
     }
 }
 
 VOID
 TestScrollerProcess() {
-    KdPrint("SCROLLER PID is %d.", GetProcessId());
+    KdPrint("SCROLLER Prio is %d", GetProcessPriority());
 
     scrollerInit();
 
@@ -75,12 +75,12 @@ KeInitialize(VOID) {
     //HANDLE handle = IoCreateFile('serial');
 
 
-    //    PsCreateProcess(TestProcess, 1, &testProcess, NULL);
-    //  PsCreateProcess(TestProcess2, 1, &testProcess2, NULL);
-    // PsCreateProcess(TestScrollerProcess, 31, &testScrollerProcess, NULL);
+    PsCreateProcess(TestProcess, 5, &testProcess, NULL);
+    PsCreateProcess(TestProcess2, 5, &testProcess2, NULL);
+    PsCreateProcess(TestScrollerProcess, 0, &testScrollerProcess, NULL);
 
 
-    PsCreateProcessByName("TestProcess3", 15, &testProcess3, NULL);
+    PsCreateProcessByName("ChangePrio", 15, &testProcess3, "3 18");
 
     KeRestoreInterrupts(TRUE);
 

@@ -85,6 +85,11 @@ PsGetPriority(
         PULONG Priority
         );
 
+STATUS
+PsChangePriority(
+        ULONG PID,
+        ULONG NewPriority
+        );
 
 
 STATUS

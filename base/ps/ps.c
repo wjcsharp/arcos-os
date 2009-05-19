@@ -23,7 +23,8 @@ POBJECT_TYPE processType;
 APPLICATION PsAvailApps[] = {
     {"MyFirstProgram", MyFirstProgram},
     {"TestProcess3", PSTestProcess3},
-    {"Kill", Kill}
+    {"Kill", Kill},
+    {"ChangePrio", ChangePrio}
 };
 
 
@@ -32,6 +33,59 @@ PIDInUse(ULONG PID);
 
 ULONG
 GetPID();
+
+BOOL
+appisdigit(CHAR c) {
+    return !(c < '0' || c > '9');
+}
+
+VOID
+ChangePrio() {
+    ULONG pid, prio;
+    PCHAR first, second;
+    PCHAR pek = KeCurrentProcess->Args;
+    //THE FOLLOWING IS REALLY UGLY so look away!
+    if (NULL == pek) {
+        KdPrint("ChangePrio needs arguments e.g. ' 2 3'");
+        KillMe();
+    }
+    //remove everything until first digit
+    if (!appisdigit(*pek)) {
+        while ((!appisdigit(*++pek)) && (*pek != 0));
+        if (0 == *pek) {
+            KdPrint("ChangePrio needs arguments e.g. ' 2 3'");
+            KillMe();
+        }
+    }
+    first = pek; //Start of first stringarg
+    //Find end of first arg
+    while (appisdigit(*++pek));
+    if (0 == *pek) {
+        KdPrint("ChangePrio needs 2 arguments e.g. ' 2 3'");
+        KillMe();
+    }
+    *pek = 0; //Set end of first string
+    //remove everything until next digit
+    while ((!appisdigit(*++pek)) && (*pek != 0));
+    if (0 == *pek) {
+        KdPrint("ChangePrio needs 2 arguments e.g. ' 2 3'");
+        KillMe();
+    }
+    second = pek; //Start of second stringarg
+    //Find end of second arg
+    while (appisdigit(*++pek));
+    if (0 != *pek)
+        *pek = 0;
+
+    pid = RtlAtoUL(first);
+    prio = RtlAtoUL(second);
+    
+    ChangePriority(pid, prio);
+    
+    KdPrint("Changed Priority of PID = %s", first);
+    KdPrint("Changed priority to: %s", second);
+    KillMe();
+}
 
 VOID
 Kill() {
@@ -52,9 +106,7 @@ VOID
 MyFirstProgram() {
     KdPrint("Hello from my first program");
     Sleep(15000);
-    KdPrint("My first process My Prio is %d.", GetProcessPriority());
-    Sleep(15000);
-    KdPrint("My first process executed and DIES %d", RtlAtoUL("   123"));
+    KdPrint("My first process executed and DIES");
     KillMe();
 }
 
@@ -333,7 +385,7 @@ PsKillByPID(
         ObDereferenceObject(pprocess);
         return status;
     }
-   // ObDereferenceObject(pprocess); BUGBUGBUG?
+    // ObDereferenceObject(pprocess); BUGBUGBUG?
     return status;
 };
 
@@ -391,8 +443,9 @@ PsChangePriority(
     if (0 != status)
         return status;
     ASSERT(pprocess);
-//Change priority
+    //Change priority
     KeChangeProcessPriority(pprocess, NewPriority);
+    KdPrint("PsChangePrioority");
     return STATUS_SUCCESS;
 };
 
