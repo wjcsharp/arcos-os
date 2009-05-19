@@ -136,7 +136,7 @@ KdPrint(
 {
     va_list args;
 
-    KdpPrintChar('\n');
+    //KdpPrintChar('\n');
     
     va_start(args, format);
     KdpPrintEx(format, args);
