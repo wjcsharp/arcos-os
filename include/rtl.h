@@ -19,6 +19,9 @@ RtlCopyMemory(PVOID dest, PVOID src, ULONG count);
 PVOID
 RtlFillMemory(PVOID dest, CHAR val, ULONG count);
 
+ULONG
+RtlAtoUL(PCHAR str);
+
 #define RtlZeroMemory(dest, count)  RtlFillMemory(dest, 0, count)
 
 #endif

@@ -35,10 +35,11 @@ GetPID();
 
 VOID
 Kill() {
-    ULONG PID = 1;
+    ULONG PID;
     STATUS status;
-     
-    status = KillByPID(1, 1);
+    PID = RtlAtoUL(KeCurrentProcess->Args);
+         
+    status = KillByPID(PID, 1);
     if (0 == status)
         KdPrint("Killed %d", PID);
     else
@@ -50,7 +51,7 @@ Kill() {
 VOID
 MyFirstProgram() {
     KdPrint("My first process My Prio is %d.", GetProcessPriority());
-    KdPrint("My first process executed and DIES");
+    KdPrint("My first process executed and DIES %d", RtlAtoUL("   123"));
     KillMe();
 }
 
@@ -316,19 +317,17 @@ PsKillByPID(
     PPROCESS pprocess=NULL;
     STATUS status;
 
-    KdPrint("PsKillByPID PID: %d ", PID);
+    
     //Get process
     status = PsReferenceProcess(PID, &pprocess);
-    KdPrint("refstatus: %d", status);
+   
     if (0 != status)
         return status;
 
     ASSERT(pprocess);
-    
-    KdPrint("kuljul: %x", pprocess);
 
     status = PsKillProcess(pprocess, ExitStatus);
-    if (0 == status) {
+    if (0 != status) {
         ObDereferenceObject(pprocess);
         return status;
     }
