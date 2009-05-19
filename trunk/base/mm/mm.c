@@ -25,13 +25,10 @@ PMEMORY_BLOCK MemBlock;
 // Pointer to the first block
 PVOID StartBlock;
 
-//
-// aligns memory pointer at a 4-byte boundary
-//
+// Aligns memory pointer at a 4-byte boundary
 #define ALIGN_MEMORY(X)     ((PVOID)(((ULONG)(X) + 3) & ~3))
 
-VOID
-MmInitialize()
+VOID MmInitialize()
 {
 	// Initialize first memory addrress
 	FirstMemPointer = ALIGN_MEMORY(HalGetFirstUsableMemoryAddress());
@@ -45,6 +42,24 @@ MmInitialize()
 	
 	// Keeps track of the first block
 	StartBlock = MemBlock;
+}
+
+ULONG MmGetUsedMemSum() {
+
+	// Copy of the mb-list
+	PMEMORY_BLOCK PMb = MemBlock;
+
+	ULONG UsedMemSum = 0;
+	
+	// Go through all blocks
+	while(PMb->NextBlock != NULL) {
+		if(PMb->IsFree == FALSE)
+			UsedMemSum = UsedMemSum + PMb->Size + HeaderSize;
+
+		PMb = PMb->NextBlock;
+	}
+
+	return UsedMemSum;
 }
 
 PVOID MmAlloc(ULONG SizeToBeAllocated) {

@@ -22,6 +22,10 @@ MmInitialize();         // NEW! Use this in KeInit to initialize
 
 PULONG
 MmGetMemPointer();	// NEW! Return freeMemPointer.
+
+// Returns the size of all allocated blocks
+ULONG
+MmGetUsedMemSum(); 
                        
 PVOID
 MmAlloc(ULONG size);	// CHANGED! Function now return POBJECT_HEADER
