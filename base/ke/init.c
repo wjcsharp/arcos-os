@@ -77,10 +77,10 @@ KeInitialize(VOID) {
 
     PsCreateProcess(TestProcess, 5, &testProcess, NULL);
     PsCreateProcess(TestProcess2, 5, &testProcess2, NULL);
-    PsCreateProcess(TestScrollerProcess, 0, &testScrollerProcess, NULL);
+    PsCreateProcess(TestScrollerProcess, 3, &testScrollerProcess, NULL);
 
 
-    PsCreateProcessByName("ChangePrio", 15, &testProcess3, "3 18");
+    PsCreateProcessByName("ChangePrio", 15, &testProcess3, " 3 18");
 
     KeRestoreInterrupts(TRUE);
 
