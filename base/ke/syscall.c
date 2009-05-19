@@ -2,6 +2,7 @@
 #include <ke.h>
 #include <ps.h>
 #include <io.h>
+#include <mess.h>
 
 VOID
 KeSetSyscallResult(
@@ -61,6 +62,15 @@ KeSystemService(
         case 8:
             KeSetSyscallResult(KeCurrentProcess, PsKillByPID(Arg0, Arg1));
             break;
+
+        case 10:
+            KeSetSyscallResult(KeCurrentProcess, MessSendMessage(Arg0, Arg1, (PVOID) Arg2, Arg3));
+            break;
+
+        case 11:
+            KeSetSyscallResult(KeCurrentProcess, (ULONG) MessReceiveFirst(Arg0));
+            break;
+
         default:
             // probably a bugcheck is overreacting but what the hell
             KeBugCheck("Bad syscall. I think I will just die now.");
