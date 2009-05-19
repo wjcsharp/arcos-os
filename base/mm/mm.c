@@ -88,7 +88,7 @@ PVOID MmVirtualAlloc(PPROCESS BlockOwner, ULONG Size) {
 
 	// Create a new block
 	PVIRTUAL_MEMORY_BLOCK NewBlock;
-	NewBlock = MmAlloc(Size);
+	NewBlock = MmAlloc((ULONG)ALIGN_MEMORY(Size + VHeaderSize));
 
 	// Add it to the list
 	NewBlock->NextBlock = PVMb;
