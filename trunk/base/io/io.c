@@ -3,11 +3,13 @@
 #include <hal.h>
 #include <ob.h>
 #include <rtl.h>
+#include <ke.h>
+#include <kd.h>
 
 POBJECT_TYPE	fileType;
 PFILE		serialFile;
 PFILE		lcdFile;	// NOT LED! The led-board will not be used, but the LCD-display will.)
-static FIFO 	fifo;	
+static FIFO 	fifo;
 
 // Pre-define some functions.
 VOID IoReadSerial();
@@ -15,7 +17,7 @@ VOID IoWriteSerial();
 VOID IoWriteLcd();
 
 // Added by Olle
-// Stops adding when buffer is full. 
+// Stops adding when buffer is full.
 VOID
 AddCharToBuffer(CHAR c)
 {
@@ -24,9 +26,9 @@ AddCharToBuffer(CHAR c)
 		fifo.buffer[fifo.length] = c;
 		fifo.length++;
 	}
-} 
+}
 
-// Added by Olle. 
+// Added by Olle.
 // Returns first char in fifo buffer, which can be NULL.
 CHAR
 GetFirstCharFromBuffer()
@@ -47,42 +49,42 @@ IoInitialize()
    	OBJECT_TYPE_INITIALIZER typeInitializer;
     	STATUS status;
 	HANDLE handle;
- 
+
 	fifo.length = 0;
-   
+
 	// Create fileType
     	typeInitializer.DumpMethod = NULL;	// What is DumpMethod?
     	typeInitializer.DeleteMethod = NULL;	// Can't delete file types in this version of ARCOS.
     	status = ObCreateObjectType('f', &typeInitializer, &fileType); // f331 = file
 	HalDisplayString("Create fileType done\n");
-    
+
 	if (status != STATUS_SUCCESS)	// Abandon procedure, and OS, I guess.
 	{
-  		HalDisplayString("Error: Create fileType\n"); 
+  		HalDisplayString("Error: Create fileType\n");
 		return status;
 	}
 	// Create serialFile and lcdFile
 	handle = NULL;
 	status = ObCreateObject(fileType, 0, sizeof(FILE), (PVOID) &serialFile);
-	
-	if (status == STATUS_SUCCESS) 
+
+	if (status == STATUS_SUCCESS)
 	{
 		HalDisplayString("Create serialFile done\n");
 		serialFile->read = IoReadSerial;
 		serialFile->write = IoWriteSerial;
 	}
 	else
-		return status;     
-	
+		return status;
+
 	status = ObCreateObject(fileType, 0, sizeof(FILE), (PVOID) &lcdFile);
-	if (status == STATUS_SUCCESS) 
+	if (status == STATUS_SUCCESS)
 	{
 		HalDisplayString("Create lcdFile done\n");
 		lcdFile->read = NULL;
 		lcdFile->write = IoWriteLcd;
 	}
-	
-	return status;		
+
+	return status;
 }
 
 HANDLE
@@ -94,10 +96,10 @@ IoCreateFile(			// Error-handling in this function?
 	STATUS status;
 
 	// Pick right type.
-	if (filename == 's') 
+	if (filename == 's')
 	{
         	status = ObOpenObjectByPointer(serialFile, OBJ_INHERIT, fileType, &handle);
-		return handle;   
+		return handle;
 	}
 	if (filename == 'l')
 	{
@@ -136,7 +138,7 @@ IoReadFile(
 	status = ObReferenceObjectByHandle(handle, fileType, (PVOID) &file);	// Only serial type have write capability in this OS.
 	if (file->read != NULL)
 		file->read(buffer,bufferSize);
-	
+
         return 0;
 }
 
@@ -149,10 +151,22 @@ IoWriteSerial(
 	// Insert multitasking routin here.
 	ULONG p;		// To get rid of warning.
 	PCHAR string;
-	
+	ULONG i;
+
+	ASSERT(buffer);
+
+	KdPrint("IO: IoWriteSerial: Start to print");
+
 	p = bufferSize;
 	string = (PCHAR) buffer;
-	HalDisplayString(string);
+
+	while(*string){
+		if (HalDisplayChar(string) != STATUS_SUCCESS)		// If device wasn't ready,
+			Sleep(500);										// sleep a while.
+		else
+			string++;
+	}
+	KdPrint("IO: IoWriteSerial: Stop printing");
 }
 
 // Read characters from the Io-buffer.
@@ -162,9 +176,21 @@ IoReadSerial(
 	ULONG bufferSize)		// Is bufferSize needed here?
 {
 	ULONG p;		// To get rid of warning.
+	CHAR c;
 	p = bufferSize;
 
-	*((CHAR*) buffer) = GetFirstCharFromBuffer();
+	c = GetFirstCharFromBuffer();
+
+	if(c==NULL){
+		KeStopSchedulingProcess(KeCurrentProcess);		// Is this legal?
+		return;								// The user program should make a loop when
+											// waiting for a char from the buffer:
+											//  while(!c){
+											//		IoReadFile(handle,c,1);
+											//  }
+	}
+
+	*((CHAR*) buffer) = c;
 }
 
 // Write up to 8 characters to the lcd display (NOT the led board), should change name).
@@ -176,7 +202,7 @@ IoWriteLcd(
 {
 	ULONG i;
 	PCHAR string = buffer;
-	volatile PCHAR lcdAddress; 	
+	volatile PCHAR lcdAddress;
 	lcdAddress = (PCHAR) 0xbf000418;	// Address of first char on ascii-board.
 	for (i = 0; i < bufferSize && i < 8; i++)
 	{

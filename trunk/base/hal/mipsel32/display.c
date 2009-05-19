@@ -19,6 +19,7 @@ Revision History:
 #include <arcos.h>
 #include <ke.h>
 #include <rtl.h>
+#include <api.h>
 #include "halp.h"
 
 VOID
@@ -40,14 +41,34 @@ HalDisplayString(
 
         // new line: output both carriage return and line feed
         if (*string == '\n') {
-            
+
             // wait for the device
             while (!tty->lsr.field.thre);
             tty->thr = '\r';
         }
-      
         string++;
     }
+}
+
+STATUS
+HalDisplayChar(
+		PCHAR c)
+{
+    volatile PNS16550 tty = (PNS16550)UART_BASE;
+
+    while (!tty->lsr.field.thre)
+    	Sleep(100);					// Check this number.
+
+    tty->thr = *c;
+
+	if (*c == '\n') {
+
+		while (!tty->lsr.field.thre)
+			Sleep(100);
+		tty->thr = '\r';
+	}
+	return STATUS_SUCCESS;
+
 }
 
 VOID
@@ -59,7 +80,7 @@ HalSetForegroundColor(
 
     RtlFormatString(ansiCommand, sizeof(ansiCommand), "\e[%d;%dm",
         color > 7 ? 1 : 0, (color > 7 ? color - 8 : color) + 30);
-    
+
     HalDisplayString(ansiCommand);
 }
 
@@ -72,7 +93,7 @@ HalSetBackgroundColor(
 
     RtlFormatString(ansiCommand, sizeof(ansiCommand), "\e[%dm",
         color + 40);
-    
+
     HalDisplayString(ansiCommand);
 }
 
