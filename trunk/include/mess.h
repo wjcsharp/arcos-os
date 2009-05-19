@@ -18,7 +18,7 @@ typedef struct _MESSAGE {
 	ULONG	receiverPid;
 	ULONG	priority;
 	ULONG	messageType;
-	//PVOID	buffer;
+	PVOID	buffer;		// Points to body of message
 	ULONG	bufferSize;
 	struct _MESSAGE *next;
 } MESSAGE, *PMESSAGE;
@@ -31,10 +31,8 @@ typedef struct _MESSAGE_QUEUE
 } MESSAGE_QUEUE, *PMESSAGE_QUEUE;
 
 STATUS
-MessSend(
-	ULONG senderPid,
+MessSendMessage(
 	ULONG receiverPid,
-	ULONG priority,
 	ULONG messageType,
 	PVOID buffer,
 	ULONG bufferSize
@@ -57,13 +55,13 @@ MessReceiveByType(
 	);
 
 ULONG
-MessGetSize(
-	PMESSAGE mess
+MessGetMessageSize(
+	PVOID mess
 	);
 
-PVOID
+STATUS
 MessCopyMessage(
-	PVOID mess,		// PVOID or PMESSAGE?
+	PVOID mess,
 	PVOID buffer,
 	ULONG bufferSize
 	);
@@ -72,5 +70,8 @@ STATUS
 MessDeleteMessage(
 	PVOID mess
 	);
+
+STATUS
+MessDeleteMessageQueue();
 
 #endif

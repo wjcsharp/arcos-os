@@ -42,4 +42,17 @@ KillByPID(
         ULONG ExitStatus
         );
 
+STATUS
+SendMessage(
+	ULONG receiverPid,
+	ULONG messageType,
+	PVOID buffer,
+	ULONG bufferSize
+	);
+
+PVOID
+ReceiveFirst(
+	ULONG timeout
+	);
+
 #endif
