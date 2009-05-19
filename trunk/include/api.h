@@ -55,4 +55,9 @@ ReceiveFirst(
 	ULONG timeout
 	);
 
+STATUS
+ChangePriority(
+        ULONG PID,
+        ULONG NewPrio);
+
 #endif

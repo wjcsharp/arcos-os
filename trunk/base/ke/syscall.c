@@ -63,6 +63,10 @@ KeSystemService(
             KeSetSyscallResult(KeCurrentProcess, PsKillByPID(Arg0, Arg1));
             break;
 
+	case 9:
+            KeSetSyscallResult(KeCurrentProcess, PsChangePriority(Arg0, Arg1));
+            break;
+
         case 10:
             KeSetSyscallResult(KeCurrentProcess, MessSendMessage(Arg0, Arg1, (PVOID) Arg2, Arg3));
             break;

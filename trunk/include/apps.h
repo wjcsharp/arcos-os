@@ -3,7 +3,7 @@
 #include <arcos.h>
 
 //ALL APPS SHOULD HAVE VOID RETURN AND USE KillMe() for graceful exit.
-//Arguments is passed via PCHAR Args in PROCESS
+//Arguments is passed via PCHAR Args in PROCESS as a string.
 
 
 VOID
@@ -20,5 +20,8 @@ scrollText();
 
 VOID
 Kill();
+
+VOID
+ChangePrio();
 
 #endif
