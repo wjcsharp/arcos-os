@@ -153,20 +153,21 @@ IoWriteSerial(
 	PCHAR string;
 	ULONG i;
 
-	ASSERT(buffer);
-
-	KdPrint("IO: IoWriteSerial: Start to print");
+	//KdPrint("IO: IoWriteSerial: Start to print");
 
 	p = bufferSize;
-	string = (PCHAR) buffer;
-
+	//string = (PCHAR) buffer;
+	HalDisplayString((PCHAR)buffer); 		// If device wasn't ready,
+	
+	/*
 	while(*string){
 		if (HalDisplayChar(string) != STATUS_SUCCESS)		// If device wasn't ready,
-			Sleep(500);										// sleep a while.
+			Sleep(500);				// sleep a while.
 		else
 			string++;
 	}
-	KdPrint("IO: IoWriteSerial: Stop printing");
+	*/
+	//KdPrint("IO: IoWriteSerial: Stop printing");
 }
 
 // Read characters from the Io-buffer.
@@ -178,19 +179,20 @@ IoReadSerial(
 	ULONG p;		// To get rid of warning.
 	CHAR c;
 	p = bufferSize;
-
-	c = GetFirstCharFromBuffer();
-
-	if(c==NULL){
-		KeStopSchedulingProcess(KeCurrentProcess);		// Is this legal?
-		return;								// The user program should make a loop when
-											// waiting for a char from the buffer:
-											//  while(!c){
-											//		IoReadFile(handle,c,1);
-											//  }
+/*
+	c = 
+	while(!c){
+		Sleep(100);						// Check number.
+		c = GetFirstCharFromBuffer();
 	}
+	// The user program should make a loop when
+	// waiting for a char from the buffer:
+	//  while(!c){
+	//		IoReadFile(handle,c,1);
+	//  }
+*/
 
-	*((CHAR*) buffer) = c;
+	*((CHAR*) buffer) = GetFirstCharFromBuffer();
 }
 
 // Write up to 8 characters to the lcd display (NOT the led board), should change name).
