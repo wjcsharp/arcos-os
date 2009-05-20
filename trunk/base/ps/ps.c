@@ -109,8 +109,23 @@ Kill() {
 
 VOID
 MyFirstProgram() {
-    KdPrint("Hello from my first program");
+    PPROCESS_INFO pinfo;
+    ULONG numprocess, i, j;
+
+    pinfo = (PPROCESS_INFO) MmAlloc(10 * sizeof (PROCESS_INFO));
+
+    KdPrint("---TaskManager sleeps a while---");
     Sleep(15000);
+
+    for (j = 0; j < 10; j++) {
+        GetProcessInfo(pinfo, 10, &numprocess);
+        KdPrint("----TASKMANAGER----");
+        for (i = 0; i < numprocess; i++) {
+            KdPrint("PID: %d", pinfo[i].PID);
+            KdPrint("CPU TIME: %d", pinfo[i].CPUTime);
+        }
+        Sleep(10000);
+    }
     KdPrint("My first process executed and DIES");
     KillMe();
 }
@@ -544,33 +559,34 @@ PsReferenceProcess(
 
 STATUS
 CopyPInfo(
-        PPROCESS Process,
+        PPROCESS PProcess,
         PPROCESS_INFO Info) {
-    if (NULL == Process)
+    if (NULL == PProcess)
         return STATUS_INVALID_PARAMETER;
 
-    Info->CPUTime = Process->CPUTime;
-    Info->Priority = Process->Priority;
+    Info->CPUTime = PProcess->CPUTime;
+    Info->Priority = PProcess->Priority;
+    Info->State = PProcess->State;
+    Info->RunningProgram = PProcess->RunningProgram;
+    Info->PID = PProcess->PID;
 
-    Info->State = Process->State;
-    Info->RunningProgram = Process->RunningProgram;
-    Info->PID = Process->PID;
-    return STATUS_NO_SUCH_PROCESS;
+    return STATUS_SUCCESS;
 };
 
 STATUS
 PsGetProcessesInfo(
-        PROCESS_INFO Buffer[],
+        PPROCESS_INFO Buffer,
         ULONG BufferSize,
         PULONG NumberProcesses
         ) {
     PROCESS_INFO pinfo;
-    PPROCESS pprocess;
+    PPROCESS pprocess = NULL;
     ULONG foundProc = 0;
     STATUS status;
 
     //Get first process object
     pprocess = ObGetFirstObjectOfType(processType);
+    ASSERT(pprocess);
 
     while (pprocess) {
         if (BufferSize > foundProc) {

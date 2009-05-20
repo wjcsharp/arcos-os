@@ -31,14 +31,14 @@ TestProcess2(PCHAR args) {
     KdPrint("Hello from testprocess2. My PID is %d.", GetProcessId());
 
     while (1) {
-        Sleep(10000);
-        KdPrint("testprocess2 heartbeat Prio is: %d", GetProcessPriority());
+        Sleep(3000);
+        KdPrint("testprocess2 heartbeat");
     }
 }
 
 VOID
 TestScrollerProcess() {
-    KdPrint("SCROLLER Prio is %d", GetProcessPriority());
+    KdPrint("SCROLLER PID is %d", GetProcessId());
 
     scrollerInit();
 
@@ -80,7 +80,7 @@ KeInitialize(VOID) {
     PsCreateProcess(TestScrollerProcess, 3, &testScrollerProcess, NULL);
 
 
-    PsCreateProcessByName("ChangePrio", 15, &testProcess3, " 3 18");
+    PsCreateProcessByName("MyFirstProgram", 30, &testProcess3, NULL);
 
     KeRestoreInterrupts(TRUE);
 

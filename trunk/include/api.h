@@ -1,5 +1,6 @@
 #ifndef __API_H__
 #define __API_H__
+#include <ps.h>
 
 VOID
 Sleep(ULONG Milliseconds);
@@ -22,19 +23,19 @@ CreateProcess(
         );
 
 HANDLE
-CreateFile(ULONG filename);	// 's' for serial, 'l' for lcd. Serial is used for input also.
+CreateFile(ULONG filename); // 's' for serial, 'l' for lcd. Serial is used for input also.
 
 ULONG
 WriteFile(
-	HANDLE handle,
-	PVOID buffer,
-	ULONG bufferSize);
+        HANDLE handle,
+        PVOID buffer,
+        ULONG bufferSize);
 
 ULONG
 ReadFile(
-	HANDLE handle,
-	PVOID buffer,
-	ULONG bufferSize);
+        HANDLE handle,
+        PVOID buffer,
+        ULONG bufferSize);
 
 STATUS
 KillByPID(
@@ -44,20 +45,28 @@ KillByPID(
 
 STATUS
 SendMessage(
-	ULONG receiverPid,
-	ULONG messageType,
-	PVOID buffer,
-	ULONG bufferSize
-	);
+        ULONG receiverPid,
+        ULONG messageType,
+        PVOID buffer,
+        ULONG bufferSize
+        );
 
 PVOID
 ReceiveFirst(
-	ULONG timeout
-	);
+        ULONG timeout
+        );
 
 STATUS
 ChangePriority(
         ULONG PID,
-        ULONG NewPrio);
+        ULONG NewPrio
+        );
+
+STATUS
+GetProcessInfo(
+        PPROCESS_INFO Buffer,
+        ULONG BufferSize,
+        PULONG NumberProcesses
+        );
 
 #endif
