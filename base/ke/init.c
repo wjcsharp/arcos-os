@@ -70,13 +70,16 @@ KeInitialize(VOID) {
 
     KdPrint("Say %s to %s!", "hello", "ARCOS kernel debugger");
 
-    HalDisplayString("Hello world!\n");
+    //HalDisplayString("Hello world!\n");
 
     //HANDLE handle = IoCreateFile('serial');
 
 
     PsCreateProcess(TestProcess, 5, &testProcess, NULL);
     PsCreateProcess(TestProcess2, 5, &testProcess2, NULL);
+
+
+
     PsCreateProcess(TestScrollerProcess, 3, &testScrollerProcess, NULL);
 
 
