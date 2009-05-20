@@ -104,10 +104,13 @@ DeleteMessage:
     syscall
     jr      ra
 
-
+.globl  GetProcessInfo
+GetProcessInfo:
+    addi    v0, zero, 17
+    syscall
+    jr      ra
 
 
 
     # Put your own syscalls here. Just change the name and increment the 0.
 
-    

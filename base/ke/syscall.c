@@ -48,7 +48,7 @@ KeSystemService(
             break;
 
         case 5:
-            KeSetSyscallResult(KeCurrentProcess, (ULONG)IoCreateFile(Arg0)); // Return HANDLE to file opened.
+            KeSetSyscallResult(KeCurrentProcess, (ULONG) IoCreateFile(Arg0)); // Return HANDLE to file opened.
             break;
 
         case 6:
@@ -63,7 +63,7 @@ KeSystemService(
             KeSetSyscallResult(KeCurrentProcess, PsKillByPID(Arg0, Arg1));
             break;
 
-	case 9:
+        case 9:
             KeSetSyscallResult(KeCurrentProcess, PsChangePriority(Arg0, Arg1));
             break;
 
@@ -73,6 +73,10 @@ KeSystemService(
 
         case 11:
             KeSetSyscallResult(KeCurrentProcess, (ULONG) MessReceiveFirst(Arg0));
+            break;
+
+        case 17:
+            KeSetSyscallResult(KeCurrentProcess, (ULONG) PsGetProcessesInfo((PPROCESS_INFO)Arg0,Arg1,(PULONG)Arg2));
             break;
 
         default:
