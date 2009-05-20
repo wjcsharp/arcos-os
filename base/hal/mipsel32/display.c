@@ -52,23 +52,10 @@ HalDisplayString(
 
 STATUS
 HalDisplayChar(
-		PCHAR c)
+		CHAR c)
 {
     volatile PNS16550 tty = (PNS16550)UART_BASE;
-
-    while (!tty->lsr.field.thre)
-    	Sleep(100);					// Check this number.
-
-    tty->thr = *c;
-
-	if (*c == '\n') {
-
-		while (!tty->lsr.field.thre)
-			Sleep(100);
-		tty->thr = '\r';
-	}
-	return STATUS_SUCCESS;
-
+    tty->thr = c;
 }
 
 VOID

@@ -47,6 +47,9 @@ IoCreateFile(
 VOID
 IoInterreuptHandler(CHAR c);	// Changed, but it matters only to me.
 
+VOID
+IoTransmitterInterruptHandler();
+
 STATUS
 IoInitialize();
 

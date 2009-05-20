@@ -8,14 +8,22 @@
 
 POBJECT_TYPE fileType;
 PFILE serialFile;
-PFILE lcdFile; // NOT LED! The led-board will not be used, but the LCD-display will.)
-static FIFO fifo;
+PFILE lcdFile; 
+BOOL doneWriting = TRUE;
+
+CHAR outputSpace[256];	// Maximum of string to print = 256
+PCHAR outputBuffer = outputSpace;
+ULONG bufferPosition = 0;
+ULONG outputLength;
+
+static FIFO fifo;	// Input buffer from kbd
 
 // Pre-define some functions.
 VOID IoReadSerial();
 VOID IoWriteSerial();
 VOID IoWriteLcd();
 
+//
 // Added by Olle
 // Stops adding when buffer is full.
 
@@ -80,6 +88,8 @@ IoInitialize() {
         lcdFile->write = IoWriteLcd;
     }
 
+    //outputSpace[0] = NULL;
+
     return status;
 }
 
@@ -135,35 +145,26 @@ IoReadFile(
 }
 
 // Write string to serial display.
-
 VOID
 IoWriteSerial(
         PVOID buffer,
         ULONG bufferSize) {
-    // Insert multitasking routin here.
-    ULONG p; // To get rid of warning.
-    PCHAR string;
-    ULONG i;
 
     //KdPrint("IO: IoWriteSerial: Start to print");
+	//CopyBufferToOutputBuffer(buffer);
+		if (doneWriting) {
+			RtlCopyString(outputBuffer,(PCHAR) buffer);
+			doneWriting = FALSE;
+			bufferPosition = 0;
+			outputLength = RtlStringLength((PCHAR) buffer);
+			return;
+		}
+	//outputBuffer = outputSpace[0];
 
-    p = bufferSize;
-    //string = (PCHAR) buffer;
-    HalDisplayString((PCHAR) buffer); // If device wasn't ready,
-
-    /*
-    while(*string){
-            if (HalDisplayChar(string) != STATUS_SUCCESS)		// If device wasn't ready,
-                    Sleep(500);				// sleep a while.
-            else
-                    string++;
-    }
-     */
     //KdPrint("IO: IoWriteSerial: Stop printing");
 }
 
 // Read characters from the Io-buffer.
-
 VOID
 IoReadSerial(
         PVOID buffer,
@@ -208,4 +209,21 @@ IoWriteLcd(
 VOID
 IoInterruptHandler(CHAR c) {
     AddCharToBuffer(c);
+}
+
+// Device is ready for ouput - write the next char on console.
+VOID
+IoTransmitterInterruptHandler() {
+	if(!doneWriting) {
+		HalDisplayChar(outputBuffer[bufferPosition++]);
+		//KeSuspendProcess(1000);
+		//Sleep(1000);
+	}
+	if(!outputBuffer[bufferPosition]) {
+		bufferPosition = 0;
+		//outputSpace[0] = NULL;
+		doneWriting = TRUE;
+	}
+	
+
 }

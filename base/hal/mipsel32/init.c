@@ -93,10 +93,6 @@ HalInitialize(
     // reset the system timer to fire in specified time
     //
     HalResetTimer(67000 * 10);
-
-    //
-    // set buffer fifo length (IO)
-    //
 }
 
 VOID
@@ -177,6 +173,11 @@ HalHandleException(
                 //
                 pFrame->Cause &= ~0x1000;
             }
+	    if (tty->lsr.field.thre) {
+	    	// Last alternative - device ready for output
+		IoTransmitterInterruptHandler();
+                pFrame->Cause &= ~0x1000;
+	    }
         }
     }
 
