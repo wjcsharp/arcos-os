@@ -162,7 +162,7 @@ typedef struct _PROCESS {
     CONTEXT Context;
     HANDLE_TABLE_ENTRY HandleTable[MAX_HANDLE_COUNT];
     PROCESS_STATE State;
-    ULONG RunningProgram;
+    PCHAR RunningProgram;
     ULONG PID;
     ULONG Priority;
     ULONG ExitStatus;

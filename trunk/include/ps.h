@@ -23,7 +23,7 @@
 
 typedef struct _PROCESS_INFO {
     PROCESS_STATE State;
-    ULONG RunningProgram;
+    PCHAR RunningProgram;
     ULONG PID;
     ULONG Priority;
     ULONG CPUTime;
