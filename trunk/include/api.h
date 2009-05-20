@@ -2,6 +2,8 @@
 #define __API_H__
 #include <ps.h>
 
+#define WriteString(handle,msg) WriteFile(handle, msg, RtlStringLength(msg))
+
 VOID
 Sleep(ULONG Milliseconds);
 

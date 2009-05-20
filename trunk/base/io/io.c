@@ -6,10 +6,10 @@
 #include <ke.h>
 #include <kd.h>
 
-POBJECT_TYPE	fileType;
-PFILE		serialFile;
-PFILE		lcdFile;	// NOT LED! The led-board will not be used, but the LCD-display will.)
-static FIFO 	fifo;
+POBJECT_TYPE fileType;
+PFILE serialFile;
+PFILE lcdFile; // NOT LED! The led-board will not be used, but the LCD-display will.)
+static FIFO fifo;
 
 // Pre-define some functions.
 VOID IoReadSerial();
@@ -18,203 +18,194 @@ VOID IoWriteLcd();
 
 // Added by Olle
 // Stops adding when buffer is full.
+
 VOID
-AddCharToBuffer(CHAR c)
-{
-	if (fifo.length + 1 < FIFO_SIZE)		// length + 1
-	{
-		fifo.buffer[fifo.length] = c;
-		fifo.length++;
-	}
+AddCharToBuffer(CHAR c) {
+    if (fifo.length + 1 < FIFO_SIZE) // length + 1
+    {
+        fifo.buffer[fifo.length] = c;
+        fifo.length++;
+    }
 }
 
 // Added by Olle.
 // Returns first char in fifo buffer, which can be NULL.
+
 CHAR
-GetFirstCharFromBuffer()
-{
-	CHAR c;
-	ULONG i;
-	c = fifo.buffer[0];
-	for (i = 0; i != fifo.length; i++)		// Move all chars one step. Tested, but not supertested.
-		fifo.buffer[i] = fifo.buffer[i+1];	// Could be optimized. Later.
-	if (fifo.length > 0)				// Decrease fifo length
-		fifo.length--;
-	return c;
+GetFirstCharFromBuffer() {
+    CHAR c;
+    ULONG i;
+    c = fifo.buffer[0];
+    for (i = 0; i != fifo.length; i++) // Move all chars one step. Tested, but not supertested.
+        fifo.buffer[i] = fifo.buffer[i + 1]; // Could be optimized. Later.
+    if (fifo.length > 0) // Decrease fifo length
+        fifo.length--;
+    return c;
 }
 
 STATUS
-IoInitialize()
-{
-   	OBJECT_TYPE_INITIALIZER typeInitializer;
-    	STATUS status;
-	HANDLE handle;
+IoInitialize() {
+    OBJECT_TYPE_INITIALIZER typeInitializer;
+    STATUS status;
+    HANDLE handle;
 
-	fifo.length = 0;
+    fifo.length = 0;
 
-	// Create fileType
-    	typeInitializer.DumpMethod = NULL;	// What is DumpMethod?
-    	typeInitializer.DeleteMethod = NULL;	// Can't delete file types in this version of ARCOS.
-    	status = ObCreateObjectType('f', &typeInitializer, &fileType); // f331 = file
-	HalDisplayString("Create fileType done\n");
+    // Create fileType
+    typeInitializer.DumpMethod = NULL; // What is DumpMethod?
+    typeInitializer.DeleteMethod = NULL; // Can't delete file types in this version of ARCOS.
+    status = ObCreateObjectType('f', &typeInitializer, &fileType); // f331 = file
+    HalDisplayString("Create fileType done\n");
 
-	if (status != STATUS_SUCCESS)	// Abandon procedure, and OS, I guess.
-	{
-  		HalDisplayString("Error: Create fileType\n");
-		return status;
-	}
-	// Create serialFile and lcdFile
-	handle = NULL;
-	status = ObCreateObject(fileType, 0, sizeof(FILE), (PVOID) &serialFile);
+    if (status != STATUS_SUCCESS) // Abandon procedure, and OS, I guess.
+    {
+        HalDisplayString("Error: Create fileType\n");
+        return status;
+    }
+    // Create serialFile and lcdFile
+    handle = NULL;
+    status = ObCreateObject(fileType, 0, sizeof (FILE), (PVOID) & serialFile);
 
-	if (status == STATUS_SUCCESS)
-	{
-		HalDisplayString("Create serialFile done\n");
-		serialFile->read = IoReadSerial;
-		serialFile->write = IoWriteSerial;
-	}
-	else
-		return status;
+    if (status == STATUS_SUCCESS) {
+        HalDisplayString("Create serialFile done\n");
+        serialFile->read = IoReadSerial;
+        serialFile->write = IoWriteSerial;
+    } else
+        return status;
 
-	status = ObCreateObject(fileType, 0, sizeof(FILE), (PVOID) &lcdFile);
-	if (status == STATUS_SUCCESS)
-	{
-		HalDisplayString("Create lcdFile done\n");
-		lcdFile->read = NULL;
-		lcdFile->write = IoWriteLcd;
-	}
+    status = ObCreateObject(fileType, 0, sizeof (FILE), (PVOID) & lcdFile);
+    if (status == STATUS_SUCCESS) {
+        HalDisplayString("Create lcdFile done\n");
+        lcdFile->read = NULL;
+        lcdFile->write = IoWriteLcd;
+    }
 
-	return status;
+    return status;
 }
 
 HANDLE
-IoCreateFile(			// Error-handling in this function?
+IoCreateFile(// Error-handling in this function?
         ULONG filename
-        )
-{
-	HANDLE handle = NULL;
-	STATUS status;
+        ) {
+    HANDLE handle = NULL;
+    STATUS status;
 
-	// Pick right type.
-	if (filename == 's')
-	{
-        	status = ObOpenObjectByPointer(serialFile, OBJ_INHERIT, fileType, &handle);
-		return handle;
-	}
-	if (filename == 'l')
-	{
-	        status = ObOpenObjectByPointer(lcdFile, OBJ_INHERIT, fileType, &handle);
-		return handle;
-	}
+    // Pick right type.
+    if (filename == 's') {
+        status = ObOpenObjectByPointer(serialFile, OBJ_INHERIT, fileType, &handle);
+        return handle;
+    }
+    if (filename == 'l') {
+        status = ObOpenObjectByPointer(lcdFile, OBJ_INHERIT, fileType, &handle);
+        return handle;
+    }
 
-	return handle;	// Return NULL if everything went ga-ga.
+    return handle; // Return NULL if everything went ga-ga.
 }
 
 ULONG
 IoWriteFile(
         HANDLE handle,
         PVOID buffer,
-        ULONG bufferSize)
-{
-	STATUS status;
-	PFILE file;
+        ULONG bufferSize) {
+    STATUS status;
+    PFILE file;
 
-	status = ObReferenceObjectByHandle(handle, fileType, (PVOID) &file); // How to solve different types here??
-	file->write(buffer,bufferSize);
-
-        return 0;	// Return what?
+    status = ObReferenceObjectByHandle(handle, fileType, (PVOID) & file); // How to solve different types here??
+    file->write(buffer, bufferSize);
+    ObDereferenceObject(file); //ADDED BY MAGNUS
+    return 0; // Return what?
 }
 
 // Don't do anything if there doesn't exists a pointer to a read function.
+
 ULONG
 IoReadFile(
         HANDLE handle,
         PVOID buffer,
-        ULONG bufferSize)
-{
-	STATUS status;
-	PFILE file;
+        ULONG bufferSize) {
+    STATUS status;
+    PFILE file;
 
-	status = ObReferenceObjectByHandle(handle, fileType, (PVOID) &file);	// Only serial type have write capability in this OS.
-	if (file->read != NULL)
-		file->read(buffer,bufferSize);
-
-        return 0;
+    status = ObReferenceObjectByHandle(handle, fileType, (PVOID) & file); // Only serial type have write capability in this OS.
+    if (file->read != NULL)
+        file->read(buffer, bufferSize);
+    ObDereferenceObject(file); //ADDED BY MAGNUS
+    return 0;
 }
 
 // Write string to serial display.
+
 VOID
 IoWriteSerial(
         PVOID buffer,
-        ULONG bufferSize)
-{
-	// Insert multitasking routin here.
-	ULONG p;		// To get rid of warning.
-	PCHAR string;
-	ULONG i;
+        ULONG bufferSize) {
+    // Insert multitasking routin here.
+    ULONG p; // To get rid of warning.
+    PCHAR string;
+    ULONG i;
 
-	//KdPrint("IO: IoWriteSerial: Start to print");
+    //KdPrint("IO: IoWriteSerial: Start to print");
 
-	p = bufferSize;
-	//string = (PCHAR) buffer;
-	HalDisplayString((PCHAR)buffer); 		// If device wasn't ready,
-	
-	/*
-	while(*string){
-		if (HalDisplayChar(string) != STATUS_SUCCESS)		// If device wasn't ready,
-			Sleep(500);				// sleep a while.
-		else
-			string++;
-	}
-	*/
-	//KdPrint("IO: IoWriteSerial: Stop printing");
+    p = bufferSize;
+    //string = (PCHAR) buffer;
+    HalDisplayString((PCHAR) buffer); // If device wasn't ready,
+
+    /*
+    while(*string){
+            if (HalDisplayChar(string) != STATUS_SUCCESS)		// If device wasn't ready,
+                    Sleep(500);				// sleep a while.
+            else
+                    string++;
+    }
+     */
+    //KdPrint("IO: IoWriteSerial: Stop printing");
 }
 
 // Read characters from the Io-buffer.
+
 VOID
 IoReadSerial(
-	PVOID buffer,
-	ULONG bufferSize)		// Is bufferSize needed here?
+        PVOID buffer,
+        ULONG bufferSize) // Is bufferSize needed here?
 {
-	ULONG p;		// To get rid of warning.
-	CHAR c;
-	p = bufferSize;
-/*
-	c = 
-	while(!c){
-		Sleep(100);						// Check number.
-		c = GetFirstCharFromBuffer();
-	}
-	// The user program should make a loop when
-	// waiting for a char from the buffer:
-	//  while(!c){
-	//		IoReadFile(handle,c,1);
-	//  }
-*/
+    ULONG p; // To get rid of warning.
+    CHAR c;
+    p = bufferSize;
+    /*
+            c =
+            while(!c){
+                    Sleep(100);						// Check number.
+                    c = GetFirstCharFromBuffer();
+            }
+            // The user program should make a loop when
+            // waiting for a char from the buffer:
+            //  while(!c){
+            //		IoReadFile(handle,c,1);
+            //  }
+     */
 
-	*((CHAR*) buffer) = GetFirstCharFromBuffer();
+    *((CHAR*) buffer) = GetFirstCharFromBuffer();
 }
 
 // Write up to 8 characters to the lcd display (NOT the led board), should change name).
 // Only writes 8 chars, even if bufferSize > 8.
+
 VOID
 IoWriteLcd(
         PVOID buffer,
-        ULONG bufferSize)
-{
-	ULONG i;
-	PCHAR string = buffer;
-	volatile PCHAR lcdAddress;
-	lcdAddress = (PCHAR) 0xbf000418;	// Address of first char on ascii-board.
-	for (i = 0; i < bufferSize && i < 8; i++)
-	{
-		*lcdAddress = string[i];
-		lcdAddress += 8;
-	}
+        ULONG bufferSize) {
+    ULONG i;
+    PCHAR string = buffer;
+    volatile PCHAR lcdAddress;
+    lcdAddress = (PCHAR) 0xbf000418; // Address of first char on ascii-board.
+    for (i = 0; i < bufferSize && i < 8; i++) {
+        *lcdAddress = string[i];
+        lcdAddress += 8;
+    }
 }
 
 VOID
-IoInterruptHandler(CHAR c)
-{
-	AddCharToBuffer(c);
+IoInterruptHandler(CHAR c) {
+    AddCharToBuffer(c);
 }

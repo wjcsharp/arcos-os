@@ -23,9 +23,9 @@ POBJECT_TYPE processType;
 
 APPLICATION PsAvailApps[] = {
     {"TaskManager", TaskManager},
-    {"TestProcess3", PSTestProcess3},
     {"Kill", Kill},
-    {"ChangePrio", ChangePrio}
+    {"ChangePrio", ChangePrio},
+    {"TestProcess3", PSTestProcess3},
 };
 
 
@@ -107,38 +107,46 @@ Kill() {
     KillMe();
 }
 
+ULONG min(ULONG A, ULONG B) {
+    if (A < B)
+        return A;
+    return B;
+}
+
+#define TASKM_BUFFER_SIZE 12
+
 VOID
 TaskManager() {
     PPROCESS_INFO pinfo;
     ULONG numprocess, i, j;
-    CHAR string3[100];
+    CHAR strbuff[100];
+    HANDLE tmout;
 
-    //RtlFormatString(string3,100, pid, pinfo[i].PID);
-    //KdPrint("aferformat:%s", string3);
-    pinfo = (PPROCESS_INFO) MmAlloc(100 * sizeof (PROCESS_INFO));
+    tmout = CreateFile('s');
 
-    KdPrint("---TaskManager sleeps a while---");
+    
+    pinfo = (PPROCESS_INFO) MmAlloc(TASKM_BUFFER_SIZE * sizeof (PROCESS_INFO));
+
+    WriteString(tmout, "---TaskManager sleeps a while---\n");
     Sleep(15000);
 
-    for (j = 0; j < 4; j++) {
-        GetProcessInfo(pinfo, 100, &numprocess);
-        KdPrint("----TASKMANAGER----");
-        
-        for (i = 0; i < numprocess; i++) {
-            if(!pinfo[i].RunningProgram)
+    for (j = 0; j < 20; j++) {
+        GetProcessInfo(pinfo, TASKM_BUFFER_SIZE, &numprocess);
+        WriteString(tmout, "----TASKMANAGER----\n");
+
+        for (i = 0; i < (min(numprocess, TASKM_BUFFER_SIZE)); i++) {
+            if (!pinfo[i].RunningProgram)
                 pinfo[i].RunningProgram = "Unnamed";
         }
 
         for (i = 0; i < numprocess; i++) {
-            RtlFormatString(string3, 100, "%s PID: %d, CPU TIME: %d", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].CPUTime);
-            KdPrint("aferformat:%s", string3);
-
-            //KdPrint("PID: %d", pinfo[i].PID);
-            //KdPrint("CPU TIME: %d", pinfo[i].CPUTime);
+            RtlFormatString(strbuff, 100, "%s PID: %d, CPU TIME: %d\n", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].CPUTime);
+            WriteString(tmout, strbuff);
         }
         Sleep(10000);
     }
-    KdPrint("---Task Manager says godbye---");
+    WriteString(tmout,"---Task Manager says godbye---");
+    ObCloseHandle(tmout);
     MmFree(pinfo);
     KillMe();
 }
@@ -205,7 +213,7 @@ PsInitialize() {
 
     //Set quantum
     process->Quantum = 1;
-    
+
 
     //Initialize handletable
     ObInitProcess(NULL, process);
