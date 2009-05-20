@@ -157,8 +157,8 @@ MessDeleteMessageQueue()
 
 	while(mq){
 		message = mq;
-		MmFree((PVOID)message);
 		mq = mq->next;
+		MmFree((PVOID)message);
 	}
 
 	return STATUS_SUCCESS;
