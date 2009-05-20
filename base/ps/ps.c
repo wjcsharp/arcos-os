@@ -22,7 +22,7 @@
 POBJECT_TYPE processType;
 
 APPLICATION PsAvailApps[] = {
-    {"MyFirstProgram", MyFirstProgram},
+    {"TaskManager", TaskManager},
     {"TestProcess3", PSTestProcess3},
     {"Kill", Kill},
     {"ChangePrio", ChangePrio}
@@ -108,25 +108,38 @@ Kill() {
 }
 
 VOID
-MyFirstProgram() {
+TaskManager() {
     PPROCESS_INFO pinfo;
     ULONG numprocess, i, j;
+    CHAR string3[100];
 
-    pinfo = (PPROCESS_INFO) MmAlloc(10 * sizeof (PROCESS_INFO));
+    //RtlFormatString(string3,100, pid, pinfo[i].PID);
+    //KdPrint("aferformat:%s", string3);
+    pinfo = (PPROCESS_INFO) MmAlloc(100 * sizeof (PROCESS_INFO));
 
     KdPrint("---TaskManager sleeps a while---");
     Sleep(15000);
 
-    for (j = 0; j < 10; j++) {
-        GetProcessInfo(pinfo, 10, &numprocess);
+    for (j = 0; j < 4; j++) {
+        GetProcessInfo(pinfo, 100, &numprocess);
         KdPrint("----TASKMANAGER----");
+        
         for (i = 0; i < numprocess; i++) {
-            KdPrint("PID: %d", pinfo[i].PID);
-            KdPrint("CPU TIME: %d", pinfo[i].CPUTime);
+            if(!pinfo[i].RunningProgram)
+                pinfo[i].RunningProgram = "Unnamed";
+        }
+
+        for (i = 0; i < numprocess; i++) {
+            RtlFormatString(string3, 100, "%s PID: %d, CPU TIME: %d", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].CPUTime);
+            KdPrint("aferformat:%s", string3);
+
+            //KdPrint("PID: %d", pinfo[i].PID);
+            //KdPrint("CPU TIME: %d", pinfo[i].CPUTime);
         }
         Sleep(10000);
     }
-    KdPrint("My first process executed and DIES");
+    KdPrint("---Task Manager says godbye---");
+    MmFree(pinfo);
     KillMe();
 }
 
@@ -192,6 +205,7 @@ PsInitialize() {
 
     //Set quantum
     process->Quantum = 1;
+    
 
     //Initialize handletable
     ObInitProcess(NULL, process);
@@ -238,6 +252,21 @@ GetProgramAdress(PCHAR ProgramName) {
         if (RtlStringLength(PsAvailApps[index].Name) == RtlStringLength(ProgramName)) {
             if (0 == RtlCompareStrings(PsAvailApps[index].Name, ProgramName))
                 return PsAvailApps[index].Execute;
+        }
+    }
+    return NULL;
+}
+
+PVOID
+GetProgramName(VOID(*Execute)(PCHAR Args)) {
+    ULONG index;
+
+    if (NULL == Execute)
+        return NULL;
+
+    for (index = 0; index < (sizeof (PsAvailApps) / sizeof (APPLICATION)); ++index) {
+        if (PsAvailApps[index].Execute == Execute) {
+            return PsAvailApps[index].Name;
         }
     }
     return NULL;
@@ -304,6 +333,7 @@ PsCreateProcess(
     }
 
     //Attach memory block
+    process->RunningProgram = GetProgramName(PStartingAddress);
     process->AllocatedMemory = memPointer;
     process->PID = GetPID();
     process->Priority = Priority;

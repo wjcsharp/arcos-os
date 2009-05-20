@@ -80,7 +80,9 @@ KeInitialize(VOID) {
     PsCreateProcess(TestScrollerProcess, 3, &testScrollerProcess, NULL);
 
 
-    PsCreateProcessByName("MyFirstProgram", 30, &testProcess3, NULL);
+    PsCreateProcessByName("TaskManager", 1, &testProcess3, NULL);
+
+    ObCloseHandle(testProcess3);
 
     KeRestoreInterrupts(TRUE);
 

@@ -7,7 +7,7 @@
 
 
 VOID
-MyFirstProgram();
+TaskManager();
 
 VOID
 PSTestProcess3();
