@@ -93,6 +93,7 @@ HalInitialize(
     // reset the system timer to fire in specified time
     //
     HalResetTimer(67000 * 10);
+
 }
 
 VOID
@@ -153,10 +154,11 @@ HalHandleException(
             HalResetTimer(67000 * 10);
         } 
 
+            volatile PNS16550 tty = (PNS16550)UART_BASE;
+
         // serial device interrupt?
         if (pFrame->Cause & CP0_CAUSE_UART) {
 
-            volatile PNS16550 tty = (PNS16550)UART_BASE;
 
 #ifdef HAVE_KD
             volatile PNS16550 tty2 = (PNS16550)0xb80002f8;
@@ -173,12 +175,14 @@ HalHandleException(
                 //
                 pFrame->Cause &= ~0x1000;
             }
-	    if (tty->lsr.field.thre) {
-	    	// Last alternative - device ready for output
-		IoTransmitterInterruptHandler();
-                pFrame->Cause &= ~0x1000;
-	    }
+
         }
+        // Transmitter idle interrupt?
+        if (tty->lsr.field.thre) {
+    		IoTransmitterInterruptHandler();
+        	pFrame->Cause &= ~0x1000;
+        }
+
     }
 
     //
