@@ -9,12 +9,12 @@
 POBJECT_TYPE fileType;
 PFILE serialFile;
 PFILE lcdFile; 
-BOOL doneWriting = TRUE;
 
-CHAR outputSpace[256];	// Maximum of string to print = 256
+CHAR outputSpace[80*25];	// Maximum of string to print = 256
 PCHAR outputBuffer = outputSpace;
 ULONG bufferPosition = 0;
 ULONG outputLength;
+BOOL doneWriting = TRUE;
 
 static FIFO fifo;	// Input buffer from kbd
 
@@ -150,18 +150,12 @@ IoWriteSerial(
         PVOID buffer,
         ULONG bufferSize) {
 
-    //KdPrint("IO: IoWriteSerial: Start to print");
-	//CopyBufferToOutputBuffer(buffer);
-		if (doneWriting) {
-			RtlCopyString(outputBuffer,(PCHAR) buffer);
-			doneWriting = FALSE;
-			bufferPosition = 0;
-			outputLength = RtlStringLength((PCHAR) buffer);
-			return;
-		}
-	//outputBuffer = outputSpace[0];
-
-    //KdPrint("IO: IoWriteSerial: Stop printing");
+	// Kolla längden!
+	RtlCopyString(outputBuffer,(PCHAR) buffer);
+	doneWriting = FALSE;
+	bufferPosition = 0;
+	outputLength = RtlStringLength((PCHAR) buffer);
+	
 }
 
 // Read characters from the Io-buffer.
@@ -214,16 +208,11 @@ IoInterruptHandler(CHAR c) {
 // Device is ready for ouput - write the next char on console.
 VOID
 IoTransmitterInterruptHandler() {
-	if(!doneWriting) {
-		HalDisplayChar(outputBuffer[bufferPosition++]);
-		//KeSuspendProcess(1000);
-		//Sleep(1000);
-	}
-	if(!outputBuffer[bufferPosition]) {
-		bufferPosition = 0;
-		//outputSpace[0] = NULL;
+	if(*outputBuffer)
+		HalDisplayChar(*outputBuffer++);
+	else {
 		doneWriting = TRUE;
+		outputBuffer = outputSpace;
+		*outputBuffer = NULL;
 	}
-	
-
 }

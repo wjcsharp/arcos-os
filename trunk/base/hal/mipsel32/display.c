@@ -56,6 +56,8 @@ HalDisplayChar(
 {
     volatile PNS16550 tty = (PNS16550)UART_BASE;
     tty->thr = c;
+    if (c == '\n')
+	tty->thr = '\r';
 }
 
 VOID
