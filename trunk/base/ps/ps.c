@@ -118,34 +118,37 @@ ULONG min(ULONG A, ULONG B) {
 VOID
 TaskManager() {
     PPROCESS_INFO pinfo;
-    ULONG numprocess, i, j;
+    ULONG numprocess, i, j, cputmp, tend;
     CHAR strbuff[100];
     HANDLE tmout;
+    PCHAR timend[] = {"ms", "s"};
 
     tmout = CreateFile('s');
-
-    
     pinfo = (PPROCESS_INFO) MmAlloc(TASKM_BUFFER_SIZE * sizeof (PROCESS_INFO));
 
-    WriteString(tmout, "---TaskManager sleeps a while---\n");
-    Sleep(15000);
-
-    for (j = 0; j < 20; j++) {
+    for (j = 0; j < 500; j++) {
         GetProcessInfo(pinfo, TASKM_BUFFER_SIZE, &numprocess);
-        WriteString(tmout, "----TASKMANAGER----\n");
-
+        WriteString(tmout, "---------TASKMANAGER---------\n");
         for (i = 0; i < (min(numprocess, TASKM_BUFFER_SIZE)); i++) {
             if (!pinfo[i].RunningProgram)
                 pinfo[i].RunningProgram = "Unnamed";
         }
-
         for (i = 0; i < numprocess; i++) {
-            RtlFormatString(strbuff, 100, "%s PID: %d, CPU TIME: %d\n", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].CPUTime);
+            //Check how big cputime is
+            cputmp = pinfo[i].CPUTime;
+            if (cputmp < 10000)
+                tend = 0;
+            else {
+                cputmp = cputmp / 1000;
+                tend = 1;
+            }
+            RtlFormatString(strbuff, 100, "%s PID: %d, CPU TIME: %d %s\n", pinfo[i].RunningProgram, pinfo[i].PID, cputmp, timend[tend]);
             WriteString(tmout, strbuff);
+            Sleep(1000);
         }
-        Sleep(10000);
+        Sleep(3000);
     }
-    WriteString(tmout,"---Task Manager says godbye---");
+    WriteString(tmout, "--------Task Manager says godbye--------");
     ObCloseHandle(tmout);
     MmFree(pinfo);
     KillMe();
@@ -153,21 +156,12 @@ TaskManager() {
 
 VOID
 PSTestProcess3() {
-    ULONG i;
-    HANDLE handtag, handtag2;
-
-    //KdPrint("Hello from testprocess3 My PID is %d.", GetProcessId());
-    //KdPrint("Hello from testprocess3 My Prio is %d.", GetProcessPriority());
-    for (i = 0; i < 5; i++) {
-        KdPrint("testprocess3 heartbeat");
-    }
-
-    KdPrint("testprocess3 Creates new PROCESSES");
-    CreateProcess("MyFirstProgram", 15, &handtag2, NULL);
-    CreateProcess("MyFirstProgram", 15, &handtag, NULL);
-
-    Sleep(45000);
-    KdPrint("testprocess3 DIES");
+    //ULONG i;
+    HANDLE handtag;
+    PsCreateProcessByName("TaskManager", 1, &handtag, NULL);
+    ObCloseHandle(handtag);
+    KdPrint("tp3 I AM:%d", GetProcessId());
+    PsSupervise(1);
     KillMe();
 }
 
@@ -462,6 +456,21 @@ PsKillProcess(
 }
 
 STATUS
+PsSupervise(ULONG PID
+        ) {
+    STATUS status;
+    PPROCESS pprocess;
+
+    status = PsReferenceProcess(PID, &pprocess);
+    if (0 != status)
+        return status;
+    pprocess->Supervisor = KeCurrentProcess->PID;
+    KdPrint("PsSuper PID:%d is supervised by %d", pprocess->PID, pprocess->Supervisor);
+    ObDereferenceObject(pprocess);
+    return STATUS_SUCCESS;
+}
+
+STATUS
 PsChangePriority(
         ULONG PID,
         ULONG NewPriority
@@ -539,13 +548,13 @@ PsGetState(
 
 STATUS
 PsGetPid(
-        PHANDLE PHandle,
+        HANDLE Handle,
         PULONG PPid
         ) {
     PPROCESS pprocess;
     STATUS status;
 
-    status = ObReferenceObjectByHandle(PHandle, processType, (void**) & pprocess);
+    status = ObReferenceObjectByHandle(&Handle, processType, (void**) & pprocess);
     if (status != 0)
         return status;
 

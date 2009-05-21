@@ -18,9 +18,6 @@
 // Defines size of default memory to be allocated for a process
 #define PROCESS_MEMORY_SIZE 32768
 
-
-
-
 typedef struct _PROCESS_INFO {
     PROCESS_STATE State;
     PCHAR RunningProgram;
@@ -86,6 +83,11 @@ PsGetPriority(
         );
 
 STATUS
+PsSupervise(
+        ULONG PID
+        );
+
+STATUS
 PsChangePriority(
         ULONG PID,
         ULONG NewPriority
@@ -119,8 +121,8 @@ PsGetProcessesInfo(
         );
 
 STATUS
-PsGetPidFromHandle(
-        PHANDLE PHandle,
+PsGetPid(
+        HANDLE Handle,
         PULONG PPid
         );
 
