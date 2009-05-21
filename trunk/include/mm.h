@@ -20,9 +20,9 @@ typedef struct _VIRTUAL_MEMORY_BLOCK {
 } VIRTUAL_MEMORY_BLOCK, *PVIRTUAL_MEMORY_BLOCK;
 
 
+// Initialize the memory manager
 VOID
-MmInitialize();         // NEW! Use this in KeInit to initialize   
-			// the memory manager (freeMemPointer etc).
+MmInitialize();
 
 // Returns the size of all allocated blocks
 ULONG
@@ -32,15 +32,27 @@ MmGetUsedMemSum();
 VOID 
 MmPrintBlocks();
 
+// Returns the sum of memory allocated by a process
+ULONG
+MmGetUsedVirtMemSum();
+
+// Returns the address to the memory allocated
 PVOID
-MmVirtualAlloc(PPROCESS Proc, ULONG Size);
+MmVirtualAlloc(PPROCESS BlockOwner, ULONG Size);
 
+// Free the memory of a virtual block
 VOID
-MmVirtualFree(PPROCESS Proc, PVOID BlockBody);
+MmVirtualFree(PPROCESS BlockOwner, PVOID BlockBody);
 
+// Free all blocks allocated by the BlockOwner
+VOID
+MmVirtualFreeAll(PPROCESS BlockOwner);
+
+// Allocate a memory block of size Size and return the address of the block body
 PVOID
 MmAlloc(ULONG Size);
 
+// Free the block pointing at BlockBody
 VOID
 MmFree(PVOID BlockBody);				
 
