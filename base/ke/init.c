@@ -14,11 +14,13 @@
 
 VOID
 TestProcess(PCHAR args) {
+    ULONG i;
     UNREFERENCED_PARAMETER(args);
 
     KdPrint("Hello from testprocess. My PID is %d.", GetProcessId());
 
     while (1) {
+        for (i = 0; i < 0xFFFFFF; i++);
         Sleep(5000);
         KdPrint("testprocess heartbeat");
     }
@@ -26,11 +28,13 @@ TestProcess(PCHAR args) {
 
 VOID
 TestProcess2(PCHAR args) {
+    ULONG i;
     UNREFERENCED_PARAMETER(args);
 
     KdPrint("Hello from testprocess2. My PID is %d.", GetProcessId());
 
     while (1) {
+        for (i = 0; i < 0xFFFFFF; i++);
         Sleep(3000);
         KdPrint("testprocess2 heartbeat");
     }
@@ -45,7 +49,7 @@ TestScrollerProcess() {
     while (1) {
         //KdPrint("Hello from text scroller");
         scrollText();
-        Sleep(1000);
+        Sleep(500);
     }
 }
 
@@ -80,10 +84,10 @@ KeInitialize(VOID) {
 
 
 
-    PsCreateProcess(TestScrollerProcess, 3, &testScrollerProcess, NULL);
+    PsCreateProcess(TestScrollerProcess, 31, &testScrollerProcess, NULL);
 
 
-    PsCreateProcessByName("TaskManager", 1, &testProcess3, NULL);
+    PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
 
     ObCloseHandle(testProcess3);
 
