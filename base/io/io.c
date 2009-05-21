@@ -5,18 +5,21 @@
 #include <rtl.h>
 #include <ke.h>
 #include <kd.h>
+#include <mm.h>
 
 POBJECT_TYPE fileType;
 PFILE serialFile;
 PFILE lcdFile; 
 
-CHAR outputSpace[80*25];	// Maximum of string to print = 256
+CHAR outputSpace[512];	// Maximum of string to print = 512
 PCHAR outputBuffer = outputSpace;
 ULONG bufferPosition = 0;
 ULONG outputLength;
 BOOL doneWriting = TRUE;
 
-static FIFO fifo;	// Input buffer from kbd
+static FIFO fifo;			// Input buffer, receives from keyboard
+PIO_WAITING_QUEUE waitingQueue;		// Waiting queue for writeFile, FILO.
+
 
 // Pre-define some functions.
 VOID IoReadSerial();
@@ -52,7 +55,65 @@ GetFirstCharFromBuffer() {
 }
 
 STATUS
-IoInitialize() {
+AddProcessToWaitingQueue(PVOID buffer, ULONG bufferSize){		// Always adding current process.
+
+	PIO_WAITING_NODE newNode = MmAlloc(sizeof(IO_WAITING_NODE));
+	
+	//KdPrint("AddProcess begin");
+
+	//Check alloc
+	if(newNode == NULL)
+		return STATUS_NO_MEMORY;
+
+	newNode->process = KeCurrentProcess;
+
+	// First node in queue?
+	if(!waitingQueue->first) {
+		ASSERT(!waitingQueue->first);
+		waitingQueue->first = waitingQueue->last = newNode;
+		// Skip copy - already done in WriteFile.
+		// Skip suspend - don't have to wait.
+	}
+	else {
+		ASSERT(waitingQueue->last);
+		waitingQueue->last->next = newNode;
+		waitingQueue->last = newNode;
+		// Copy information about stuff to write (buffer).
+		RtlCopyString((PCHAR) newNode->buffer, (PCHAR) buffer);
+		newNode->bufferSize = bufferSize;
+		//KeBlockProcess();	// Send waiting process to block queue in scheduler.
+		//			// OBS OBS OBS! I don't use KeResumeProcess anywhere! Why do they keep waking??
+
+	}
+		
+	//KdPrint("IO: AddProcessToWaitingQueue: SUCCESS");
+
+	return STATUS_SUCCESS;
+}
+
+VOID
+RemoveProcessFromWaitingQueue(){	// Always remove process first in queue.
+
+	PIO_WAITING_QUEUE nodeToFree = waitingQueue->first;
+
+	ASSERT(waitingQueue->first);
+	
+	waitingQueue->first = waitingQueue->first->next;		// Could be NULL.
+	MmFree(nodeToFree);
+
+	if(waitingQueue->first) { 	// Is another queue in the list? Then copy stuff to outputBuffer and start the printing.
+		RtlCopyString(outputBuffer,(PCHAR) waitingQueue->first->buffer);
+		doneWriting = FALSE;
+		bufferPosition = 0;
+		//outputLength = RtlStringLength((PCHAR) waitingQueue->first->buffer);
+	}
+
+	//KdPrint("IO: RemoveProcessFromWaitingQueue");
+
+}
+
+STATUS
+IoInitialize() {					// Add mem-check to this function.
     OBJECT_TYPE_INITIALIZER typeInitializer;
     STATUS status;
     HANDLE handle;
@@ -88,13 +149,15 @@ IoInitialize() {
         lcdFile->write = IoWriteLcd;
     }
 
-    //outputSpace[0] = NULL;
+    waitingQueue = MmAlloc(sizeof(IO_WAITING_QUEUE));
+    waitingQueue->first = NULL;
+    waitingQueue->last = NULL;
 
     return status;
 }
 
 HANDLE
-IoCreateFile(// Error-handling in this function?
+IoCreateFile(                         // Error-handling in this function?
         ULONG filename
         ) {
     HANDLE handle = NULL;
@@ -122,7 +185,7 @@ IoWriteFile(
     PFILE file;
 
     status = ObReferenceObjectByHandle(handle, fileType, (PVOID) & file); // How to solve different types here??
-    file->write(buffer, bufferSize);
+    file->write(buffer, bufferSize);	// Add return stuff here!
     ObDereferenceObject(file); //ADDED BY MAGNUS
     return 0; // Return what?
 }
@@ -150,12 +213,22 @@ IoWriteSerial(
         PVOID buffer,
         ULONG bufferSize) {
 
-	// Kolla längden!
-	RtlCopyString(outputBuffer,(PCHAR) buffer);
-	doneWriting = FALSE;
-	bufferPosition = 0;
-	outputLength = RtlStringLength((PCHAR) buffer);
-	
+	//KdPrint("IO: IoWriteSerial: Start of function");
+
+	if(!waitingQueue->first) {	// If waiting queue is empty, copy buffer to outputBuffer and add the process to the waiting queue.
+		//KdPrint("IO: IoWriteSerial: !waitingQueue == TRUE");
+		RtlCopyString(outputBuffer,(PCHAR) buffer);
+		doneWriting = FALSE;
+		bufferPosition = 0;
+		outputLength = RtlStringLength((PCHAR) buffer);
+		AddProcessToWaitingQueue(buffer, bufferSize);		
+	}
+	else {	// Some other process is already writing on the serial - copy buffer to waiting node and wait.
+		//KdPrint("IO: IoWriteSerial: At least two processes waiting for IO");
+		AddProcessToWaitingQueue(buffer, bufferSize);
+		//KeSuspendProcess(5000);
+		// Suspend me.
+	}	
 }
 
 // Read characters from the Io-buffer.
@@ -210,9 +283,10 @@ VOID
 IoTransmitterInterruptHandler() {
 	if(*outputBuffer)
 		HalDisplayChar(*outputBuffer++);
-	else {
+	else if (waitingQueue->first) {
 		doneWriting = TRUE;
 		outputBuffer = outputSpace;
 		*outputBuffer = NULL;
+		RemoveProcessFromWaitingQueue();
 	}
 }
