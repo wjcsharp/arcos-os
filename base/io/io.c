@@ -9,16 +9,16 @@
 
 POBJECT_TYPE fileType;
 PFILE serialFile;
-PFILE lcdFile; 
+PFILE lcdFile;
 
-CHAR outputSpace[512];	// Maximum of string to print = 512
+CHAR outputSpace[512]; // Maximum of string to print = 512
 PCHAR outputPointer;
 ULONG bufferPosition = 0;
 ULONG outputLength;
 BOOL doneWriting = TRUE;
 
-static FIFO fifo;			// Input buffer, receives from keyboard
-PIO_WAITING_QUEUE waitingQueue;		// Waiting queue for writeFile, FILO.
+static FIFO fifo; // Input buffer, receives from keyboard
+PIO_WAITING_QUEUE waitingQueue; // Waiting queue for writeFile, FILO.
 PIO_BUFFER_QUEUE bufferQueue;
 
 // Pre-define some functions.
@@ -54,69 +54,8 @@ GetFirstCharFromBuffer() {
     return c;
 }
 
-
-/*
 STATUS
-AddProcessToWaitingQueue(PVOID buffer, ULONG bufferSize){		// Always adding current process.
-
-	PIO_WAITING_NODE newNode = MmAlloc(sizeof(IO_WAITING_NODE));
-	
-	KdPrint("AddProcess begin");
-
-	//Check alloc
-	if(newNode == NULL)
-		return STATUS_NO_MEMORY;
-
-	newNode->process = KeCurrentProcess;
-
-	// First node in queue?
-	if(!waitingQueue->first) {
-		ASSERT(!waitingQueue->first);
-		waitingQueue->first = waitingQueue->last = newNode;
-		// Skip copy - already done in WriteFile.
-		// Skip suspend - don't have to wait.
-	}
-	else {
-		ASSERT(waitingQueue->last);
-		waitingQueue->last->next = newNode;
-		waitingQueue->last = newNode;
-		// Copy information about stuff to write (buffer).
-		RtlCopyString((PCHAR) newNode->buffer, (PCHAR) buffer);
-		newNode->bufferSize = bufferSize;
-		//KeBlockProcess();	// Send waiting process to block queue in scheduler.
-		//			// OBS OBS OBS! I don't use KeResumeProcess anywhere! Why do they keep waking??
-
-	}
-		
-	KdPrint("IO: AddProcessToWaitingQueue: SUCCESS");
-
-	return STATUS_SUCCESS;
-}
-*/
-/*
-VOID
-RemoveProcessFromWaitingQueue(){	// Always remove process first in queue.
-
-	PIO_WAITING_NODE nodeToFree = waitingQueue->first;
-
-	ASSERT(waitingQueue->first);
-	
-	waitingQueue->first = waitingQueue->first->next;		// Could be NULL.
-	MmFree(nodeToFree);
-
-	if(waitingQueue->first) { 	// Is another queue in the list? Then copy stuff to outputBuffer and start the printing.
-		RtlCopyString(outputBuffer,(PCHAR) waitingQueue->first->buffer);
-		doneWriting = FALSE;
-		bufferPosition = 0;
-		//outputLength = RtlStringLength((PCHAR) waitingQueue->first->buffer);
-	}
-
-	//KdPrint("IO: RemoveProcessFromWaitingQueue");
-
-}
-*/
-STATUS
-IoInitialize() {					// Add mem-check to this function.
+IoInitialize() { // Add mem-check to this function.
     OBJECT_TYPE_INITIALIZER typeInitializer;
     STATUS status;
     HANDLE handle;
@@ -152,11 +91,11 @@ IoInitialize() {					// Add mem-check to this function.
         lcdFile->write = IoWriteLcd;
     }
 
-    waitingQueue = MmAlloc(sizeof(IO_WAITING_QUEUE));
+    waitingQueue = MmAlloc(sizeof (IO_WAITING_QUEUE));
     waitingQueue->first = NULL;
     waitingQueue->last = NULL;
 
-    bufferQueue = MmAlloc(sizeof(IO_BUFFER_QUEUE));
+    bufferQueue = MmAlloc(sizeof (IO_BUFFER_QUEUE));
     bufferQueue->first = NULL;
     bufferQueue->last = NULL;
 
@@ -168,7 +107,7 @@ IoInitialize() {					// Add mem-check to this function.
 }
 
 HANDLE
-IoCreateFile(                         // Error-handling in this function?
+IoCreateFile(// Error-handling in this function?
         ULONG filename
         ) {
     HANDLE handle = NULL;
@@ -196,7 +135,7 @@ IoWriteFile(
     PFILE file;
 
     status = ObReferenceObjectByHandle(handle, fileType, (PVOID) & file); // How to solve different types here??
-    file->write(buffer, bufferSize);	// Add return stuff here!
+    file->write(buffer, bufferSize); // Add return stuff here!
     ObDereferenceObject(file); //ADDED BY MAGNUS
     return 0; // Return what?
 }
@@ -219,54 +158,56 @@ IoReadFile(
 }
 
 // Write string to serial display.
+
 VOID
 IoWriteSerial(
         PVOID buffer,
         ULONG bufferSize) {
 
-	PIO_BUFFER_NODE newNode = MmAlloc(sizeof(IO_BUFFER_NODE));
+    PIO_BUFFER_NODE newNode = MmAlloc(sizeof (IO_BUFFER_NODE));
 
-	KdPrint("IoWriteSerial");
+    KdPrint("IoWriteSerial");
 
-	// Copy buffer to nodes buffer (has to end with null).
-	RtlCopyString(newNode->buffer,(PCHAR) buffer);	
-	newNode->next = NULL;
+    // Copy buffer to nodes buffer (has to end with null).
+    RtlCopyString(newNode->buffer, (PCHAR) buffer);
+    newNode->next = NULL;
 
-	// Insert new node.
-	if(bufferQueue->first == NULL) {
-		bufferQueue->first = newNode;
-		bufferQueue->last = newNode;
-		outputPointer = bufferQueue->first->buffer;
-	}
-	if(bufferQueue->first){
-		bufferQueue->last->next = newNode;
-		bufferQueue->last = newNode;
-	}
+    // Insert new node.
+    if (bufferQueue->first == NULL) {
+        bufferQueue->first = newNode;
+        bufferQueue->last = newNode;
+        outputPointer = bufferQueue->first->buffer;
+    }
+    if (bufferQueue->first) {
+        bufferQueue->last->next = newNode;
+        bufferQueue->last = newNode;
+    }
 }
 
 // Read characters from the Io-buffer.
+
 VOID
 IoReadSerial(
         PVOID buffer,
         ULONG bufferSize) // Is bufferSize needed here?
 {
-    ULONG p; // To get rid of warning.
-    CHAR c;
-    p = bufferSize;
-    /*
-            c =
-            while(!c){
-                    Sleep(100);						// Check number.
-                    c = GetFirstCharFromBuffer();
-            }
-            // The user program should make a loop when
-            // waiting for a char from the buffer:
-            //  while(!c){
-            //		IoReadFile(handle,c,1);
-            //  }
-     */
 
-    *((CHAR*) buffer) = GetFirstCharFromBuffer();
+    PIO_WAITING_NODE newNode = MmAlloc(sizeof (IO_WAITING_NODE));
+
+    newNode->pbuffer = buffer;
+    newNode->bufferSize = bufferSize;
+    newNode->pprocess = KeCurrentProcess;
+    newNode->next = NULL;
+
+    if (waitingQueue->first == NULL) {
+        waitingQueue->first = waitingQueue->last = newNode;
+        KeStopSchedulingProcess(KeCurrentProcess);
+    } else {
+        ASSERT(waitingQueue->last);
+        waitingQueue->last->next = newNode;
+        waitingQueue->last = newNode;
+        KeStopSchedulingProcess(KeCurrentProcess);
+    }
 }
 
 // Write up to 8 characters to the lcd display (NOT the led board), should change name).
@@ -288,32 +229,43 @@ IoWriteLcd(
 
 VOID
 IoInterruptHandler(CHAR c) {
+
+    PIO_WAITING_NODE tempNode;
+
     AddCharToBuffer(c);
+
+    if (waitingQueue->first) {
+        *(waitingQueue->first->pbuffer) = GetFirstCharFromBuffer();
+        tempNode = waitingQueue->first;
+        waitingQueue->first = waitingQueue->first->next;
+        KeStartSchedulingProcess(tempNode->pprocess);
+        MmFree(tempNode);
+    }
 }
 
 // Device is ready for ouput - write the next char on console.
+
 VOID
 IoTransmitterInterruptHandler() {
-	PIO_BUFFER_NODE tempNode;	// Move this?	
+    PIO_BUFFER_NODE tempNode; // Move this?
 
-	if(outputPointer && *outputPointer)
-		HalDisplayChar(*outputPointer++);
-	if(outputPointer && *outputPointer == NULL) {				// Done writing.
-		KdPrint("*outputPointer == NULL");
-		if(bufferQueue->first == bufferQueue->last) {
-			KdPrint("only one node in queue");
-			MmFree(bufferQueue->first);
-			bufferQueue->first = NULL;
-			bufferQueue->last = NULL;
-			outputPointer = NULL;
-		}
-		else {
-			KdPrint("next == NULL");
-			tempNode = bufferQueue->first;
-			bufferQueue->first = bufferQueue->first->next;
-			outputPointer = bufferQueue->first->buffer;
-			MmFree(tempNode);
-		}
-	
-	}
+    if (outputPointer && *outputPointer)
+        HalDisplayChar(*outputPointer++);
+    if (outputPointer && *outputPointer == NULL) { // Done writing.
+        KdPrint("*outputPointer == NULL");
+        if (bufferQueue->first == bufferQueue->last) {
+            KdPrint("only one node in queue");
+            MmFree(bufferQueue->first);
+            bufferQueue->first = NULL;
+            bufferQueue->last = NULL;
+            outputPointer = NULL;
+        } else {
+            KdPrint("next == NULL");
+            tempNode = bufferQueue->first;
+            bufferQueue->first = bufferQueue->first->next;
+            outputPointer = bufferQueue->first->buffer;
+            MmFree(tempNode);
+        }
+
+    }
 }
