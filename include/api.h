@@ -71,4 +71,10 @@ GetProcessInfo(
         PULONG NumberProcesses
         );
 
+STATUS
+SuperviseProc(
+        ULONG Supervisor,
+        ULONG Pid
+        );
+
 #endif

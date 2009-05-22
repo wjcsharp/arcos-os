@@ -20,9 +20,9 @@ TestProcess(PCHAR args) {
     KdPrint("Hello from testprocess. My PID is %d.", GetProcessId());
 
     while (1) {
-        for (i = 0; i < 0xFFFFFF; i++);
-        Sleep(5000);
-        KdPrint("testprocess heartbeat");
+        for (i = 0; i < 0x00FFFF; i++);
+        Sleep(500);
+        //KdPrint("testprocess heartbeat");
     }
 }
 
@@ -34,9 +34,9 @@ TestProcess2(PCHAR args) {
     KdPrint("Hello from testprocess2. My PID is %d.", GetProcessId());
 
     while (1) {
-        for (i = 0; i < 0xFFFFFF; i++);
-        Sleep(3000);
-        KdPrint("testprocess2 heartbeat");
+        for (i = 0; i < 0x00FFFF; i++);
+        Sleep(250);
+        //KdPrint("testprocess2 heartbeat");
     }
 }
 

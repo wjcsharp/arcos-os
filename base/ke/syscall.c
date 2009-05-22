@@ -76,8 +76,13 @@ KeSystemService(
             break;
 
         case 17:
-            KeSetSyscallResult(KeCurrentProcess, PsGetProcessesInfo((PPROCESS_INFO)Arg0,Arg1,(PULONG)Arg2));
+            KeSetSyscallResult(KeCurrentProcess, PsGetProcessesInfo((PPROCESS_INFO) Arg0, Arg1, (PULONG) Arg2));
             break;
+
+        case 18:
+            KeSetSyscallResult(KeCurrentProcess, PsSupervise(Arg0, Arg1));
+            break;
+
 
         default:
             // probably a bugcheck is overreacting but what the hell

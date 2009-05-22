@@ -84,6 +84,7 @@ PsGetPriority(
 
 STATUS
 PsSupervise(
+        ULONG Supervisor,
         ULONG PID
         );
 
