@@ -202,12 +202,12 @@ IoReadSerial(
     newNode->next = NULL;
 
     if (waitingQueue->first == NULL) {
-       // KdPrint("serial empty queue");
+        // KdPrint("serial empty queue");
         waitingQueue->first = waitingQueue->last = newNode;
         KeStopSchedulingProcess(KeCurrentProcess);
     } else {
         ASSERT(waitingQueue->last);
-       // KdPrint("serial non empty queue");
+        // KdPrint("serial non empty queue");
         waitingQueue->last->next = newNode;
         waitingQueue->last = newNode;
         KeStopSchedulingProcess(KeCurrentProcess);
@@ -242,12 +242,12 @@ IoInterruptHandler(CHAR c) {
         *(waitingQueue->first->pbuffer) = GetFirstCharFromBuffer();
         tempNode = waitingQueue->first;
         waitingQueue->first = waitingQueue->first->next;
-       // KdPrint("before kestartsched");
+        // KdPrint("before kestartsched");
         KeStartSchedulingProcess(tempNode->pprocess);
-       // KdPrint("after kestartsched");
+        // KdPrint("after kestartsched");
         KdPrint("%x", tempNode);
-        //MmFree(tempNode);
-       // KdPrint("after MmFree iointerrupt");
+        MmFree(tempNode);
+        KdPrint("after MmFree iointerrupt");
     }
 }
 
