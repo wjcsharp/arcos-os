@@ -32,7 +32,7 @@ VOID IoWriteLcd();
 
 VOID
 AddCharToBuffer(CHAR c) {
-    if (fifo.length + 1 < FIFO_SIZE) // length + 1
+    if (fifo.length + 1 < FIFO_SIZE) // length + 1 BUGBUGBUG
     {
         fifo.buffer[fifo.length] = c;
         fifo.length++;
@@ -46,11 +46,13 @@ CHAR
 GetFirstCharFromBuffer() {
     CHAR c;
     ULONG i;
+    KdPrint("GetFirstCharFromBuffer");
     c = fifo.buffer[0];
     for (i = 0; i != fifo.length; i++) // Move all chars one step. Tested, but not supertested.
         fifo.buffer[i] = fifo.buffer[i + 1]; // Could be optimized. Later.
     if (fifo.length > 0) // Decrease fifo length
         fifo.length--;
+    KdPrint("GetFirstCharFromBuffer DONE:%c", c);
     return c;
 }
 
@@ -166,7 +168,7 @@ IoWriteSerial(
 
     PIO_BUFFER_NODE newNode = MmAlloc(sizeof (IO_BUFFER_NODE));
 
-    KdPrint("IoWriteSerial");
+    //KdPrint("IoWriteSerial");
 
     // Copy buffer to nodes buffer (has to end with null).
     RtlCopyString(newNode->buffer, (PCHAR) buffer);
@@ -200,10 +202,12 @@ IoReadSerial(
     newNode->next = NULL;
 
     if (waitingQueue->first == NULL) {
+       // KdPrint("serial empty queue");
         waitingQueue->first = waitingQueue->last = newNode;
         KeStopSchedulingProcess(KeCurrentProcess);
     } else {
         ASSERT(waitingQueue->last);
+       // KdPrint("serial non empty queue");
         waitingQueue->last->next = newNode;
         waitingQueue->last = newNode;
         KeStopSchedulingProcess(KeCurrentProcess);
@@ -238,8 +242,12 @@ IoInterruptHandler(CHAR c) {
         *(waitingQueue->first->pbuffer) = GetFirstCharFromBuffer();
         tempNode = waitingQueue->first;
         waitingQueue->first = waitingQueue->first->next;
+       // KdPrint("before kestartsched");
         KeStartSchedulingProcess(tempNode->pprocess);
-        MmFree(tempNode);
+       // KdPrint("after kestartsched");
+        KdPrint("%x", tempNode);
+        //MmFree(tempNode);
+       // KdPrint("after MmFree iointerrupt");
     }
 }
 
@@ -252,15 +260,15 @@ IoTransmitterInterruptHandler() {
     if (outputPointer && *outputPointer)
         HalDisplayChar(*outputPointer++);
     if (outputPointer && *outputPointer == NULL) { // Done writing.
-        KdPrint("*outputPointer == NULL");
+        //KdPrint("*outputPointer == NULL");
         if (bufferQueue->first == bufferQueue->last) {
-            KdPrint("only one node in queue");
+            //  KdPrint("only one node in queue");
             MmFree(bufferQueue->first);
             bufferQueue->first = NULL;
             bufferQueue->last = NULL;
             outputPointer = NULL;
         } else {
-            KdPrint("next == NULL");
+            //KdPrint("next == NULL");
             tempNode = bufferQueue->first;
             bufferQueue->first = bufferQueue->first->next;
             outputPointer = bufferQueue->first->buffer;

@@ -127,11 +127,11 @@ TaskManager() {
     pinfo = (PPROCESS_INFO) MmAlloc(TASKM_BUFFER_SIZE * sizeof (PROCESS_INFO));
 
     for (j = 0; j < 500; j++) {
-        KdPrint("GetProcessInfo BEGIN");
+        //KdPrint("GetProcessInfo BEGIN");
         GetProcessInfo(pinfo, TASKM_BUFFER_SIZE, &numprocess);
-        KdPrint("Before WriteFile");
+        //KdPrint("Before WriteFile");
         WriteString(tmout, "---------TASKMANAGER---------\n");
-        KdPrint("---taskm DONE");
+        //KdPrint("---taskm DONE");
         //Sleep(1000);
         for (i = 0; i < (min(numprocess, TASKM_BUFFER_SIZE)); i++) {
             if (!pinfo[i].RunningProgram)
@@ -147,9 +147,9 @@ TaskManager() {
                 tend = 1;
             }
             RtlFormatString(strbuff, 100, "%s PID: %d, CPU TIME: %d %s\n", pinfo[i].RunningProgram, pinfo[i].PID, cputmp, timend[tend]);
-            KdPrint("Before WriteFile");
+           // KdPrint("Before WriteFile");
             WriteString(tmout, strbuff);
-            Sleep(1000);
+          //  Sleep(1000);
         }
         Sleep(3000);
     }
@@ -163,13 +163,13 @@ TaskManager() {
 VOID
 PSTestProcess3() {
     //ULONG i;
-    /*
+    
      HANDLE handtag;
      PsCreateProcessByName("TaskManager", 1, &handtag, NULL);
      ObCloseHandle(handtag);
-     */
+     
     KdPrint("tp3 I AM:%d", GetProcessId());
-    SuperviseProc(2, 1);
+    SuperviseProc(2, 3);
 
     KillMe();
 }
