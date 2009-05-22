@@ -58,6 +58,7 @@ HalDisplayChar(
     tty->thr = c;
     if (c == '\n')
 	tty->thr = '\r';
+    return STATUS_SUCCESS; //BUGBUGBUGBUGBUGBUG?
 }
 
 VOID

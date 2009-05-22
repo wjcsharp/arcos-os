@@ -17,11 +17,20 @@ TestProcess(PCHAR args) {
     ULONG i;
     UNREFERENCED_PARAMETER(args);
 
-    KdPrint("Hello from testprocess. My PID is %d.", GetProcessId());
+    KdPrint("Blubb from testprocess. My PID is %d.", GetProcessId());
+
+    HANDLE handle = CreateFile('s');
+    CHAR s[] = "Test1:     \n";
+    //s[1] = NULL;
+    PCHAR c = &s[6];
+
+    //Sleep(5000);
 
     while (1) {
         for (i = 0; i < 0x00FFFF; i++);
-        Sleep(500);
+        //Sleep(500);
+        ReadFile(handle, c, 1);
+        WriteFile(handle, s, 1);
         //KdPrint("testprocess heartbeat");
     }
 }
@@ -33,9 +42,19 @@ TestProcess2(PCHAR args) {
 
     KdPrint("Hello from testprocess2. My PID is %d.", GetProcessId());
 
+    HANDLE handle = CreateFile('s');
+    CHAR s[] = "Test2:     \n";
+    //s[1] = NULL;
+    PCHAR c = &s[6];
+
+    //Sleep(15000);
+
     while (1) {
         for (i = 0; i < 0x00FFFF; i++);
-        Sleep(250);
+        //Sleep(250);
+        ReadFile(handle, c, 1);
+        WriteFile(handle, s, 1);
+
         //KdPrint("testprocess2 heartbeat");
     }
 }
@@ -79,16 +98,10 @@ KeInitialize(VOID) {
     //HANDLE handle = IoCreateFile('serial');
 
 
-    PsCreateProcess(TestProcess, 5, &testProcess, NULL);
+    PsCreateProcess(TestProcess, 30, &testProcess, NULL);
     PsCreateProcess(TestProcess2, 5, &testProcess2, NULL);
-
-
-
-    PsCreateProcess(TestScrollerProcess, 31, &testScrollerProcess, NULL);
-
-
+    PsCreateProcess(TestScrollerProcess, 10, &testScrollerProcess, NULL);
     PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
-
     ObCloseHandle(testProcess3);
 
     KeRestoreInterrupts(TRUE);
