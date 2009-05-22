@@ -61,7 +61,7 @@ AddProcessToWaitingQueue(PVOID buffer, ULONG bufferSize){		// Always adding curr
 
 	PIO_WAITING_NODE newNode = MmAlloc(sizeof(IO_WAITING_NODE));
 	
-	//KdPrint("AddProcess begin");
+	KdPrint("AddProcess begin");
 
 	//Check alloc
 	if(newNode == NULL)
@@ -88,7 +88,7 @@ AddProcessToWaitingQueue(PVOID buffer, ULONG bufferSize){		// Always adding curr
 
 	}
 		
-	//KdPrint("IO: AddProcessToWaitingQueue: SUCCESS");
+	KdPrint("IO: AddProcessToWaitingQueue: SUCCESS");
 
 	return STATUS_SUCCESS;
 }
@@ -97,7 +97,7 @@ AddProcessToWaitingQueue(PVOID buffer, ULONG bufferSize){		// Always adding curr
 VOID
 RemoveProcessFromWaitingQueue(){	// Always remove process first in queue.
 
-	PIO_WAITING_QUEUE nodeToFree = waitingQueue->first;
+	PIO_WAITING_NODE nodeToFree = waitingQueue->first;
 
 	ASSERT(waitingQueue->first);
 	

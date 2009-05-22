@@ -110,6 +110,11 @@ GetProcessInfo:
     syscall
     jr      ra
 
+.globl SuperviseProc
+SuperviseProc:
+    addi    v0, zero, 18
+    syscall
+    jr      ra
 
 
     # Put your own syscalls here. Just change the name and increment the 0.
