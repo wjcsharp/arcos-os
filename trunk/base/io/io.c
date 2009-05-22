@@ -12,14 +12,14 @@ PFILE serialFile;
 PFILE lcdFile; 
 
 CHAR outputSpace[512];	// Maximum of string to print = 512
-PCHAR outputBuffer = outputSpace;
+PCHAR outputPointer;
 ULONG bufferPosition = 0;
 ULONG outputLength;
 BOOL doneWriting = TRUE;
 
 static FIFO fifo;			// Input buffer, receives from keyboard
 PIO_WAITING_QUEUE waitingQueue;		// Waiting queue for writeFile, FILO.
-
+PIO_BUFFER_QUEUE bufferQueue;
 
 // Pre-define some functions.
 VOID IoReadSerial();
@@ -54,6 +54,8 @@ GetFirstCharFromBuffer() {
     return c;
 }
 
+
+/*
 STATUS
 AddProcessToWaitingQueue(PVOID buffer, ULONG bufferSize){		// Always adding current process.
 
@@ -90,7 +92,8 @@ AddProcessToWaitingQueue(PVOID buffer, ULONG bufferSize){		// Always adding curr
 
 	return STATUS_SUCCESS;
 }
-
+*/
+/*
 VOID
 RemoveProcessFromWaitingQueue(){	// Always remove process first in queue.
 
@@ -111,7 +114,7 @@ RemoveProcessFromWaitingQueue(){	// Always remove process first in queue.
 	//KdPrint("IO: RemoveProcessFromWaitingQueue");
 
 }
-
+*/
 STATUS
 IoInitialize() {					// Add mem-check to this function.
     OBJECT_TYPE_INITIALIZER typeInitializer;
@@ -152,6 +155,14 @@ IoInitialize() {					// Add mem-check to this function.
     waitingQueue = MmAlloc(sizeof(IO_WAITING_QUEUE));
     waitingQueue->first = NULL;
     waitingQueue->last = NULL;
+
+    bufferQueue = MmAlloc(sizeof(IO_BUFFER_QUEUE));
+    bufferQueue->first = NULL;
+    bufferQueue->last = NULL;
+
+    outputPointer = NULL;
+
+    doneWriting = TRUE;
 
     return status;
 }
@@ -213,22 +224,24 @@ IoWriteSerial(
         PVOID buffer,
         ULONG bufferSize) {
 
-	//KdPrint("IO: IoWriteSerial: Start of function");
+	PIO_BUFFER_NODE newNode = MmAlloc(sizeof(IO_BUFFER_NODE));
 
-	if(!waitingQueue->first) {	// If waiting queue is empty, copy buffer to outputBuffer and add the process to the waiting queue.
-		//KdPrint("IO: IoWriteSerial: !waitingQueue == TRUE");
-		RtlCopyString(outputBuffer,(PCHAR) buffer);
-		doneWriting = FALSE;
-		bufferPosition = 0;
-		outputLength = RtlStringLength((PCHAR) buffer);
-		AddProcessToWaitingQueue(buffer, bufferSize);		
+	KdPrint("IoWriteSerial");
+
+	// Copy buffer to nodes buffer (has to end with null).
+	RtlCopyString(newNode->buffer,(PCHAR) buffer);	
+	newNode->next = NULL;
+
+	// Insert new node.
+	if(bufferQueue->first == NULL) {
+		bufferQueue->first = newNode;
+		bufferQueue->last = newNode;
+		outputPointer = bufferQueue->first->buffer;
 	}
-	else {	// Some other process is already writing on the serial - copy buffer to waiting node and wait.
-		//KdPrint("IO: IoWriteSerial: At least two processes waiting for IO");
-		AddProcessToWaitingQueue(buffer, bufferSize);
-		//KeSuspendProcess(5000);
-		// Suspend me.
-	}	
+	if(bufferQueue->first){
+		bufferQueue->last->next = newNode;
+		bufferQueue->last = newNode;
+	}
 }
 
 // Read characters from the Io-buffer.
@@ -281,12 +294,26 @@ IoInterruptHandler(CHAR c) {
 // Device is ready for ouput - write the next char on console.
 VOID
 IoTransmitterInterruptHandler() {
-	if(*outputBuffer)
-		HalDisplayChar(*outputBuffer++);
-	else if (waitingQueue->first) {
-		doneWriting = TRUE;
-		outputBuffer = outputSpace;
-		*outputBuffer = NULL;
-		RemoveProcessFromWaitingQueue();
+	PIO_BUFFER_NODE tempNode;	// Move this?	
+
+	if(outputPointer && *outputPointer)
+		HalDisplayChar(*outputPointer++);
+	if(outputPointer && *outputPointer == NULL) {				// Done writing.
+		KdPrint("*outputPointer == NULL");
+		if(bufferQueue->first == bufferQueue->last) {
+			KdPrint("only one node in queue");
+			MmFree(bufferQueue->first);
+			bufferQueue->first = NULL;
+			bufferQueue->last = NULL;
+			outputPointer = NULL;
+		}
+		else {
+			KdPrint("next == NULL");
+			tempNode = bufferQueue->first;
+			bufferQueue->first = bufferQueue->first->next;
+			outputPointer = bufferQueue->first->buffer;
+			MmFree(tempNode);
+		}
+	
 	}
 }
