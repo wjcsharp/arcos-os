@@ -27,8 +27,8 @@ typedef struct _FILE {
 
 // Node to waiting queue for writeFile.
 typedef struct _IO_WAITING_NODE {
-	PPROCESS process;
-	CHAR buffer[512];		// Maximum of stuff to write = 512 bytes
+	PPROCESS pprocess;
+	PCHAR pbuffer;		// Maximum of stuff to write = 512 bytes
 	ULONG bufferSize;
 	struct _IO_WAITING_NODE *next;
 } IO_WAITING_NODE, *PIO_WAITING_NODE;
