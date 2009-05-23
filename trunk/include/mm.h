@@ -24,7 +24,7 @@ typedef struct _VIRTUAL_MEMORY_BLOCK {
 VOID
 MmInitialize();
 
-// Returns the size of all allocated blocks
+// Returns the size of all allocated blocks (headers included)
 ULONG
 MmGetUsedMemSum(); 
        
@@ -32,7 +32,7 @@ MmGetUsedMemSum();
 VOID 
 MmPrintBlocks();
 
-// Returns the sum of memory allocated by a process
+// Returns the sum of memory allocated by a process (headers included)
 ULONG
 MmGetUsedVirtMemSum();
 
