@@ -287,6 +287,8 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 }
 
 
+VOID MmFree(PVOID BlockBody) {};
+/*
 VOID MmFree(PVOID BlockBody) {
 	
 	// Size of the header
@@ -325,4 +327,4 @@ VOID MmFree(PVOID BlockBody) {
 	// Save the block list
 	PMb = StartBlock;
 	MemBlock = PMb;
-}
+}*/
