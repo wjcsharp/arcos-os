@@ -9,43 +9,39 @@
 STATUS
 MessSendMessage(
     ULONG receiverPid,
-    ULONG messageType,
+    ULONG type,
     PVOID buffer,
     ULONG bufferSize		// Is bufferSize in bytes?
     )
 {
 	PPROCESS pprocess;
-	PMESSAGE message = (PMESSAGE) MmAlloc(sizeof(MESSAGE) + bufferSize);
+	PMESSAGE message ;
 	STATUS status;
 
 	ASSERT(buffer);		// Allowing sending message without buffer?
 
 	KdPrint("MESS: SendMessage");
 
+	if((message = (PMESSAGE) MmAlloc(sizeof(MESSAGE) + bufferSize)) == NULL)
+		return STATUS_NO_MEMORY; 
+
+	// Init mess
 	message->senderPid = KeCurrentProcess->PID;
 	message->receiverPid = receiverPid;
 	message->priority = 1;						// NOTE TO SELF: FIX THIS?
-	message->messageType = messageType;
+	message->type = type;
 	message->bufferSize = bufferSize;
 
 	// THIS DOESNT WORK!!!
-	RtlCopyMemory((PCHAR)message + sizeof(MESSAGE), buffer, bufferSize);
-	message->buffer = message + sizeof(MESSAGE);
-	KdPrint("MESS: SendMessage: Printing copied buffer content");
-	KdPrint((PCHAR) (message + sizeof(MESSAGE)));
+	RtlCopyMemory((PCHAR) message + sizeof(MESSAGE), buffer, bufferSize);
+	message->buffer = (PCHAR) message + sizeof(MESSAGE);
+	//KdPrint("MESS: SendMessage: Printing copied buffer content");
+	//KdPrint((PCHAR) (message + sizeof(MESSAGE)));
 
-	status = PsReferenceProcess(receiverPid,&pprocess);		// Get receiver process.
+	status = PsReferenceProcess(receiverPid,&pprocess);	// Get receiver process. CHECK STATUS!
 
 	ASSERT(pprocess);
 	pprocess->MessageQueue = message;			// Add message.
-
-	// IS THIS CORRECT?
-    if(pprocess->State == blocked)			// But a process can be blocked by many reasons?
-	{
-    	KdPrint("MESS: SendMessage: Receiving message is blocked - wake it up!");
-        KeSetSyscallResult(pprocess, (ULONG) message);
-        KeResumeProcess(pprocess);
-    }
 
 	return STATUS_SUCCESS;
 }
@@ -58,6 +54,9 @@ MessReceiveFirst(
     )
 {
 
+	KeSuspendProcess(5000);
+	return NULL;
+
 	PMESSAGE newMessage;
 
 	KdPrint("MESS: ReceiveFirst");
@@ -65,26 +64,26 @@ MessReceiveFirst(
 	if (KeCurrentProcess->MessageQueue != NULL)
 	{
 		newMessage = KeCurrentProcess->MessageQueue;
-		newMessage->next = NULL;		// No tail with messages on new message.
+		newMessage->next = NULL;		// No tail with messages on new message. BUG???
 		KeCurrentProcess->MessageQueue = KeCurrentProcess->MessageQueue->next;	// Jump forward one step in the queue, skipping the first one.
 		return newMessage;	// Return pointer to new message. Should be copied by the process, I guess, and then deleted.
 	}
 	else	// No message in message queue - wait a while/timeout.
 	{
 		KdPrint("MESS: ReceiveFirst: No message in queue - suspending in %d ms", timeout);
-		KeSuspendProcess(timeout);
+		//KeSuspendProcess(timeout);
 		return NULL;
 	}
 }
 
 
-/*************************
+/*
 
 Magnus wrote:
 I will need a dealloc message queue function that frees every message in the list and then sets the list pointer to null
 This is to free memory when a process is killed.
 
-***/
+*/
 
 ULONG
 MessGetMessageSize(
