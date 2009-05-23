@@ -194,7 +194,15 @@ IoReadSerial(
         ULONG bufferSize) // Is bufferSize needed here?
 {
 
-    PIO_WAITING_NODE newNode = MmAlloc(sizeof (IO_WAITING_NODE));
+    PIO_WAITING_NODE newNode;
+
+    // If waitingQueue is empty and ther is chars in fifo-buffer, just return the first char in that buffer. Don't create waiting node.
+    if(waitingQueue->first == NULL && fifo.buffer[0] != NULL){
+    	*((PCHAR) buffer) = GetFirstCharFromBuffer();
+	return;
+    }
+
+    newNode = MmAlloc(sizeof (IO_WAITING_NODE));
 
     newNode->pbuffer = buffer;
     newNode->bufferSize = bufferSize;
@@ -261,7 +269,7 @@ IoTransmitterInterruptHandler() {
         HalDisplayChar(*outputPointer++);
     if (outputPointer && *outputPointer == NULL) { // Done writing.
         //KdPrint("*outputPointer == NULL");
-        if (bufferQueue->first == bufferQueue->last) {
+        if (bufferQueue->first == bufferQueue->last) {		// BUGBUG: Could be one or zero element.
             //  KdPrint("only one node in queue");
             MmFree(bufferQueue->first);
             bufferQueue->first = NULL;
