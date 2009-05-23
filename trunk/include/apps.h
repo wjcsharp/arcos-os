@@ -5,12 +5,14 @@
 //ALL APPS SHOULD HAVE VOID RETURN AND USE KillMe() for graceful exit.
 //Arguments is passed via PCHAR Args in PROCESS as a string.
 
+VOID
+AppSupervise();
 
 VOID
-TaskManager();
+AppTaskManager();
 
 VOID
-PSTestProcess3();
+AppPSTestProcess3();
 
 VOID		// Should return status.
 scrollerInit();
@@ -19,9 +21,9 @@ VOID
 scrollText();
 
 VOID
-Kill();
+AppKill();
 
 VOID
-ChangePrio();
+AppChangePrio();
 
 #endif

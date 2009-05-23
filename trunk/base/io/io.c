@@ -138,6 +138,7 @@ IoWriteFile(
 
     status = ObReferenceObjectByHandle(handle, fileType, (PVOID) & file); // How to solve different types here??
     file->write(buffer, bufferSize); // Add return stuff here!
+    ASSERT(file);
     ObDereferenceObject(file); //ADDED BY MAGNUS
     return 0; // Return what?
 }
@@ -155,6 +156,7 @@ IoReadFile(
     status = ObReferenceObjectByHandle(handle, fileType, (PVOID) & file); // Only serial type have write capability in this OS.
     if (file->read != NULL)
         file->read(buffer, bufferSize);
+    ASSERT(file);
     ObDereferenceObject(file); //ADDED BY MAGNUS
     return 0;
 }
@@ -253,9 +255,9 @@ IoInterruptHandler(CHAR c) {
         // KdPrint("before kestartsched");
         KeStartSchedulingProcess(tempNode->pprocess);
         // KdPrint("after kestartsched");
-        KdPrint("%x", tempNode);
+        //KdPrint("IOInterrupt %x", tempNode);
         MmFree(tempNode);
-        KdPrint("after MmFree iointerrupt");
+        //KdPrint("after MmFree iointerrupt");
     }
 }
 

@@ -22,10 +22,16 @@
 POBJECT_TYPE processType;
 
 APPLICATION PsAvailApps[] = {
-    {"TaskManager", TaskManager},
-    {"Kill", Kill},
-    {"ChangePrio", ChangePrio},
-    {"TestProcess3", PSTestProcess3},
+    {"TaskManager", AppTaskManager},
+    {"Kill", AppKill},
+    {"ChangePrio", AppChangePrio},
+    {"TestProcess3", AppPSTestProcess3},
+    {"Supervise", AppSupervise},
+    {"taskmanager", AppTaskManager},
+    {"kill", AppKill},
+    {"changeprio", AppChangePrio},
+    {"testprocess3", AppPSTestProcess3},
+    {"supervise", AppSupervise}
 };
 
 
@@ -41,7 +47,23 @@ appisdigit(CHAR c) {
 }
 
 VOID
-ChangePrio() {
+AppSupervise() {
+    ULONG supervPid, ProcessPid;
+    PCHAR first, second;
+    
+    first = KeCurrentProcess->Args;
+    KdPrint(first);
+
+    while ((' ' == *first)&& *first)
+        ++first;
+    KdPrint(first);
+    if(first==NULL)
+        KdPrint("null in appsupervise");
+    KillMe();
+}
+
+VOID
+AppChangePrio() {
     ULONG pid, prio, status;
     PCHAR first, second;
     PCHAR pek = KeCurrentProcess->Args;
@@ -93,7 +115,7 @@ ChangePrio() {
 }
 
 VOID
-Kill() {
+AppKill() {
     ULONG PID;
     STATUS status;
     PID = RtlAtoUL(KeCurrentProcess->Args);
@@ -116,7 +138,7 @@ ULONG min(ULONG A, ULONG B) {
 #define TASKM_BUFFER_SIZE 12
 
 VOID
-TaskManager() {
+AppTaskManager() {
     PPROCESS_INFO pinfo;
     ULONG numprocess, i, j, cputmp, tend;
     CHAR strbuff[100];
@@ -147,9 +169,9 @@ TaskManager() {
                 tend = 1;
             }
             RtlFormatString(strbuff, 100, "%s PID: %d, CPU TIME: %d %s\n", pinfo[i].RunningProgram, pinfo[i].PID, cputmp, timend[tend]);
-           // KdPrint("Before WriteFile");
+            // KdPrint("Before WriteFile");
             WriteString(tmout, strbuff);
-          //  Sleep(1000);
+            //  Sleep(1000);
         }
         Sleep(3000);
     }
@@ -161,13 +183,14 @@ TaskManager() {
 }
 
 VOID
-PSTestProcess3() {
+AppPSTestProcess3() {
     //ULONG i;
-    
-     HANDLE handtag;
-     PsCreateProcessByName("TaskManager", 1, &handtag, NULL);
-     ObCloseHandle(handtag);
-     
+
+    HANDLE handtag;
+    //PsCreateProcessByName("taskmanager", 1, &handtag, "   asdfg");
+    CreateProcess("taskmanager", 1, &handtag, NULL);
+    ObCloseHandle(handtag);
+
     KdPrint("tp3 I AM:%d", GetProcessId());
     SuperviseProc(2, 3);
 
@@ -338,6 +361,7 @@ PsCreateProcess(
     //Ask mamory manager for a chunk of memory to be attached to the process
     memPointer = MmAlloc(PROCESS_MEMORY_SIZE);
     if (memPointer == NULL) {
+        ASSERT(createdProcessObject);
         ObDereferenceObject(createdProcessObject);
         return STATUS_NO_MEMORY;
     }
@@ -357,6 +381,7 @@ PsCreateProcess(
     //Initialize handletable
     status = ObInitProcess(KeCurrentProcess, process);
     if (status != 0) {
+        ASSERT(createdProcessObject);
         ObDereferenceObject(createdProcessObject);
         MmFree(memPointer);
         return status;
@@ -378,6 +403,7 @@ PsCreateProcess(
     //Create Handle to object
     status = ObOpenObjectByPointer(createdProcessObject, 0, processType, ProcessHandle);
     if (status != 0) {
+        ASSERT(createdProcessObject);
         ObDereferenceObject(createdProcessObject);
         MmFree(memPointer);
         return status;
@@ -388,11 +414,12 @@ PsCreateProcess(
     //Schedule process
     status = KeStartSchedulingProcess(process);
     if (status != 0) {
+        ASSERT(createdProcessObject);
         ObDereferenceObject(createdProcessObject);
         MmFree(memPointer);
         return status;
     }
-
+    ASSERT(createdProcessObject);
     ObDereferenceObject(createdProcessObject);
 
     return STATUS_SUCCESS;
@@ -424,6 +451,7 @@ PsKillByPID(
 
     status = PsKillProcess(pprocess, ExitStatus);
     if (0 != status) {
+        ASSERT(pprocess);
         ObDereferenceObject(pprocess);
         return status;
     }
@@ -459,6 +487,7 @@ PsKillProcess(
     //Free message-queue
     MessDeleteMessageQueue();
     //Dereference process
+    ASSERT(PProcess);
     ObDereferenceObject(PProcess);
     return STATUS_SUCCESS;
 }
@@ -477,6 +506,7 @@ PsSupervise(
 
     pprocess->Supervisor = Supervisor;
     KdPrint("PsSuper PID:%d is supervised by %d", pprocess->PID, pprocess->Supervisor);
+    ASSERT(pprocess);
     ObDereferenceObject(pprocess);
     return STATUS_SUCCESS;
 }
@@ -517,6 +547,7 @@ PsGetExitStatus(
         return status;
 
     *ExitStatus = process->ExitStatus;
+    ASSERT(process);
     ObDereferenceObject(process);
     return STATUS_SUCCESS;
 }
@@ -535,6 +566,7 @@ PsGetPriority(
         return status;
 
     *Priority = process->Priority;
+    ASSERT(process);
     ObDereferenceObject(process);
     return STATUS_SUCCESS;
 }
@@ -553,6 +585,7 @@ PsGetState(
         return status;
 
     *PState = pprocess->State;
+    ASSERT(pprocess);
     ObDereferenceObject(pprocess);
     return STATUS_SUCCESS;
 }
@@ -570,6 +603,7 @@ PsGetPid(
         return status;
 
     *PPid = pprocess->PID;
+    ASSERT(pprocess);
     ObDereferenceObject(pprocess);
     return STATUS_SUCCESS;
 };
