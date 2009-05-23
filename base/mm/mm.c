@@ -304,8 +304,8 @@ VOID MmFree(PVOID BlockBody) {
 		//KdPrint("...appending with my next neighbor");
 		PMb->Size = (ULONG)ALIGN_MEMORY(PMb->Size + PMb->NextBlock->Size + HeaderSize); 
 		PMb->NextBlock = PMb->NextBlock->NextBlock;
-		if(PMb->NextBlock != NULL)
-			PMb->NextBlock->PreviousBlock = PMb;
+		if(PMb->NextBlock->NextBlock != NULL)
+			PMb->NextBlock->NextBlock->PreviousBlock = PMb;
 	}
 	
 	// Append previous neighbor block?
@@ -315,8 +315,8 @@ VOID MmFree(PVOID BlockBody) {
 			PMb = PMb->PreviousBlock;
 			PMb->Size = (ULONG)ALIGN_MEMORY(PMb->Size + PMb->NextBlock->Size + HeaderSize);
 			PMb->NextBlock = PMb->NextBlock->NextBlock;
-			if(PMb->NextBlock != NULL)
-				PMb->NextBlock->PreviousBlock = PMb;
+			if(PMb->NextBlock->NextBlock != NULL)
+				PMb->NextBlock->NextBlock->PreviousBlock = PMb;
 		}
 	}
 	
