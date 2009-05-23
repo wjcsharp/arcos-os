@@ -13,11 +13,15 @@
 
 #include <arcos.h>
 
+// Define types for messages
+#define MESSAGE_TYPE_STRING	0
+
+
 typedef struct _MESSAGE {
 	ULONG	senderPid;
 	ULONG	receiverPid;
 	ULONG	priority;
-	ULONG	messageType;
+	ULONG	type;
 	PVOID	buffer;		// Points to body of message
 	ULONG	bufferSize;
 	struct _MESSAGE *next;
@@ -33,7 +37,7 @@ typedef struct _MESSAGE_QUEUE
 STATUS
 MessSendMessage(
 	ULONG receiverPid,
-	ULONG messageType,
+	ULONG type,
 	PVOID buffer,
 	ULONG bufferSize
 	);
