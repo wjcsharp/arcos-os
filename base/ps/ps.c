@@ -119,6 +119,13 @@ VOID
 AppKill() {
     ULONG PID;
     STATUS status;
+
+    if (!(KeCurrentProcess->Args)){
+        KdPrint("Kill needs an argument e.g. 'kill 5'");
+        KillMe();
+    }
+
+
     PID = RtlAtoUL(KeCurrentProcess->Args);
 
     status = KillByPID(PID, 1);
@@ -650,7 +657,9 @@ PsReferenceProcess(
             ObReferenceObject(pprocess, processType);
             return STATUS_SUCCESS;
         }
+        KdPrint("PsReferenceProcess");
         pprocess = ObGetNextObjectOfType(pprocess);
+        KdPrint("PsReferenceProcess after get nex obj");
     }
     *ProcessPtr = NULL;
     return STATUS_NO_SUCH_PROCESS;
@@ -696,7 +705,9 @@ PsGetProcessesInfo(
         }
         Buffer[foundProc] = pinfo;
         foundProc++;
+        KdPrint("PsGetProcessesInfo");
         pprocess = ObGetNextObjectOfType(pprocess);
+        KdPrint("PsGetProcessesInfo after get nex obj");
     }
     *NumberProcesses = foundProc;
     return STATUS_SUCCESS;
