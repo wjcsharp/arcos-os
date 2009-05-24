@@ -28,7 +28,7 @@ void split(char *string,char *pCommand,char *pArgument)
 			break;
 		}
 		else
-			pArgument = "";
+			pArgument = NULL;
 	}
 	/*i = 0;
 	while(pCommand[i])
