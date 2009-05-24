@@ -173,9 +173,9 @@ AppTaskManager() {
             WriteString(tmout, strbuff);
             //  Sleep(1000);
         }
-        Sleep(1000);
+        Sleep(5000);
     }
-    KdPrint("Before WriteFile");
+    KdPrint("Before tmgoodbye");
     WriteString(tmout, "--------Task Manager says godbye--------");
     ObCloseHandle(tmout);
     MmFree(pinfo);
@@ -402,10 +402,9 @@ PsCreateProcess(
             RtlCopyString(argtmp, Args);
             process->Args = argtmp;
             process->Context.A0 = (ULONG) argtmp;
-        } else
-            Args = NULL;
-    }
-
+        }
+    } else
+        Args = NULL;
 
     //Create Handle to object
     status = ObOpenObjectByPointer(createdProcessObject, 0, processType, ProcessHandle);
