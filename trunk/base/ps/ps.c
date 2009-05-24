@@ -212,7 +212,7 @@ CreateProcessObjectType() {
     //
     // create a new object type: Process
     //
-    typeInitializer.DumpMethod = DumpProcessObject; //Should be implemented...
+    typeInitializer.DumpMethod = NULL; //Should be implemented...
     typeInitializer.DeleteMethod = NULL;
     status = ObCreateObjectType(0x0CE55, &typeInitializer, &processType);
     return status;
