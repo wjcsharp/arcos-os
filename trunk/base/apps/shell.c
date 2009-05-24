@@ -30,22 +30,24 @@ void split(char *string,char *pCommand,char *pArgument)
 		else
 			pArgument = "";
 	}
-	i = 0;
+	/*i = 0;
 	while(pCommand[i])
 	{
 		KdPrint("%c",pCommand[i]);
 		i++;
 		if(pCommand[i] == NULL)
 			KdPrint("%s","NULLLLLLLLLLLLLLLLLLLLLLL");
-	}
-	KdPrint("Command:%s",pCommand);
+	}*/
+	//KdPrint("Command:%s",pCommand);
 	HANDLE commandProcess;
 	
-	KdPrint("Argument is:%s11",pArgument);
-	KdPrint("Argument Length is: %d",RtlStringLength(pArgument));
+	//KdPrint("Argument is:%s11",pArgument);
+	//KdPrint("Argument Length is: %d",RtlStringLength(pArgument));
 	status = CreateProcess(pCommand,31,&commandProcess,pArgument);
-	KdPrint("Status is: %d",status);
-        KdPrint("Length is: %d",RtlStringLength(pCommand));
+	if (status != 0)
+		WriteFile(handle,"\nARCOS:\\>Uknown comannd. Try again.",0);
+	//KdPrint("Status is: %d",status);
+    //KdPrint("Length is: %d",RtlStringLength(pCommand));
 	//PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
     //ObCloseHandle(testProcess3);
 	
