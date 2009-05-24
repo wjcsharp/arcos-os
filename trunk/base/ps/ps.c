@@ -477,9 +477,9 @@ PsKillProcess(
     PProcess->ExitStatus = ExitStatus;
 
     //Free message-queueBUGBUGBUGBUG
-    //MessDeleteMessageQueue();
-    //Dereference process
+    MessDeleteMessageQueue();
 
+    //Dereference process
     ASSERT(PProcess);
     ObDereferenceObject(PProcess);
     return STATUS_SUCCESS;
