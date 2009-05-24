@@ -26,4 +26,7 @@ AppKill();
 VOID
 AppChangePrio();
 
+VOID
+AppShell();
+
 #endif
