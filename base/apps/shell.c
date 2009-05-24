@@ -40,11 +40,12 @@ void split(char *string,char *pCommand,char *pArgument)
 	}
 	KdPrint("Command:%s",pCommand);
 	HANDLE commandProcess;
-	KdPrint("Status is: %d",status);
+	
 	KdPrint("Argument is:%s11",pArgument);
 	KdPrint("Argument Length is: %d",RtlStringLength(pArgument));
 	status = CreateProcess(pCommand,31,&commandProcess,pArgument);
-	KdPrint("Length is: %d",RtlStringLength(pCommand));
+	KdPrint("Status is: %d",status);
+        KdPrint("Length is: %d",RtlStringLength(pCommand));
 	//PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
     //ObCloseHandle(testProcess3);
 	
