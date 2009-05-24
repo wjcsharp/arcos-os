@@ -39,7 +39,6 @@ void split(char *string, char *pCommand, char *pArgument) {
         ASSERT(commandProcess);
         ObCloseHandle(commandProcess);
     }
-    KdPrint("getsdone");
     ObCloseHandle(outp);
 }
 
@@ -71,7 +70,7 @@ void AppShell() {
             break;
         else {
             input[i] = ch[0];
-            WriteFile(serialinout, c, 1);//BUGBUGBUG?
+            WriteFile(serialinout, c, 1); //BUGBUGBUG?
             i++;
         }
         if (i > 99)
@@ -82,6 +81,5 @@ void AppShell() {
         input[n] = '\0';
     ch[0] = '\0';
     WriteFile(serialinout, "\n", 1);
-    KdPrint("joda den exerkveras");
     ObCloseHandle(serialinout);
 }
