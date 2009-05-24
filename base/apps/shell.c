@@ -45,7 +45,7 @@ void split(char *string,char *pCommand,char *pArgument)
 	//KdPrint("Argument Length is: %d",RtlStringLength(pArgument));
 	status = CreateProcess(pCommand,31,&commandProcess,pArgument);
 	if (status != 0)
-		WriteFile(handle,"\nARCOS:\\>Uknown comannd. Try again.",0);
+		WriteFile(handle,"\nARCOS:\\>Unknown comannd. Try again.",0);
 	//KdPrint("Status is: %d",status);
     //KdPrint("Length is: %d",RtlStringLength(pCommand));
 	//PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
