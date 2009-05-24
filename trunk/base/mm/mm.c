@@ -225,7 +225,8 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	return NULL;
 }
 
-
+VOID MmFree(PVOID BlockBody) {};
+/*
 VOID MmFree(PVOID BlockBody) {
 	
 	// Size of the header
@@ -265,3 +266,4 @@ VOID MmFree(PVOID BlockBody) {
 
 }
 
+*/
