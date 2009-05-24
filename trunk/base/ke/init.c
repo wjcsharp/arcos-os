@@ -13,6 +13,16 @@
 #include <apps.h>
 
 VOID
+TestShell() {
+    KdPrint("Shell PID is %d", GetProcessId());
+	
+    while (1) {
+        AppShell();
+        Sleep(0);
+    }
+}
+/*
+VOID
 TestProcess(PCHAR args) {
     ULONG i;
     UNREFERENCED_PARAMETER(args);
@@ -58,7 +68,7 @@ TestProcess2(PCHAR args) {
         //KdPrint("testprocess2 heartbeat");
     }
 }
-
+*/
 VOID
 TestScrollerProcess() {
     KdPrint("SCROLLER PID is %d", GetProcessId());
@@ -72,9 +82,11 @@ TestScrollerProcess() {
     }
 }
 
+
+
 VOID
 KeInitialize(VOID) {
-    HANDLE testProcess, testProcess2, testProcess3 = NULL, testScrollerProcess;
+    HANDLE testProcess, testProcess2, testProcess3, testScrollerProcess, testShell;
 
     HalInitialize();
 
@@ -97,14 +109,13 @@ KeInitialize(VOID) {
 
     //HANDLE handle = IoCreateFile('serial');
 
-
-    //    PsCreateProcess(TestProcess, 30, &testProcess, NULL);
-    //    PsCreateProcess(TestProcess2, 25, &testProcess2, NULL);
+	PsCreateProcess(TestShell, 31, &testShell, NULL);
+    //PsCreateProcess(TestProcess, 30, &testProcess, NULL);
+    //PsCreateProcess(TestProcess2, 5, &testProcess2, NULL);
     PsCreateProcess(TestScrollerProcess, 10, &testScrollerProcess, NULL);
-    CreateProcess("TestProcess3", 1, &testProcess3, NULL);
-
-    if (testProcess3)
-        ObCloseHandle(testProcess3);
+	
+    //PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
+    //ObCloseHandle(testProcess3);
 
     KeRestoreInterrupts(TRUE);
 
