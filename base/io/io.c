@@ -117,11 +117,11 @@ IoCreateFile(// Error-handling in this function?
 
     // Pick right type.
     if (filename == 's') {
-        status = ObOpenObjectByPointer(serialFile, OBJ_INHERIT, fileType, &handle);
+        status = ObOpenObjectByPointer(serialFile, 0 /*OBJ_INHERIT*/, fileType, &handle);//BUGBUGBUG? magnus wonders
         return handle;
     }
     if (filename == 'l') {
-        status = ObOpenObjectByPointer(lcdFile, OBJ_INHERIT, fileType, &handle);
+        status = ObOpenObjectByPointer(lcdFile, 0 /*OBJ_INHERIT*/, fileType, &handle);//BUGBUGBUG? magnus wonders
         return handle;
     }
 
