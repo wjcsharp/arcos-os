@@ -177,12 +177,12 @@ IoWriteSerial(
     newNode->next = NULL;
 
     // Insert new node.
-    if (bufferQueue->first == NULL) {
-        bufferQueue->first = newNode;
-        bufferQueue->last = newNode;
+    if (!bufferQueue->first) {      // 
+        bufferQueue->first = bufferQueue->last = newNode;
         outputPointer = bufferQueue->first->buffer;
     }
-    if (bufferQueue->first) {
+    else {
+        KdPrint("Can't write just now, putting you in queue");
         bufferQueue->last->next = newNode;
         bufferQueue->last = newNode;
     }
@@ -267,23 +267,25 @@ VOID
 IoTransmitterInterruptHandler() {
     PIO_BUFFER_NODE tempNode; // Move this?
 
-    if (outputPointer && *outputPointer)
-        HalDisplayChar(*outputPointer++);
-    if (outputPointer && *outputPointer == NULL) { // Done writing.
-        //KdPrint("*outputPointer == NULL");
-        if (bufferQueue->first == bufferQueue->last) {		// BUGBUG: Could be one or zero element.
-            //  KdPrint("only one node in queue");
-            MmFree(bufferQueue->first);
-            bufferQueue->first = NULL;
-            bufferQueue->last = NULL;
-            outputPointer = NULL;
-        } else {
-            //KdPrint("next == NULL");
-            tempNode = bufferQueue->first;
-            bufferQueue->first = bufferQueue->first->next;
-            outputPointer = bufferQueue->first->buffer;
-            MmFree(tempNode);
-        }
+    if(outputPointer){
+        if (*outputPointer)         // Still something to write?
+            HalDisplayChar(*outputPointer++);
+        else {                      // Done writing.
+            //KdPrint("*outputPointer == NULL");
+            if (bufferQueue->first && !bufferQueue->last) {         // Only one node in queue
+                //  KdPrint("only one node in queue");
+                MmFree(bufferQueue->first);
+                bufferQueue->first = NULL;
+                bufferQueue->last = NULL;
+                outputPointer = NULL;
+            } else {
+                //KdPrint("next == NULL");
+                tempNode = bufferQueue->first;
+                bufferQueue->first = bufferQueue->first->next;
+                outputPointer = bufferQueue->first->buffer;
+                MmFree(tempNode);
+            }
 
+        }
     }
 }
