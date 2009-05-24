@@ -100,6 +100,9 @@ KeInitialize(VOID) {
 
     //Initialize ps manager, create initial process
     PsInitialize();
+
+    //Initialize message passing
+    MessInitialize();
     ASSERT(KeCurrentProcess);
 
 

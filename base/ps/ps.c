@@ -22,6 +22,7 @@
 POBJECT_TYPE processType;
 
 APPLICATION PsAvailApps[] = {
+    {"tm", AppTaskManager},
     {"TaskManager", AppTaskManager},
     {"Kill", AppKill},
     {"ChangePrio", AppChangePrio},
