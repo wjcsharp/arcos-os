@@ -154,6 +154,8 @@ IoReadFile(
     PFILE file;
 
     status = ObReferenceObjectByHandle(handle, fileType, (PVOID) & file); // Only serial type have write capability in this OS.
+    if (status != 0)
+        KdPrint("IOReadFile failed referncing object by handle");
     if (file->read != NULL)
         file->read(buffer, bufferSize);
     ASSERT(file);
