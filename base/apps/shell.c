@@ -1,5 +1,5 @@
 /*
- *  shell.c
+ *  AppShell.c
  *
  *  Created on: May 21, 2009
  *  Author: Sam Eskandari
@@ -50,7 +50,7 @@ void split(char *string,char *pCommand,char *pArgument)
 	
 }
 
-void shell()
+void AppShell()
 {
 	CHAR input[100]; //buffer
 	PCHAR c;
@@ -95,5 +95,4 @@ void shell()
 			input[n] = '\0';
 		ch[0] = '\0';
 		WriteFile(handle,"\n",0);
-	//}
 }
