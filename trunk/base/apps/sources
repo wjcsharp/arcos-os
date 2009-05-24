@@ -3,4 +3,5 @@ TARGETPATH=lib
 TARGETTYPE=library
 
 SOURCES= \
-	scroller.c
+	scroller.c \
+	shell.c
