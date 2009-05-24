@@ -6,6 +6,46 @@
 #include <ke.h>
 #include <kd.h>
 
+PMESS_PROCESS_QUEUE processQueue;
+
+STATUS
+MessInitialize(){
+
+	// Init process queue.
+	processQueue = MmAlloc(sizeof(MESS_PROCESS_QUEUE));
+	if(!processQueue)
+		return STATUS_NO_MEMORY;
+	processQueue->first = NULL;
+	processQueue->last = NULL;
+        
+	return STATUS_SUCCESS;
+}
+
+
+STATUS
+AddProcessToQueue(ULONG timeout){           // Eventually remove timout
+        
+	PMESS_PROCESS_NODE newNode;
+
+	// Init node.
+	newNode = MmAlloc(sizeof(MESS_PROCESS_NODE));	// Add mem-check.
+	newNode->process = KeCurrentProcess;
+	newNode->next = NULL;
+        newNode->pid = KeCurrentProcess->PID;
+        
+	if(!processQueue->first && !processQueue->last){	// No nodes in queue.
+		processQueue->first = processQueue->last = newNode;		
+	}
+	else {							// Some node in queue.
+		processQueue->last->next = newNode;
+		processQueue->last = newNode;
+	}
+	
+        return STATUS_SUCCESS;
+
+}
+
+
 STATUS
 MessSendMessage(
     ULONG receiverPid,
@@ -17,12 +57,14 @@ MessSendMessage(
 	PPROCESS pprocess;
 	PMESSAGE message ;
 	STATUS status;
+        PMESS_PROCESS_NODE iterator = processQueue->first;
 
 	ASSERT(buffer);		// Allowing sending message without buffer?
 
 	KdPrint("MESS: SendMessage");
 
-	if((message = (PMESSAGE) MmAlloc(sizeof(MESSAGE) + bufferSize)) == NULL)
+	message = (PMESSAGE) MmAlloc(sizeof(MESSAGE) + bufferSize);
+	if(message == NULL)		// Check out of memory.
 		return STATUS_NO_MEMORY; 
 
 	// Init mess
@@ -32,13 +74,23 @@ MessSendMessage(
 	message->type = type;
 	message->bufferSize = bufferSize;
 
-	// THIS DOESNT WORK!!!
+       	status = PsReferenceProcess(receiverPid,&pprocess);	// Get receiver process. CHECK STATUS!
+
+        // Check if the process is waiting, going through processQueue.
+        
+        while(iterator){
+            if(iterator->pid == receiverPid) {
+                KeSetSyscallResult(pprocess, (ULONG) message);
+                KeResumeProcess(pprocess);
+                KdPrint("Message found!");
+            }
+            iterator = iterator->next;
+        }
+        
+	// Copy input to mess buffer.
 	RtlCopyMemory((PCHAR) message + sizeof(MESSAGE), buffer, bufferSize);
 	message->buffer = (PCHAR) message + sizeof(MESSAGE);
-	//KdPrint("MESS: SendMessage: Printing copied buffer content");
-	//KdPrint((PCHAR) (message + sizeof(MESSAGE)));
 
-	status = PsReferenceProcess(receiverPid,&pprocess);	// Get receiver process. CHECK STATUS!
 
 	ASSERT(pprocess);
 	pprocess->MessageQueue = message;			// Add message.
@@ -54,26 +106,27 @@ MessReceiveFirst(
     )
 {
 
-	KeSuspendProcess(5000);
-	return NULL;
+	//KeSuspendProcess(5000);
+	//return NULL;
 
 	PMESSAGE newMessage;
 
 	KdPrint("MESS: ReceiveFirst");
 
-	if (KeCurrentProcess->MessageQueue != NULL)
+	if (KeCurrentProcess->MessageQueue)	// Message queue not empty - check it.
 	{
-		newMessage = KeCurrentProcess->MessageQueue;
-		newMessage->next = NULL;		// No tail with messages on new message. BUG???
-		KeCurrentProcess->MessageQueue = KeCurrentProcess->MessageQueue->next;	// Jump forward one step in the queue, skipping the first one.
-		return newMessage;	// Return pointer to new message. Should be copied by the process, I guess, and then deleted.
+		newMessage = KeCurrentProcess->MessageQueue;		
+		KeCurrentProcess->MessageQueue = KeCurrentProcess->MessageQueue->next;	// Might be NULL.
+		newMessage->next = NULL;
+                return newMessage;	// Return pointer to new message. Should be copied by the process, I guess, and then deleted.
 	}
 	else	// No message in message queue - wait a while/timeout.
 	{
-		KdPrint("MESS: ReceiveFirst: No message in queue - suspending in %d ms", timeout);
-		//KeSuspendProcess(timeout);
-		return NULL;
-	}
+		AddProcessToQueue(timeout);
+                KeSuspendProcess(timeout);
+                KdPrint("Process stopped");
+        }
+        return NULL;
 }
 
 
@@ -154,7 +207,7 @@ MessDeleteMessageQueue()
 
 	mq = KeCurrentProcess->MessageQueue;
 
-	while(mq){
+	while(mq){				// BUGBUG!
 		message = mq;
 		mq = mq->next;
 		MmFree((PVOID)message);

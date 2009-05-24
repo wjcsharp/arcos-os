@@ -27,12 +27,8 @@ typedef struct _MESSAGE {
 	struct _MESSAGE *next;
 } MESSAGE, *PMESSAGE;
 
-// Simple single-linked list for message queue.
-typedef struct _MESSAGE_QUEUE
-{
-	PMESSAGE	message;	// Should it be MESSAGE here?
-	PMESSAGE	next;
-} MESSAGE_QUEUE, *PMESSAGE_QUEUE;
+// Note to anyone: MESS_PROCESS_NODE and MESS_PROCESS_QUEUE are defined
+// in arcos.h. 
 
 STATUS
 MessSendMessage(

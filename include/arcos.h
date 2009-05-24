@@ -176,6 +176,20 @@ typedef struct _PROCESS {
     struct _PROCESS *NextPCB;
 } PROCESS, *PPROCESS;
 
+// Why is message stuff here? Cause they contain PPROCESS and I can't define
+// them in mess.h.
+typedef struct _MESS_PROCESS_NODE {
+	PPROCESS            process;
+        ULONG               pid;
+	struct _MESS_PROCESS_NODE  *next;
+} MESS_PROCESS_NODE, *PMESS_PROCESS_NODE;
+
+// Simple process queue.
+typedef struct _MESS_PROCESS_QUEUE {
+	PMESS_PROCESS_NODE	first;
+	PMESS_PROCESS_NODE	last;
+} MESS_PROCESS_QUEUE, *PMESS_PROCESS_QUEUE;
+
 
 
 #endif
