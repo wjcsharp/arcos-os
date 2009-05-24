@@ -279,7 +279,7 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 			PMb = StartBlock;
 
 		// Save block list and return block body
-		KdPrint("xPMb: 0x%x", PMb);
+		//KdPrint("xPMb: 0x%x", PMb);
 		MemBlock = PMb;
 		return ReturnAddress;
 	}

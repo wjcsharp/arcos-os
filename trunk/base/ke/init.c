@@ -74,7 +74,7 @@ TestScrollerProcess() {
 
 VOID
 KeInitialize(VOID) {
-    HANDLE testProcess, testProcess2, testProcess3, testScrollerProcess;
+    HANDLE testProcess, testProcess2, testProcess3 = NULL, testScrollerProcess;
 
     HalInitialize();
 
@@ -98,12 +98,13 @@ KeInitialize(VOID) {
     //HANDLE handle = IoCreateFile('serial');
 
 
-//    PsCreateProcess(TestProcess, 30, &testProcess, NULL);
-//    PsCreateProcess(TestProcess2, 5, &testProcess2, NULL);
+    //    PsCreateProcess(TestProcess, 30, &testProcess, NULL);
+    //    PsCreateProcess(TestProcess2, 25, &testProcess2, NULL);
     PsCreateProcess(TestScrollerProcess, 10, &testScrollerProcess, NULL);
-    PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
-    ASSERT(testProcess3);
-    ObCloseHandle(testProcess3);
+    CreateProcess("TestProcess3", 1, &testProcess3, NULL);
+
+    if (testProcess3)
+        ObCloseHandle(testProcess3);
 
     KeRestoreInterrupts(TRUE);
 
