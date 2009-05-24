@@ -46,13 +46,13 @@ CHAR
 GetFirstCharFromBuffer() {
     CHAR c;
     ULONG i;
-    KdPrint("GetFirstCharFromBuffer");
+    //KdPrint("GetFirstCharFromBuffer");
     c = fifo.buffer[0];
     for (i = 0; i != fifo.length; i++) // Move all chars one step. Tested, but not supertested.
         fifo.buffer[i] = fifo.buffer[i + 1]; // Could be optimized. Later.
     if (fifo.length > 0) // Decrease fifo length
         fifo.length--;
-    KdPrint("GetFirstCharFromBuffer DONE:%c", c);
+    //KdPrint("GetFirstCharFromBuffer DONE:%c", c);
     return c;
 }
 
@@ -155,7 +155,7 @@ IoReadFile(
 
     status = ObReferenceObjectByHandle(handle, fileType, (PVOID) & file); // Only serial type have write capability in this OS.
     if (status != 0)
-        KdPrint("IOReadFile failed referncing object by handle");
+        KdPrint("IOReadFile failed referencing object by handle");
     if (file->read != NULL)
         file->read(buffer, bufferSize);
     ASSERT(file);
@@ -179,11 +179,10 @@ IoWriteSerial(
     newNode->next = NULL;
 
     // Insert new node.
-    if (!bufferQueue->first) {      // 
+    if (!bufferQueue->first) { //
         bufferQueue->first = bufferQueue->last = newNode;
         outputPointer = bufferQueue->first->buffer;
-    }
-    else {
+    } else {
         KdPrint("Can't write just now, putting you in queue");
         bufferQueue->last->next = newNode;
         bufferQueue->last = newNode;
@@ -201,9 +200,9 @@ IoReadSerial(
     PIO_WAITING_NODE newNode;
 
     // If waitingQueue is empty and ther is chars in fifo-buffer, just return the first char in that buffer. Don't create waiting node.
-    if(waitingQueue->first == NULL && fifo.buffer[0] != NULL){
-    	*((PCHAR) buffer) = GetFirstCharFromBuffer();
-	return;
+    if (waitingQueue->first == NULL && fifo.buffer[0] != NULL) {
+        *((PCHAR) buffer) = GetFirstCharFromBuffer();
+        //return;
     }
 
     newNode = MmAlloc(sizeof (IO_WAITING_NODE));
@@ -216,12 +215,14 @@ IoReadSerial(
     if (waitingQueue->first == NULL) {
         // KdPrint("serial empty queue");
         waitingQueue->first = waitingQueue->last = newNode;
+        ObReferenceObject(KeCurrentProcess, NULL);
         KeStopSchedulingProcess(KeCurrentProcess);
     } else {
         ASSERT(waitingQueue->last);
         // KdPrint("serial non empty queue");
         waitingQueue->last->next = newNode;
         waitingQueue->last = newNode;
+        ObReferenceObject(KeCurrentProcess, NULL);
         KeStopSchedulingProcess(KeCurrentProcess);
     }
 }
@@ -249,17 +250,22 @@ IoInterruptHandler(CHAR c) {
     PIO_WAITING_NODE tempNode;
 
     AddCharToBuffer(c);
+    // KdPrint("inIoInterruptH");
 
     if (waitingQueue->first) {
+        //    KdPrint("inIoInterruptH1");
         *(waitingQueue->first->pbuffer) = GetFirstCharFromBuffer();
+        //   KdPrint("inIoInterruptH2");
         tempNode = waitingQueue->first;
+        //  KdPrint("inIoInterruptH3");
         waitingQueue->first = waitingQueue->first->next;
         // KdPrint("before kestartsched");
         KeStartSchedulingProcess(tempNode->pprocess);
-        // KdPrint("after kestartsched");
+        ObDereferenceObject(tempNode->pprocess);
+        //KdPrint("after kestartsched");
         //KdPrint("IOInterrupt %x", tempNode);
         MmFree(tempNode);
-        //KdPrint("after MmFree iointerrupt");
+        // KdPrint("after MmFree iointerrupt");
     }
 }
 
@@ -268,20 +274,20 @@ IoInterruptHandler(CHAR c) {
 VOID
 IoTransmitterInterruptHandler() {
     PIO_BUFFER_NODE tempNode; // Move this?
-
-    if(outputPointer){
-        if (*outputPointer)         // Still something to write?
+    //KdPrint("IoTransmitter");
+    if (outputPointer) {
+        if (*outputPointer) // Still something to write?
             HalDisplayChar(*outputPointer++);
-        else {                      // Done writing.
+        else { // Done writing.
             //KdPrint("*outputPointer == NULL");
-            if (bufferQueue->first && !bufferQueue->last) {         // Only one node in queue
-                //  KdPrint("only one node in queue");
+            if ((bufferQueue->first == bufferQueue->last) && bufferQueue->first) { // Only one node in queue
+                //KdPrint("only one node in queue");
                 MmFree(bufferQueue->first);
                 bufferQueue->first = NULL;
                 bufferQueue->last = NULL;
                 outputPointer = NULL;
             } else {
-                //KdPrint("next == NULL");
+                //  KdPrint("next == NULL");
                 tempNode = bufferQueue->first;
                 bufferQueue->first = bufferQueue->first->next;
                 outputPointer = bufferQueue->first->buffer;

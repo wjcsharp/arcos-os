@@ -79,9 +79,9 @@ KeSystemService(
             KeSetSyscallResult(KeCurrentProcess, PsGetProcessesInfo((PPROCESS_INFO) Arg0, Arg1, (PULONG) Arg2));
             break;
 
-        case 18:
-            KeSetSyscallResult(KeCurrentProcess, PsSupervise(Arg0, Arg1));
-            break;
+        //case 18:
+          //  KeSetSyscallResult(KeCurrentProcess, PsSupervise(Arg0, Arg1));
+            //break;
 
 
         default:
