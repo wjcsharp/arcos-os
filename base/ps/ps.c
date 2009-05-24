@@ -50,14 +50,14 @@ VOID
 AppSupervise() {
     ULONG supervPid, ProcessPid;
     PCHAR first, second;
-    
+
     first = KeCurrentProcess->Args;
     KdPrint(first);
 
-    while ((' ' == *first)&& *first)
+    while ((' ' == *first) && *first)
         ++first;
     KdPrint(first);
-    if(first==NULL)
+    if (first == NULL)
         KdPrint("null in appsupervise");
     KillMe();
 }
@@ -168,12 +168,12 @@ AppTaskManager() {
                 cputmp = cputmp / 1000;
                 tend = 1;
             }
-            RtlFormatString(strbuff, 100, "%s PID: %d, CPU TIME: %d %s\n", pinfo[i].RunningProgram, pinfo[i].PID, cputmp, timend[tend]);
+            RtlFormatString(strbuff, 100, "%s PID: %d, STATE:%d CPU TIME: %d %s\n", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].State, cputmp, timend[tend]);
             // KdPrint("Before WriteFile");
             WriteString(tmout, strbuff);
             //  Sleep(1000);
         }
-        Sleep(3000);
+        Sleep(1000);
     }
     KdPrint("Before WriteFile");
     WriteString(tmout, "--------Task Manager says godbye--------");
@@ -197,6 +197,13 @@ AppPSTestProcess3() {
     KillMe();
 }
 
+VOID
+DumpProcessObject(
+        PPROCESS pprocess
+        ) {
+    KdPrint("PID:%d CPUTIME:%d", pprocess->PID, pprocess->CPUTime);
+}
+
 STATUS
 CreateProcessObjectType() {
     //Create Process object type
@@ -205,7 +212,7 @@ CreateProcessObjectType() {
     //
     // create a new object type: Process
     //
-    typeInitializer.DumpMethod = NULL; //Should be implemented...
+    typeInitializer.DumpMethod = DumpProcessObject; //Should be implemented...
     typeInitializer.DeleteMethod = NULL;
     status = ObCreateObjectType(0x0CE55, &typeInitializer, &processType);
     return status;
@@ -661,6 +668,7 @@ CopyPInfo(
     Info->State = PProcess->State;
     Info->RunningProgram = PProcess->RunningProgram;
     Info->PID = PProcess->PID;
+    Info->State = PProcess->State;
 
     return STATUS_SUCCESS;
 };
