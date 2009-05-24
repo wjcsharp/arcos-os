@@ -14,9 +14,9 @@
 
 void split(char *string, char *pCommand, char *pArgument) {
     ULONG i;
-    HANDLE handle, commandProcess;
+    HANDLE outp, commandProcess;
     STATUS status;
-    handle = CreateFile('s');
+    outp = CreateFile('s');
     pCommand = string;
     for (i = 0; string[i] != '\0'; i++) {
         if (string[i] == ' ') {
@@ -29,17 +29,18 @@ void split(char *string, char *pCommand, char *pArgument) {
     // if (RtlCompareStrings(pCommand, "Exit") == 0)
     //   KillMe();
 
-    status = CreateProcess(pCommand, 31, &commandProcess, pArgument);
+    status = CreateProcess(pCommand, 9, &commandProcess, pArgument);
     if (status != 0) {
-        WriteFile(handle, "\nARCOS:\\>Unknown command. Try again.", 38);
-        ObCloseHandle(handle);
+        WriteFile(outp, "\nARCOS:\\>Unknown command. Try again.", 38);
+        ObCloseHandle(outp);
     }
 
     if (status == 0) {
         ASSERT(commandProcess);
         ObCloseHandle(commandProcess);
     }
-    ObCloseHandle(handle);
+    KdPrint("getsdone");
+    ObCloseHandle(outp);
 }
 
 void AppShell() {
@@ -48,29 +49,29 @@ void AppShell() {
     CHAR ch[2];
     PCHAR command;
     PCHAR argument;
-    HANDLE handle;
+    HANDLE serialinout;
     ULONG i;
     ULONG n;
     ch[1] = NULL;
     c = ch;
-    handle = CreateFile('s');
-    WriteFile(handle, "ARCOS:\\>", 9);
+    serialinout = CreateFile('s');
+    WriteFile(serialinout, "ARCOS:\\>", 9);
     i = 0;
     while (*c != '\r') {
         command = NULL;
         argument = NULL;
-        ReadFile(handle, c, 1);
+        ReadFile(serialinout, c, 1);
         if (*c == '\b' || *c == 127) {
             if (i > 0) {
                 i = i - 1;
                 input[i] = '\0';
-                WriteFile(handle, "\e[D \e[D", 9);
+                WriteFile(serialinout, "\e[D \e[D", 9);
             }
         } else if (*c == '\r')
             break;
         else {
             input[i] = ch[0];
-            WriteFile(handle, c, 1);
+            WriteFile(serialinout, c, 1);//BUGBUGBUG?
             i++;
         }
         if (i > 99)
@@ -80,6 +81,7 @@ void AppShell() {
     for (n = 0; n < i; n++)
         input[n] = '\0';
     ch[0] = '\0';
-    WriteFile(handle, "\n", 0);
-    ObCloseHandle(handle);
+    WriteFile(serialinout, "\n", 1);
+    KdPrint("joda den exerkveras");
+    ObCloseHandle(serialinout);
 }

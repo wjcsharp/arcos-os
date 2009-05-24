@@ -27,12 +27,13 @@ APPLICATION PsAvailApps[] = {
     {"Kill", AppKill},
     {"ChangePrio", AppChangePrio},
     {"TestProcess3", AppPSTestProcess3},
-    {"Supervise", AppSupervise},
     {"taskmanager", AppTaskManager},
     {"kill", AppKill},
     {"changeprio", AppChangePrio},
-    {"testprocess3", AppPSTestProcess3},
-    {"supervise", AppSupervise}
+    {"testprocess3", AppPSTestProcess3}
+    //{"Supervise", AppSupervise},
+    //,{"supervise", AppSupervise}
+
 };
 
 
@@ -48,36 +49,20 @@ appisdigit(CHAR c) {
 }
 
 VOID
-AppSupervise() {
-    ULONG supervPid, ProcessPid;
-    PCHAR first, second;
-
-    first = KeCurrentProcess->Args;
-    KdPrint(first);
-
-    while ((' ' == *first) && *first)
-        ++first;
-    KdPrint(first);
-    if (first == NULL)
-        KdPrint("null in appsupervise");
-    KillMe();
-}
-
-VOID
 AppChangePrio() {
     ULONG pid, prio, status;
     PCHAR first, second;
     PCHAR pek = KeCurrentProcess->Args;
     //THE FOLLOWING IS REALLY UGLY so look away!
     if (NULL == pek) {
-        KdPrint("ChangePrio needs arguments e.g. ' 2 3'");
+        KdPrint("ChangePrio needs arguments e.g. ' 2 3'"); //BUGBUGBUG
         KillMe();
     }
     //remove everything until first digit
     if (!appisdigit(*pek)) {
         while ((!appisdigit(*++pek)) && (*pek != 0));
         if (0 == *pek) {
-            KdPrint("ChangePrio needs arguments e.g. ' 2 3'");
+            KdPrint("ChangePrio needs arguments e.g. ' 2 3'"); //BUGBUGBUG
             KillMe();
         }
     }
@@ -85,14 +70,14 @@ AppChangePrio() {
     //Find end of first arg
     while (appisdigit(*++pek));
     if (0 == *pek) {
-        KdPrint("ChangePrio needs 2 arguments e.g. ' 2 3'");
+        KdPrint("ChangePrio needs 2 arguments e.g. ' 2 3'"); //BUGBUGBUG
         KillMe();
     }
     *pek = 0; //Set end of first string
     //remove everything until next digit
     while ((!appisdigit(*++pek)) && (*pek != 0));
     if (0 == *pek) {
-        KdPrint("ChangePrio needs 2 arguments e.g. ' 2 3'");
+        KdPrint("ChangePrio needs 2 arguments e.g. ' 2 3'"); //BUGBUGBUG
         KillMe();
     }
     second = pek; //Start of second stringarg
@@ -106,12 +91,12 @@ AppChangePrio() {
 
     status = ChangePriority(pid, prio);
     if (0 != status) {
-        KdPrint("The pid:%d is not in use", pid);
+        KdPrint("The pid:%d is not in use", pid); //BUGBUGBUG
         KillMe();
     }
 
-    KdPrint("Changed Priority of PID = %s", first);
-    KdPrint("Changed priority to: %s", second);
+    KdPrint("Changed Priority of PID = %s", first); //BUGBUGBUG
+    KdPrint("Changed priority to: %s", second); //BUGBUGBUG
     KillMe();
 }
 
@@ -119,9 +104,9 @@ VOID
 AppKill() {
     ULONG PID;
     STATUS status;
-
-    if (!(KeCurrentProcess->Args)){
-        KdPrint("Kill needs an argument e.g. 'kill 5'");
+    Sleep(15000);
+    if (!(KeCurrentProcess->Args)) {
+        KdPrint("Kill needs an argument e.g. 'kill 5'"); //BUGBUGBUG
         KillMe();
     }
 
@@ -130,9 +115,9 @@ AppKill() {
 
     status = KillByPID(PID, 1); //ExitStatus 1 == murdered
     if (0 == status)
-        KdPrint("Killed %d", PID);
+        KdPrint("Killed %d", PID); //BUGBUGBUG
     else
-        KdPrint("Failed to kill %d", PID);
+        KdPrint("Failed to kill %d", PID); //BUGBUGBUG
 
     KillMe();
 }
@@ -183,7 +168,7 @@ AppTaskManager() {
         }
         Sleep(5000);
     }
-    KdPrint("Before tmgoodbye");
+    //KdPrint("Before tmgoodbye");
     WriteString(tmout, "--------Task Manager says godbye--------");
     ObCloseHandle(tmout);
     MmFree(pinfo);
@@ -203,13 +188,6 @@ AppPSTestProcess3() {
     SuperviseProc(2, 3);
 
     KillMe();
-}
-
-VOID
-DumpProcessObject(
-        PPROCESS pprocess
-        ) {
-    KdPrint("PID:%d CPUTIME:%d", pprocess->PID, pprocess->CPUTime);
 }
 
 STATUS
@@ -444,7 +422,7 @@ PsKillMe() {
     STATUS status;
     status = PsKillProcess(KeCurrentProcess, 0); //Exitstatus 0 == Suicide
     if (0 != status)
-        KdPrint("KillMe failed");
+        KdPrint("KillMe failed"); //BUGBUGBUG
 }
 
 STATUS
@@ -478,7 +456,7 @@ PsKillProcess(
         ULONG ExitStatus
         ) {
     STATUS status;
-
+    KdPrint("ps Killing:%d", PProcess->PID); //BUGBUGBUG
     status = ObReferenceObject(PProcess, processType);
     if (status != 0)
         return status;
@@ -486,42 +464,24 @@ PsKillProcess(
     status = KeStopSchedulingProcess(PProcess);
     if (status != 0) return status;
 
-    //Clear hadletable
+    //Clear handletable
     ObKillProcess(PProcess);
 
     //Free allocated memory BUGBUGBUG
     MmFree(PProcess->AllocatedMemory);
 
     //Free memory allocated for Args
-    if (PProcess->Args != NULL)
+    if (PProcess->Args)
         MmFree(PProcess->Args);
 
     PProcess->ExitStatus = ExitStatus;
 
-    //Free message-queue
-    MessDeleteMessageQueue();
+    //Free message-queueBUGBUGBUGBUG
+    //MessDeleteMessageQueue();
     //Dereference process
+
     ASSERT(PProcess);
     ObDereferenceObject(PProcess);
-    return STATUS_SUCCESS;
-}
-
-STATUS
-PsSupervise(
-        ULONG Supervisor,
-        ULONG PID
-        ) {
-    STATUS status;
-    PPROCESS pprocess;
-
-    status = PsReferenceProcess(PID, &pprocess);
-    if (0 != status)
-        return status;
-
-    pprocess->Supervisor = Supervisor;
-    KdPrint("PsSuper PID:%d is supervised by %d", pprocess->PID, pprocess->Supervisor);
-    ASSERT(pprocess);
-    ObDereferenceObject(pprocess);
     return STATUS_SUCCESS;
 }
 
@@ -657,10 +617,10 @@ PsReferenceProcess(
             ObReferenceObject(pprocess, processType);
             return STATUS_SUCCESS;
         }
-        KdPrint("PsReferenceProcess");
+        //KdPrint("PsReferenceProcess");
         ASSERT(pprocess);
         pprocess = ObGetNextObjectOfType(pprocess);
-        KdPrint("PsReferenceProcess after get nex obj");
+        //KdPrint("PsReferenceProcess after get nex obj");
     }
     *ProcessPtr = NULL;
     return STATUS_NO_SUCH_PROCESS;
@@ -706,11 +666,46 @@ PsGetProcessesInfo(
         }
         Buffer[foundProc] = pinfo;
         foundProc++;
-        KdPrint("PsGetProcessesInfo");
+        //KdPrint("PsGetProcessesInfo");
         pprocess = ObGetNextObjectOfType(pprocess);
-        KdPrint("PsGetProcessesInfo after get nex obj");
+        //KdPrint("PsGetProcessesInfo after get nex obj");
     }
     *NumberProcesses = foundProc;
     return STATUS_SUCCESS;
 }
 
+STATUS
+PsSupervise(
+        ULONG Supervisor,
+        ULONG PID
+        ) {
+    STATUS status;
+    PPROCESS pprocess;
+
+    status = PsReferenceProcess(PID, &pprocess);
+    if (0 != status)
+        return status;
+
+    pprocess->Supervisor = Supervisor;
+    KdPrint("PsSuper PID:%d is supervised by %d", pprocess->PID, pprocess->Supervisor);
+    ASSERT(pprocess);
+    ObDereferenceObject(pprocess);
+    return STATUS_SUCCESS;
+}
+
+/*
+VOID
+AppSupervise() {
+    ULONG supervPid, ProcessPid;
+    PCHAR first, second;
+
+    first = KeCurrentProcess->Args;
+    KdPrint(first);
+
+    while ((' ' == *first) && *first)
+        ++first;
+    KdPrint(first);
+    if (first == NULL)
+        KdPrint("null in appsupervise");
+    KillMe();
+}*/

@@ -34,7 +34,7 @@ MmAlloc(
 {
         PVOID returnPointer = freeMemPointer;                   // Give current address to object
         freeMemPointer = ALIGN_MEMORY((ULONG)freeMemPointer + size); // Increase freeMemPointer 
-        KdPrint("Malloc%x", returnPointer);
+        //KdPrint("Malloc%x", returnPointer);
         return returnPointer;
 
 }
@@ -44,5 +44,5 @@ MmFree(
         PVOID objectHeader
         )
 {
-KdPrint("Dealloc");        // Add code here.
+//KdPrint("Dealloc");        // Add code here.
 }
