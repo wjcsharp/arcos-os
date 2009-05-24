@@ -15,7 +15,7 @@
 void split(char *string,char *pCommand,char *pArgument)
 {
 	ULONG i;
-	HANDLE handle;
+	HANDLE handle, commandProcess;
 	STATUS status;
 	handle = CreateFile('s');
 	pCommand = string;
@@ -30,29 +30,16 @@ void split(char *string,char *pCommand,char *pArgument)
 		else
 			pArgument = NULL;
 	}
-	/*i = 0;
-	while(pCommand[i])
-	{
-		KdPrint("%c",pCommand[i]);
-		i++;
-		if(pCommand[i] == NULL)
-			KdPrint("%s","NULLLLLLLLLLLLLLLLLLLLLLL");
-	}*/
-	//KdPrint("Command:%s",pCommand);
-	HANDLE commandProcess;
-	
-	//KdPrint("Argument is:%s11",pArgument);
-	//KdPrint("Argument Length is: %d",RtlStringLength(pArgument));
-	status = CreateProcess(pCommand,31,&commandProcess,pArgument);
-	if (status != 0)
-		WriteFile(handle,"\nARCOS:\\>Unknown comannd. Try again.",0);
+	if (RtlCompareStrings(pCommand,"Exit") == 0)
+		KillMe();
 	else
-		ObCloseHandle(commandProcess);
-	//KdPrint("Status is: %d",status);
-    //KdPrint("Length is: %d",RtlStringLength(pCommand));
-	//PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
-    //ObCloseHandle(testProcess3);
-	
+	{
+		status = CreateProcess(pCommand,31,&commandProcess,pArgument);
+		if (status != 0)
+			WriteFile(handle,"\nARCOS:\\>Unknown command. Try again.",0);
+		else
+			ObCloseHandle(commandProcess);
+	}
 }
 
 void AppShell()
