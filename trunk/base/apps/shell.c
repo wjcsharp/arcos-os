@@ -26,16 +26,20 @@ void split(char *string, char *pCommand, char *pArgument) {
         } else
             pArgument = NULL;
     }
-    if (RtlCompareStrings(pCommand, "Exit") == 0)
-        KillMe();
+    // if (RtlCompareStrings(pCommand, "Exit") == 0)
+    //   KillMe();
 
     status = CreateProcess(pCommand, 31, &commandProcess, pArgument);
-    if (status != 0)
+    if (status != 0) {
         WriteFile(handle, "\nARCOS:\\>Unknown command. Try again.", 38);
+        ObCloseHandle(handle);
+    }
+
     if (status == 0) {
         ASSERT(commandProcess);
         ObCloseHandle(commandProcess);
     }
+    ObCloseHandle(handle);
 }
 
 void AppShell() {
@@ -77,4 +81,5 @@ void AppShell() {
         input[n] = '\0';
     ch[0] = '\0';
     WriteFile(handle, "\n", 0);
+    ObCloseHandle(handle);
 }
