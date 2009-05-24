@@ -190,70 +190,76 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	
 	// Temporary pointers to save block header
 	PVOID TempNextBlock;
-	ULONG TempSize;
+	//ULONG TempSize;
 	
 	// Search for a free block to use
-	while (PMb->NextBlock != NULL) {
+	while (PMb != NULL) {
 		
 		// Block big enough and free?
-		if(PMb->Size > (ULONG)ALIGN_MEMORY(SizeToBeAllocated + HeaderSize) && PMb->IsFree == TRUE) {
-			ULONG FragmentSize = (ULONG)ALIGN_MEMORY(PMb->Size - (SizeToBeAllocated + HeaderSize));
-			// Is the fragment block bigger than the header?
-			if (FragmentSize > HeaderSize) {
+		//if(PMb->Size > (ULONG)ALIGN_MEMORY(SizeToBeAllocated + HeaderSize) && PMb->IsFree == TRUE) {
+		if(PMb->IsFree) {
+			if(PMb->Size >= (ULONG)ALIGN_MEMORY(SizeToBeAllocated)) {
+				
+				ULONG FragmentSize = (ULONG)ALIGN_MEMORY(PMb->Size - (SizeToBeAllocated + HeaderSize));
 
-				// Return block body
-				ReturnAddress = ALIGN_MEMORY((ULONG)PMb + HeaderSize);
-				RtlFillMemory(ReturnAddress, 'C', SizeToBeAllocated);
+				// Is the fragment block bigger than the header?
+				if (FragmentSize > HeaderSize) {
 
-				// Set block properties
-				PMb->IsFree = FALSE;
-				PMb->Size = SizeToBeAllocated;
-				TempNextBlock = PMb->NextBlock;
-				PMb->NextBlock = ALIGN_MEMORY(PMb + HeaderSize + SizeToBeAllocated);
-				PMb->NextBlock->IsFree = TRUE;
-				PMb->NextBlock->Size = FragmentSize;
-				PMb->NextBlock->NextBlock = TempNextBlock;
-				PMb->NextBlock->PreviousBlock = PMb;
+					// Return block body
+					ReturnAddress = ALIGN_MEMORY((ULONG)PMb + HeaderSize);
+					//RtlFillMemory(ReturnAddress, 'U', SizeToBeAllocated);
 
-				// Is this the first block?
-				if(PMb->PreviousBlock == NULL)
-					StartBlock = PMb;
-				else
-					// Point back to the start
-					PMb = StartBlock;
+					// Set block properties
+					PMb->IsFree = FALSE;
+					PMb->Size = SizeToBeAllocated;
+					TempNextBlock = PMb->NextBlock;
+					PMb->NextBlock = ALIGN_MEMORY((ULONG)PMb + HeaderSize + SizeToBeAllocated);
+					PMb->NextBlock->IsFree = TRUE;
+					PMb->NextBlock->Size = FragmentSize;
+					PMb->NextBlock->NextBlock = TempNextBlock;
+					PMb->NextBlock->PreviousBlock = PMb;
+					
+					/*
+					// Is this the first block?
+					if(PMb->PreviousBlock == NULL)
+						StartBlock = PMb;
+					else
+						// Point back to the start
+						PMb = StartBlock;
 
-				// Save block list and return block body
-				MemBlock = PMb;
-				return ReturnAddress;
-			}
+					// Save block list and return block body
+					MemBlock = PMb;
+					*/
+					return ReturnAddress;
+				}
 
-			// Otherwise alloc the full block (make no fragment block)
-			else {
-				// Return block body
-				ReturnAddress = ALIGN_MEMORY(PMb + HeaderSize);
+				// Otherwise alloc the full block (make no fragment block)
+				else {
+					// Return block body
+					ReturnAddress = ALIGN_MEMORY(PMb + HeaderSize);
 
-				// The only block property to be set
-				PMb->IsFree = FALSE;
+					// The only block property to be set
+					PMb->IsFree = FALSE;
+					
+					/*
+					// Is this the first block?
+					if(PMb->PreviousBlock == NULL)
+						StartBlock = PMb;
+					else
+						// Point back to the start
+						PMb = StartBlock;
 
-				// Is this the first block?
-				if(PMb->PreviousBlock == NULL)
-					StartBlock = PMb;
-				else
-					// Point back to the start
-					PMb = StartBlock;
-
-				// Save block list and return block body
-				MemBlock = PMb;
-				return ReturnAddress;
+					// Save block list and return block body
+					MemBlock = PMb;
+					*/
+					return ReturnAddress;
+				}
 			}
 		}
-
 		// Check the next block
-		else {
-			PMb = PMb->NextBlock;
-		}
+		PMb = PMb->NextBlock;
 	}
-	
+	/*
 	// All memory used?
 	if(PMb->Size > (ULONG)ALIGN_MEMORY(SizeToBeAllocated + HeaderSize)) {
 
@@ -279,16 +285,15 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 			PMb = StartBlock;
 
 		// Save block list and return block body
-		//KdPrint("xPMb: 0x%x", PMb);
+		KdPrint("xPMb: 0x%x", PMb);
 		MemBlock = PMb;
 		return ReturnAddress;
 	}
+	*/
 	return NULL;
 }
 
 
-VOID MmFree(PVOID BlockBody) {};
-/*
 VOID MmFree(PVOID BlockBody) {
 	
 	// Size of the header
@@ -302,12 +307,14 @@ VOID MmFree(PVOID BlockBody) {
 	PMb->IsFree = TRUE;
 	
 	// Append next neighbor block?
-	if(PMb->NextBlock->IsFree == TRUE) {
-		//KdPrint("...appending with my next neighbor");
-		PMb->Size = (ULONG)ALIGN_MEMORY(PMb->Size + PMb->NextBlock->Size + HeaderSize); 
-		PMb->NextBlock = PMb->NextBlock->NextBlock;
-		if(PMb->NextBlock->NextBlock != NULL)
-			PMb->NextBlock->NextBlock->PreviousBlock = PMb;
+	if(PMb->NextBlock != NULL) {
+		if(PMb->NextBlock->IsFree == TRUE) {
+			//KdPrint("...appending with my next neighbor");
+			PMb->Size = (ULONG)ALIGN_MEMORY(PMb->Size + PMb->NextBlock->Size + HeaderSize); 
+			PMb->NextBlock = PMb->NextBlock->NextBlock;
+			if(PMb->NextBlock != NULL)
+				PMb->NextBlock->PreviousBlock = PMb;
+		}
 	}
 	
 	// Append previous neighbor block?
@@ -317,14 +324,17 @@ VOID MmFree(PVOID BlockBody) {
 			PMb = PMb->PreviousBlock;
 			PMb->Size = (ULONG)ALIGN_MEMORY(PMb->Size + PMb->NextBlock->Size + HeaderSize);
 			PMb->NextBlock = PMb->NextBlock->NextBlock;
-			if(PMb->NextBlock->NextBlock != NULL)
-				PMb->NextBlock->NextBlock->PreviousBlock = PMb;
+			if(PMb->NextBlock != NULL)
+				PMb->NextBlock->PreviousBlock = PMb;
 		}
 	}
 	
 	//KdPrint("Now I'm free! (0x%x)", ALIGN_MEMORY((ULONG)PMb + HeaderSize));
 
 	// Save the block list
+	/*
 	PMb = StartBlock;
 	MemBlock = PMb;
-}*/
+	*/
+}
+
