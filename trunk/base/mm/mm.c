@@ -20,9 +20,6 @@ static PVOID FirstMemPointer;
 // Memory Block list
 PMEMORY_BLOCK MemBlock;
 
-// Pointer to the first block
-PVOID StartBlock;
-
 // Aligns memory pointer at a 4-byte boundary
 #define ALIGN_MEMORY(X)     ((PVOID)(((ULONG)(X) + 3) & ~3))
 
@@ -38,8 +35,6 @@ VOID MmInitialize()
 	MemBlock->NextBlock = NULL;
 	MemBlock->PreviousBlock = NULL;
 	
-	// Keeps track of the first block
-	StartBlock = MemBlock;
 }
 
 ULONG MmGetUsedMemSum() {
@@ -96,11 +91,16 @@ ULONG MmGetUsedVirtMemSum() {
 	
 	// Go through the list
 	while(PVMb != NULL) {
-		KdPrint("inte NULL!");
+		
+		//KdPrint("inte NULL!");
+		
 		// Get the "real" block
-		PMb = ALIGN_MEMORY(PVMb - HeaderSize);
+		//KdPrint("PVMb: 0x%x", PVMb);
+		PMb = ALIGN_MEMORY((ULONG)PVMb - HeaderSize);
 		
 		KdPrint("PMb: 0x%x", PMb);
+
+		KdPrint("PMb->Size: %d", PMb->Size);
 
 		MemSum = MemSum + PMb->Size + HeaderSize;
 		PVMb = PVMb->NextBlock;
@@ -124,45 +124,27 @@ PVOID MmVirtualAlloc(PPROCESS BlockOwner, ULONG Size) {
 	// Add it to the list
 	NewBlock->NextBlock = PVMb;
 	BlockOwner->AllocatedMemory = NewBlock;
+
 	return ALIGN_MEMORY((ULONG)BlockOwner->AllocatedMemory + VirtualHeaderSize);
 }
 
 VOID MmVirtualFree(PPROCESS BlockOwner, PVOID BlockBody) {
-
-	// Size of header for the virtual blocks
-	static ULONG VirtualHeaderSize = sizeof(VIRTUAL_MEMORY_BLOCK);
-
-	PVIRTUAL_MEMORY_BLOCK PreviousPVMb;
-
+	
 	// Get a copy of the block list
 	PVIRTUAL_MEMORY_BLOCK PVMb = BlockOwner->AllocatedMemory;
-	
-	// Make a pointer to the first block
-	PVOID VirtualStartBlock = PVMb;
-	
-	KdPrint("PVMb: 0x%x \tBlockBody: 0x%x", PVMb, BlockBody); 
-	//PreviousPVMb = PVMb;
 
-	// Find the block to be freed in the list
-	while(ALIGN_MEMORY((ULONG)BlockBody - VirtualHeaderSize) != PVMb) {
-		KdPrint("P: 0x%x", PVMb);
-		PreviousPVMb = PVMb;
-		PVMb = PVMb->NextBlock;
-		KdPrint("banan: 0x%x", ALIGN_MEMORY((ULONG)BlockBody - VirtualHeaderSize));
+	if(PVMb->NextBlock != NULL) {
+		while(PVMb->NextBlock != BlockBody - sizeof(VIRTUAL_MEMORY_BLOCK)) {
+			PVMb = PVMb->NextBlock;
+		}
+		PVMb->NextBlock = PVMb->NextBlock->NextBlock;
 	}
-	KdPrint("babababab!");
-	// Free it and remove it from the list
-	//PVMb = PVMb->NextBlock;
-	KdPrint("huh?");
-	if(PVMb->NextBlock != NULL) 
-		PreviousPVMb->NextBlock = PVMb->NextBlock;
-	KdPrint("huh?");
-	MmFree(PVMb);
-	
-	// Point to the first block
-	PVMb = VirtualStartBlock;
-	BlockOwner->AllocatedMemory = PVMb;
+	else
+		PVMb = NULL;
+
+	MmFree(BlockBody - sizeof(VIRTUAL_MEMORY_BLOCK));
 }
+
 
 VOID MmVirtualFreeAll(PPROCESS BlockOwner) {
 	
@@ -185,18 +167,16 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 	// Address to return
 	PVOID ReturnAddress;
 	
-	// Copy of the mb-list
+	// Copy of the memory block pointer
 	PMEMORY_BLOCK PMb = MemBlock;
 	
 	// Temporary pointers to save block header
 	PVOID TempNextBlock;
-	//ULONG TempSize;
 	
 	// Search for a free block to use
 	while (PMb != NULL) {
 		
 		// Block big enough and free?
-		//if(PMb->Size > (ULONG)ALIGN_MEMORY(SizeToBeAllocated + HeaderSize) && PMb->IsFree == TRUE) {
 		if(PMb->IsFree) {
 			if(PMb->Size >= (ULONG)ALIGN_MEMORY(SizeToBeAllocated)) {
 				
@@ -209,9 +189,11 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 					ReturnAddress = ALIGN_MEMORY((ULONG)PMb + HeaderSize);
 					//RtlFillMemory(ReturnAddress, 'U', SizeToBeAllocated);
 
-					// Set block properties
+					// Set previous block properties
 					PMb->IsFree = FALSE;
 					PMb->Size = SizeToBeAllocated;
+
+					// Set next block Properties
 					TempNextBlock = PMb->NextBlock;
 					PMb->NextBlock = ALIGN_MEMORY((ULONG)PMb + HeaderSize + SizeToBeAllocated);
 					PMb->NextBlock->IsFree = TRUE;
@@ -219,77 +201,27 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 					PMb->NextBlock->NextBlock = TempNextBlock;
 					PMb->NextBlock->PreviousBlock = PMb;
 					
-					/*
-					// Is this the first block?
-					if(PMb->PreviousBlock == NULL)
-						StartBlock = PMb;
-					else
-						// Point back to the start
-						PMb = StartBlock;
-
-					// Save block list and return block body
-					MemBlock = PMb;
-					*/
 					return ReturnAddress;
 				}
 
 				// Otherwise alloc the full block (make no fragment block)
 				else {
+
 					// Return block body
 					ReturnAddress = ALIGN_MEMORY(PMb + HeaderSize);
 
 					// The only block property to be set
 					PMb->IsFree = FALSE;
-					
-					/*
-					// Is this the first block?
-					if(PMb->PreviousBlock == NULL)
-						StartBlock = PMb;
-					else
-						// Point back to the start
-						PMb = StartBlock;
 
-					// Save block list and return block body
-					MemBlock = PMb;
-					*/
 					return ReturnAddress;
 				}
 			}
 		}
+
 		// Check the next block
 		PMb = PMb->NextBlock;
 	}
-	/*
-	// All memory used?
-	if(PMb->Size > (ULONG)ALIGN_MEMORY(SizeToBeAllocated + HeaderSize)) {
 
-		// Return block body
-		ReturnAddress = ALIGN_MEMORY((ULONG)PMb + HeaderSize);
-
-		// Set block properties
-		PMb->IsFree = FALSE;
-		TempSize = PMb->Size;
-		PMb->Size = SizeToBeAllocated;
-		TempNextBlock = PMb->NextBlock;
-		PMb->NextBlock = ALIGN_MEMORY(PMb + HeaderSize + SizeToBeAllocated);
-		PMb->NextBlock->IsFree = TRUE;
-		PMb->NextBlock->Size = (ULONG)ALIGN_MEMORY(TempSize - (PMb->Size + (2*HeaderSize)));
-		PMb->NextBlock->NextBlock = TempNextBlock;
-		PMb->NextBlock->PreviousBlock = PMb;
-
-		// Is this the first block?
-		if(PMb->PreviousBlock == NULL)
-			StartBlock = PMb;
-		else
-			// Point back to the start
-			PMb = StartBlock;
-
-		// Save block list and return block body
-		KdPrint("xPMb: 0x%x", PMb);
-		MemBlock = PMb;
-		return ReturnAddress;
-	}
-	*/
 	return NULL;
 }
 
@@ -331,10 +263,5 @@ VOID MmFree(PVOID BlockBody) {
 	
 	//KdPrint("Now I'm free! (0x%x)", ALIGN_MEMORY((ULONG)PMb + HeaderSize));
 
-	// Save the block list
-	/*
-	PMb = StartBlock;
-	MemBlock = PMb;
-	*/
 }
 
