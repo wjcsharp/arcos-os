@@ -31,6 +31,9 @@ typedef struct _MESSAGE {
 // in arcos.h. 
 
 STATUS
+MessInitialize();
+
+STATUS
 MessSendMessage(
 	ULONG receiverPid,
 	ULONG type,
