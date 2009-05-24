@@ -128,7 +128,7 @@ AppKill() {
 
     PID = RtlAtoUL(KeCurrentProcess->Args);
 
-    status = KillByPID(PID, 1);
+    status = KillByPID(PID, 1); //ExitStatus 1 == murdered
     if (0 == status)
         KdPrint("Killed %d", PID);
     else
@@ -156,7 +156,7 @@ AppTaskManager() {
     tmout = CreateFile('s');
     pinfo = (PPROCESS_INFO) MmAlloc(TASKM_BUFFER_SIZE * sizeof (PROCESS_INFO));
 
-    for (j = 0; j < 500; j++) {
+    for (j = 0; j < 5; j++) {
         //KdPrint("GetProcessInfo BEGIN");
         GetProcessInfo(pinfo, TASKM_BUFFER_SIZE, &numprocess);
         //KdPrint("Before WriteFile");
@@ -442,7 +442,7 @@ PsCreateProcess(
 VOID
 PsKillMe() {
     STATUS status;
-    status = PsKillProcess(KeCurrentProcess, 0);
+    status = PsKillProcess(KeCurrentProcess, 0); //Exitstatus 0 == Suicide
     if (0 != status)
         KdPrint("KillMe failed");
 }
@@ -658,6 +658,7 @@ PsReferenceProcess(
             return STATUS_SUCCESS;
         }
         KdPrint("PsReferenceProcess");
+        ASSERT(pprocess);
         pprocess = ObGetNextObjectOfType(pprocess);
         KdPrint("PsReferenceProcess after get nex obj");
     }

@@ -32,9 +32,10 @@ void split(char *string, char *pCommand, char *pArgument) {
     status = CreateProcess(pCommand, 31, &commandProcess, pArgument);
     if (status != 0)
         WriteFile(handle, "\nARCOS:\\>Unknown command. Try again.", 38);
-    //else
-    //ObCloseHandle(commandProcess);
-
+    if (status == 0) {
+        ASSERT(commandProcess);
+        ObCloseHandle(commandProcess);
+    }
 }
 
 void AppShell() {
