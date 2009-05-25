@@ -117,11 +117,11 @@ IoCreateFile(// Error-handling in this function?
 
     // Pick right type.
     if (filename == 's') {
-        status = ObOpenObjectByPointer(serialFile, 0 /*OBJ_INHERIT*/, fileType, &handle);//BUGBUGBUG? magnus wonders
+        status = ObOpenObjectByPointer(serialFile, 0 /*OBJ_INHERIT*/, fileType, &handle); //BUGBUGBUG? magnus wonders
         return handle;
     }
     if (filename == 'l') {
-        status = ObOpenObjectByPointer(lcdFile, 0 /*OBJ_INHERIT*/, fileType, &handle);//BUGBUGBUG? magnus wonders
+        status = ObOpenObjectByPointer(lcdFile, 0 /*OBJ_INHERIT*/, fileType, &handle); //BUGBUGBUG? magnus wonders
         return handle;
     }
 
@@ -155,7 +155,7 @@ IoReadFile(
 
     status = ObReferenceObjectByHandle(handle, fileType, (PVOID) & file); // Only serial type have write capability in this OS.
     if (status != 0)
-        //KdPrint("IOReadFile failed referencing object by handle");
+        KdPrint("IOReadFile failed referencing object by handle");
     if (file->read != NULL)
         file->read(buffer, bufferSize);
     ASSERT(file);
@@ -183,7 +183,7 @@ IoWriteSerial(
         bufferQueue->first = bufferQueue->last = newNode;
         outputPointer = bufferQueue->first->buffer;
     } else {
-       // KdPrint("Can't write just now, putting you in queue");
+        // KdPrint("Can't write just now, putting you in queue");
         bufferQueue->last->next = newNode;
         bufferQueue->last = newNode;
     }
