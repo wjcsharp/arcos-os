@@ -571,7 +571,7 @@ PsGetPid(
     PPROCESS pprocess;
     STATUS status;
 
-    status = ObReferenceObjectByHandle(&Handle, processType, (void**) & pprocess);
+    status = ObReferenceObjectByHandle(Handle, processType, (void**) & pprocess);
     if (status != 0)
         return status;
 
