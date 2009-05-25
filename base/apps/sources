@@ -4,4 +4,5 @@ TARGETTYPE=library
 
 SOURCES= \
 	scroller.c \
-	shell.c
+	shell.c \
+	philosopher.c

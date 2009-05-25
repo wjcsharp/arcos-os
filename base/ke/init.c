@@ -106,6 +106,25 @@ KeInitialize(VOID) {
 
     KdPrint("Say %s to %s!", "hello", "ARCOS kernel debugger");
 
+	PVOID hb1, hb2, hb3, hb4;
+
+	hb1 = MmAlloc(100);
+	KdPrint("hb1: 0x%x", hb1);
+	hb2 = MmAlloc(100);
+	KdPrint("hb2: 0x%x", hb2);
+	hb3 = MmAlloc(100);
+	KdPrint("hb3: 0x%x", hb3);
+	hb4 = MmAlloc(100);
+	KdPrint("hb4: 0x%x", hb4);
+
+	MmFree(hb2);
+	//MmFree(hb3);
+
+	hb2 = MmAlloc(100);
+	KdPrint("hb2: 0x%x", hb2);
+
+	//MmPrintBlocks();
+
     //HalDisplayString("Hello world!\n");
 
     //HANDLE handle = IoCreateFile('serial');
