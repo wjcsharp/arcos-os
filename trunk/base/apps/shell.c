@@ -31,7 +31,7 @@ void split(char *string, char *pCommand, char *pArgument) {
 
     status = CreateProcess(pCommand, 9, &commandProcess, pArgument);
     if (status != 0) {
-        WriteFile(outp, "\nARCOS:\\>Unknown command. Try again.", 38);
+        WriteFile(outp, "\n\rARCOS:\\>Unknown command. Try again.", 38);
         ObCloseHandle(outp);
     }
 
@@ -80,6 +80,6 @@ void AppShell() {
     for (n = 0; n < i; n++)
         input[n] = '\0';
     ch[0] = '\0';
-    WriteFile(serialinout, "\n", 1);
+    WriteFile(serialinout, "\n\r", 1);
     ObCloseHandle(serialinout);
 }
