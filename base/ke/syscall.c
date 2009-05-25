@@ -100,6 +100,10 @@ KeSystemService(
 			KeSetSyscallResult(KeCurrentProcess, MmGetUsedVirtMemSum());
 			break;
 
+        case 23:
+            ObWaitForSingleObject((HANDLE)Arg0);
+            break;
+
         default:
             // probably a bugcheck is overreacting but what the hell
             KeBugCheck("Bad syscall. I think I will just die now.");

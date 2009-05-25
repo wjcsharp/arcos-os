@@ -12,6 +12,11 @@
 // forward declaration of _OBJECT_TYPE
 struct _OBJECT_TYPE;
 
+typedef struct _OB_WAIT_QUEUE_ENTRY {
+    PPROCESS Process;
+    struct _OB_WAIT_QUEUE_ENTRY *Next;
+} OB_WAIT_QUEUE_ENTRY, *POB_WAIT_QUEUE_ENTRY;
+
 //
 // object header definition
 //
@@ -20,6 +25,8 @@ typedef struct _OBJECT_HEADER {
     ULONG HandleCount;
     ULONG PointerCount;
     ULONG Attributes;
+    ULONG SignalState;
+    POB_WAIT_QUEUE_ENTRY WaitQueue;
     struct _OBJECT_TYPE *Type;
     
     struct _OBJECT_HEADER *NextObjectOfType;
@@ -111,9 +118,13 @@ ObKillProcess(
 
 STATUS
 ObWaitForSingleObject(
-    HANDLE Handle,
-    ULONG TimeOut
+    HANDLE Handle
     );
+
+VOID
+ObSignalObject(
+    PVOID Object
+);
 
 STATUS
 ObCloseHandle(

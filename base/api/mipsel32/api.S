@@ -140,5 +140,11 @@ GetUsedMemSum:
 	syscall
 	jr      ra
 
+.globl WaitForSingleObject
+WaitForSingleObject:
+    addi    v0, zero, 23
+    syscall
+    jr      ra
+
     # Put your own syscalls here. Just change the name and increment the 0.
 
