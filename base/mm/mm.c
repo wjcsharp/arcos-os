@@ -3,7 +3,7 @@
         Author: Hugo Heyman
 
 
-		MmVirtualAlloc and MmVirtualFree needs to be tested
+		MmVirtualAlloc and MmVirtualFree working now??
 
 		
 */
@@ -167,6 +167,7 @@ VOID MmVirtualFreeAll(PPROCESS BlockOwner) {
 		PVMb = PVMb->NextBlock;
 	}
 
+	BlockOwner->AllocatedMemory = PVMb;
 }
 
 PVOID MmAlloc(ULONG SizeToBeAllocated) {
