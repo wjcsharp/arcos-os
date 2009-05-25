@@ -144,9 +144,9 @@ AppTaskManager() {
     for (j = 0; j < 5; j++) {
         //KdPrint("GetProcessInfo BEGIN");
         GetProcessInfo(pinfo, TASKM_BUFFER_SIZE, &numprocess);
-        KdPrint("Before WriteFile");
+        //KdPrint("Before WriteFile");
         WriteString(tmout, "\n\r---------TASKMANAGER---------\n\r");
-        KdPrint("---taskm DONE");
+        //KdPrint("---taskm DONE");
         //Sleep(1000);
         for (i = 0; i < (min(numprocess, TASKM_BUFFER_SIZE)); i++) {
             if (!pinfo[i].RunningProgram)
@@ -162,7 +162,7 @@ AppTaskManager() {
                 tend = 1;
             }
             RtlFormatString(strbuff, 250, "%s PID: %d, STATE:%d CPU TIME: %d %s\n\r", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].State, cputmp, timend[tend]);
-             KdPrint("Before WriteFile");
+             //KdPrint("Before WriteFile");
             WriteString(tmout, strbuff);
             //  Sleep(1000);
         }
