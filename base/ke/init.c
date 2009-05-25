@@ -24,9 +24,8 @@ TestShell() {
 
 /*
 VOID
-TestProcess(PCHAR args) {
+TestProcess() {
     ULONG i;
-    UNREFERENCED_PARAMETER(args);
 
     KdPrint("Blubb from testprocess. My PID is %d.", GetProcessId());
 
@@ -47,9 +46,8 @@ TestProcess(PCHAR args) {
 }
 
 VOID
-TestProcess2(PCHAR args) {
+TestProcess2() {
     ULONG i;
-    UNREFERENCED_PARAMETER(args);
 
     KdPrint("Hello from testprocess2. My PID is %d.", GetProcessId());
 
