@@ -16,17 +16,6 @@
 // Define types for messages
 #define MESSAGE_TYPE_STRING	0
 
-
-typedef struct _MESSAGE {
-	ULONG	senderPid;
-	ULONG	receiverPid;
-	ULONG	priority;
-	ULONG	type;
-	PVOID	buffer;		// Points to body of message
-	ULONG	bufferSize;
-	struct _MESSAGE *next;
-} MESSAGE, *PMESSAGE;
-
 // Note to anyone: MESS_PROCESS_NODE and MESS_PROCESS_QUEUE are defined
 // in arcos.h. 
 

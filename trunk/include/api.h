@@ -58,6 +58,23 @@ ReceiveFirst(
         ULONG timeout
         );
 
+ULONG
+GetMessageSize(
+    PVOID mess
+    );
+
+STATUS
+CopyMessage(
+    PVOID messDest,
+    PVOID messSource,
+    ULONG bufferSize
+    );
+
+STATUS
+DeleteMessage(
+    PVOID mess
+    );
+
 STATUS
 ChangePriority(
         ULONG PID,
