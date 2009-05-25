@@ -13,7 +13,7 @@
 #include <rtl.h>
 #include <kd.h>
 #include <mess.h>
-#include <api.h>//SYSCALLS FOR USERPROGRAMS
+#include <api.h>//SYSCALLS FOR USERPROGRAMS Process_info struct
 
 //#define DEBUG_PS
 //
@@ -41,9 +41,7 @@ BOOL
 PIDInUse(ULONG PID);
 
 ULONG
-GetPID();
-
-
+GetNewPID();
 
 VOID
 AppChangePrio() {
@@ -126,8 +124,6 @@ ULONG min(ULONG A, ULONG B) {
 }
 
 #define TASKM_BUFFER_SIZE 12
-
-
 
 VOID
 AppTaskManager() {
@@ -257,7 +253,7 @@ PIDInUse(
 }
 
 ULONG
-GetPID() {
+GetNewPID() {
     ULONG PID = 1;
 
     while (PIDInUse(PID)) {
@@ -361,7 +357,7 @@ PsCreateProcess(
     //Attach memory block
     process->RunningProgram = GetProgramName(PStartingAddress);
     process->AllocatedMemory = memPointer;
-    process->PID = GetPID();
+    process->PID = GetNewPID();
     process->Priority = Priority;
     process->CPUTime = 0;
     process->Args = Args;
@@ -432,7 +428,6 @@ PsKillByPID(
     PPROCESS pprocess = NULL;
     STATUS status;
 
-
     //Get process
     status = PsReferenceProcess(PID, &pprocess);
     if (0 != status)
@@ -446,6 +441,7 @@ PsKillByPID(
         ObDereferenceObject(pprocess);
         return status;
     }
+    ObDereferenceObject(pprocess);
     return status;
 };
 
@@ -461,8 +457,10 @@ PsKillProcess(
         return status;
 
     status = KeStopSchedulingProcess(PProcess);
-    if (status != 0) return status;
-
+    if (status != 0) {
+        KdPrint("stop scheduling failed in kill process");
+        return status;
+    }
     //Clear handletable
     ObKillProcess(PProcess);
 
@@ -562,6 +560,9 @@ PsGetState(
     ObDereferenceObject(pprocess);
     return STATUS_SUCCESS;
 }
+
+STATUS
+PsCopyArgs();
 
 STATUS
 PsGetPid(

@@ -1,8 +1,16 @@
 #ifndef __API_H__
 #define __API_H__
-#include <ps.h>
+
 
 #define WriteString(handle,msg) WriteFile(handle, msg, RtlStringLength(msg))
+
+typedef struct _PROCESS_INFO {
+    PROCESS_STATE State;
+    PCHAR RunningProgram;
+    ULONG PID;
+    ULONG Priority;
+    ULONG CPUTime;
+} PROCESS_INFO, *PPROCESS_INFO;
 
 VOID
 Sleep(ULONG Milliseconds);
@@ -60,20 +68,20 @@ ReceiveFirst(
 
 ULONG
 GetMessageSize(
-    PVOID mess
-    );
+        PVOID mess
+        );
 
 STATUS
 CopyMessage(
-    PVOID messDest,
-    PVOID messSource,
-    ULONG bufferSize
-    );
+        PVOID messDest,
+        PVOID messSource,
+        ULONG bufferSize
+        );
 
 STATUS
 DeleteMessage(
-    PVOID mess
-    );
+        PVOID mess
+        );
 
 STATUS
 ChangePriority(
@@ -94,30 +102,30 @@ SuperviseProc(
         ULONG Pid
         );
 
-PVOID 
+PVOID
 Malloc(
-		PPROCESS BlockOwner, 
-		ULONG Size
-		);
+        PPROCESS BlockOwner,
+        ULONG Size
+        );
 
-PVOID 
+PVOID
 Free(
-		PPROCESS BlockOwner, 
-		PVOID BlockBody
-		);
+        PPROCESS BlockOwner,
+        PVOID BlockBody
+        );
 
 VOID
 FreeAll(
-		PPROCESS BlockOwner, 
-		PVOID BlockBody
-		);
+        PPROCESS BlockOwner,
+        PVOID BlockBody
+        );
 
 ULONG
 GetUsedMemSum();
 
 STATUS
 WaitForSingleObject(
-    HANDLE Handle
-);
+        HANDLE Handle
+        );
 
 #endif
