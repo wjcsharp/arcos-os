@@ -43,10 +43,7 @@ PIDInUse(ULONG PID);
 ULONG
 GetPID();
 
-BOOL
-appisdigit(CHAR c) {
-    return !(c < '0' || c > '9');
-}
+
 
 VOID
 AppChangePrio() {
@@ -59,8 +56,8 @@ AppChangePrio() {
         KillMe();
     }
     //remove everything until first digit
-    if (!appisdigit(*pek)) {
-        while ((!appisdigit(*++pek)) && (*pek != 0));
+    if (!Rtlappisdigit(*pek)) {
+        while ((!Rtlappisdigit(*++pek)) && (*pek != 0));
         if (0 == *pek) {
             KdPrint("ChangePrio needs arguments e.g. ' 2 3'"); //BUGBUGBUG
             KillMe();
@@ -68,21 +65,21 @@ AppChangePrio() {
     }
     first = pek; //Start of first stringarg
     //Find end of first arg
-    while (appisdigit(*++pek));
+    while (Rtlappisdigit(*++pek));
     if (0 == *pek) {
         KdPrint("ChangePrio needs 2 arguments e.g. ' 2 3'"); //BUGBUGBUG
         KillMe();
     }
     *pek = 0; //Set end of first string
     //remove everything until next digit
-    while ((!appisdigit(*++pek)) && (*pek != 0));
+    while ((!Rtlappisdigit(*++pek)) && (*pek != 0));
     if (0 == *pek) {
         KdPrint("ChangePrio needs 2 arguments e.g. ' 2 3'"); //BUGBUGBUG
         KillMe();
     }
     second = pek; //Start of second stringarg
     //Find end of second arg
-    while (appisdigit(*++pek));
+    while (Rtlappisdigit(*++pek));
     if (0 != *pek)
         *pek = 0;
 
@@ -104,7 +101,7 @@ VOID
 AppKill() {
     ULONG PID;
     STATUS status;
-    
+
     if (!(KeCurrentProcess->Args)) {
         KdPrint("Kill needs an argument e.g. 'kill 5'"); //BUGBUGBUG
         KillMe();
@@ -130,6 +127,8 @@ ULONG min(ULONG A, ULONG B) {
 
 #define TASKM_BUFFER_SIZE 12
 
+
+
 VOID
 AppTaskManager() {
     PPROCESS_INFO pinfo;
@@ -139,7 +138,7 @@ AppTaskManager() {
     PCHAR timend[] = {"ms", "s"};
 
     tmout = CreateFile('s');
-    pinfo = (PPROCESS_INFO) MmAlloc(TASKM_BUFFER_SIZE * sizeof(PROCESS_INFO));
+    pinfo = (PPROCESS_INFO) MmAlloc(TASKM_BUFFER_SIZE * sizeof (PROCESS_INFO));
 
     for (j = 0; j < 5; j++) {
         //KdPrint("GetProcessInfo BEGIN");
@@ -162,7 +161,7 @@ AppTaskManager() {
                 tend = 1;
             }
             RtlFormatString(strbuff, 250, "%s PID: %d, STATE:%d CPU TIME: %d %s\n\r", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].State, cputmp, timend[tend]);
-             //KdPrint("Before WriteFile");
+            //KdPrint("Before WriteFile");
             WriteString(tmout, strbuff);
             //  Sleep(1000);
         }

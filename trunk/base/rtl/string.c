@@ -215,3 +215,8 @@ RtlAtoUL(PCHAR str) {
     }
     return result;
 }
+
+BOOL
+Rtlappisdigit(CHAR c) {
+    return !(c < '0' || c > '9');
+}

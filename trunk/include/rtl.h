@@ -22,6 +22,9 @@ RtlFillMemory(PVOID dest, CHAR val, ULONG count);
 ULONG
 RtlAtoUL(PCHAR str);
 
+BOOL
+Rtlappisdigit(CHAR c);
+
 #define RtlZeroMemory(dest, count)  RtlFillMemory(dest, 0, count)
 
 #endif
