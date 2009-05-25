@@ -104,7 +104,7 @@ VOID
 AppKill() {
     ULONG PID;
     STATUS status;
-    Sleep(15000);
+    
     if (!(KeCurrentProcess->Args)) {
         KdPrint("Kill needs an argument e.g. 'kill 5'"); //BUGBUGBUG
         KillMe();
@@ -134,25 +134,25 @@ VOID
 AppTaskManager() {
     PPROCESS_INFO pinfo;
     ULONG numprocess, i, j, cputmp, tend;
-    CHAR strbuff[100];
+    CHAR strbuff[250];
     HANDLE tmout;
     PCHAR timend[] = {"ms", "s"};
 
     tmout = CreateFile('s');
-    pinfo = (PPROCESS_INFO) MmAlloc(TASKM_BUFFER_SIZE * sizeof (PROCESS_INFO));
+    pinfo = (PPROCESS_INFO) MmAlloc(TASKM_BUFFER_SIZE * sizeof(PROCESS_INFO));
 
     for (j = 0; j < 5; j++) {
         //KdPrint("GetProcessInfo BEGIN");
         GetProcessInfo(pinfo, TASKM_BUFFER_SIZE, &numprocess);
-        //KdPrint("Before WriteFile");
-        WriteString(tmout, "---------TASKMANAGER---------\n");
-        //KdPrint("---taskm DONE");
+        KdPrint("Before WriteFile");
+        WriteString(tmout, "\n\r---------TASKMANAGER---------\n\r");
+        KdPrint("---taskm DONE");
         //Sleep(1000);
         for (i = 0; i < (min(numprocess, TASKM_BUFFER_SIZE)); i++) {
             if (!pinfo[i].RunningProgram)
                 pinfo[i].RunningProgram = "Unnamed";
         }
-        for (i = 0; i < numprocess; i++) {
+        for (i = 0; i < (min(numprocess, TASKM_BUFFER_SIZE)); i++) {
             //Check how big cputime is
             cputmp = pinfo[i].CPUTime;
             if (cputmp < 10000)
@@ -161,15 +161,15 @@ AppTaskManager() {
                 cputmp = cputmp / 1000;
                 tend = 1;
             }
-            RtlFormatString(strbuff, 100, "%s PID: %d, STATE:%d CPU TIME: %d %s\n", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].State, cputmp, timend[tend]);
-            // KdPrint("Before WriteFile");
+            RtlFormatString(strbuff, 250, "%s PID: %d, STATE:%d CPU TIME: %d %s\n\r", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].State, cputmp, timend[tend]);
+             KdPrint("Before WriteFile");
             WriteString(tmout, strbuff);
             //  Sleep(1000);
         }
         Sleep(5000);
     }
     //KdPrint("Before tmgoodbye");
-    WriteString(tmout, "--------Task Manager says godbye--------");
+    WriteString(tmout, "--------Task Manager says godbye--------\n\r");
     ObCloseHandle(tmout);
     MmFree(pinfo);
     KillMe();
