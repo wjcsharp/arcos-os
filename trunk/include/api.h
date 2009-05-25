@@ -98,4 +98,9 @@ FreeAll(
 ULONG
 GetUsedMemSum();
 
+STATUS
+WaitForSingleObject(
+    HANDLE Handle
+);
+
 #endif

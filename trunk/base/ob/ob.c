@@ -59,6 +59,8 @@ ObCreateObject(
     objectHeader->Magic = 0x0BEC0BEC;
     objectHeader->HandleCount = 0;
     objectHeader->PointerCount = 1;   // compensate for the returned pointer
+    objectHeader->SignalState = 0;
+    objectHeader->WaitQueue = NULL;
     objectHeader->Attributes = ObjectAttributes;
     objectHeader->Type = ObjectType;
     
@@ -542,5 +544,77 @@ ObDumpObject(
             objectHeader->Type->Dump(Object, Buffer + length, BufferSize - length);
         }
     }
+}
+
+STATUS
+ObWaitForSingleObject(
+    HANDLE Handle
+)
+{
+    STATUS status;
+
+    PVOID object;
+
+    POBJECT_HEADER header;
+
+    status = ObReferenceObjectByHandle(Handle, NULL, &object);
+    if (status != STATUS_SUCCESS) {
+        return status;
+    }
+
+    header = OBJECT_BODY_TO_HEADER(object);
+
+    ASSERT_OBJECT(header);
+
+    if (!header->SignalState) {
+
+        POB_WAIT_QUEUE_ENTRY entry = (POB_WAIT_QUEUE_ENTRY)MmAlloc(sizeof(OB_WAIT_QUEUE_ENTRY));
+
+        if (entry != NULL) {
+            
+            entry->Process = KeCurrentProcess;
+            entry->Next = header->WaitQueue;
+            header->WaitQueue = entry;
+
+            KeBlockProcess();
+        } else {
+        
+            ObDereferenceObject(object);
+            return STATUS_NO_MEMORY;
+        }
+    }   
+
+    ObDereferenceObject(object);
+
+    return STATUS_SUCCESS;
+}
+
+VOID
+ObSignalObject(
+    PVOID Object
+)
+{
+    POBJECT_HEADER header = OBJECT_BODY_TO_HEADER(Object);
+
+    POB_WAIT_QUEUE_ENTRY entry, next;
+
+    ASSERT_OBJECT(header);
+
+    header->SignalState = 1;
+
+    entry = header->WaitQueue;
+
+    while (entry) {
+
+        KeResumeProcess(entry->Process);
+
+        next = entry->Next;
+
+        MmFree(entry);
+
+        entry = next;
+    }
+
+    header->WaitQueue = NULL;
 }
 
