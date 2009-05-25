@@ -44,6 +44,7 @@ typedef struct _IO_WAITING_QUEUE {
 typedef struct _IO_BUFFER_NODE {
 	CHAR buffer[512];		// Maximum of string to write = 512 chars
 	ULONG bufferSize;
+        ULONG sizeCounter;
 	struct _IO_BUFFER_NODE *next;
 } IO_BUFFER_NODE, *PIO_BUFFER_NODE;
 

@@ -154,8 +154,6 @@ IoReadFile(
     PFILE file;
 
     status = ObReferenceObjectByHandle(handle, fileType, (PVOID) & file); // Only serial type have write capability in this OS.
-    if (status != 0)
-        KdPrint("IOReadFile failed referencing object by handle");
     if (file->read != NULL)
         file->read(buffer, bufferSize);
     ASSERT(file);
@@ -177,6 +175,7 @@ IoWriteSerial(
     // Copy buffer to nodes buffer (has to end with null).
     RtlCopyString(newNode->buffer, (PCHAR) buffer);
     newNode->next = NULL;
+    newNode->bufferSize = bufferSize;
 
     // Insert new node.
     if (!bufferQueue->first) { //
@@ -244,6 +243,36 @@ IoWriteLcd(
     }
 }
 
+PCHAR
+IoGetLine(){
+
+    ULONG i, length;
+    PCHAR s, iterator;
+    HANDLE handle;
+
+    handle = IoCreateFile('s');
+    length = 0;
+    // Allocate 100 bytes/chars.
+    iterator = s = MmAlloc(100);
+    if(!s) {
+        KdPrint("'I hate myself and want to die' / Kurt Cobain");
+        return NULL;
+    }
+    // Make null with s. This is so WriteFile will work properly.
+    for(i = 0; i < 100; i++)
+        *s = '\0';
+    
+    // Loop some input.
+    while(length < 100){
+        IoReadFile(handle,iterator++,1);
+        IoWriteFile(handle,iterator,1);
+        length++;
+        if(*iterator == '\r') break;        // Add '\r', or don't.
+    }
+
+    return s;
+}
+
 VOID
 IoInterruptHandler(CHAR c) {
 
@@ -276,8 +305,11 @@ IoTransmitterInterruptHandler() {
     PIO_BUFFER_NODE tempNode; // Move this?
     //KdPrint("IoTransmitter");
     if (outputPointer) {
-        if (*outputPointer) // Still something to write?
+        // A nice if, ey? Check if there is a buffer node, if its sizeConter still is below bufferSize, and check outputPointer != NULL.
+        //if (bufferQueue && bufferQueue->first && bufferQueue->first->sizeCounter < bufferQueue->first->bufferSize && *outputPointer ) {
+        if(*outputPointer){
             HalDisplayChar(*outputPointer++);
+        }
         else { // Done writing.
             //KdPrint("*outputPointer == NULL");
             if ((bufferQueue->first == bufferQueue->last) && bufferQueue->first) { // Only one node in queue
