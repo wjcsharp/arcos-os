@@ -92,7 +92,11 @@ MessSendMessage(
 
         // Get receiver process to check its state and pid.
        	status = PsReferenceProcess(receiverPid,&pprocess);	
-
+        // Check if status exists.
+        if(status != 0) {
+            KdPrint("No such process in SendMessage - check pid!");
+            return status;
+        }
         // Check if the process is waiting, going through processQueue.
         while(iterator){
             if(iterator->pid == receiverPid && iterator->process->State == blocked) {   // I should think about this one more time...
