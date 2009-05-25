@@ -5,55 +5,32 @@
  *  Author: Sam Eskandari
  */
 
-#include <io.h>
-#include <arcos.h>
-#include <ps.h>
 #include <kd.h>
 #include <api.h>
-#include <rtl.h>
 
-void split(char *string, char *pCommand, char *pArgument) {
+void split(char *string, char **pCommand, char **pArgument) {
     ULONG i;
-    HANDLE outp, commandProcess;
-    STATUS status;
-    outp = CreateFile('s');
-    pCommand = string;
+    *pCommand = string;
     for (i = 0; string[i] != '\0'; i++) {
         if (string[i] == ' ') {
             string[i] = '\0';
-            pArgument = &string[i + 1];
+            *pArgument = &string[i+1];
             break;
         } else
-            pArgument = NULL;
+            *pArgument = NULL;
     }
-    // if (RtlCompareStrings(pCommand, "Exit") == 0)
-    //   KillMe();
-
-    status = CreateProcess(pCommand, 9, &commandProcess, pArgument);
-    if (status != 0) {
-        WriteFile(outp, "\n\rARCOS:\\>Unknown command. Try again.", 38);
-        ObCloseHandle(outp);
-    }
-
-    if (status == 0) {
-        ASSERT(commandProcess);
-        ObCloseHandle(commandProcess);
-    }
-    ObCloseHandle(outp);
 }
 
 void AppShell() {
-    CHAR input[100]; //buffer
-    PCHAR c;
-    CHAR ch[2];
-    PCHAR command;
-    PCHAR argument;
-    HANDLE serialinout;
-    ULONG i;
-    ULONG n;
+    CHAR input[100], ch[2]; 
+    PCHAR c, command, argument;
+    HANDLE serialinout, outp, commandProcess;
+    ULONG i, n;
+    STATUS status;
+    outp = CreateFile('s');
+	serialinout = CreateFile('s');
     ch[1] = NULL;
     c = ch;
-    serialinout = CreateFile('s');
     WriteFile(serialinout, "ARCOS:\\>", 9);
     i = 0;
     while (*c != '\r') {
@@ -76,7 +53,19 @@ void AppShell() {
         if (i > 99)
             i = 0;
     }
-    split(input, command, argument);
+    split(input, &command, &argument);
+		
+	status = CreateProcess(command, 9, &commandProcess, argument);
+    if (status != 0) {
+        WriteFile(outp, "\n\rARCOS:\\>Unknown command. Try again.", 38);
+        ObCloseHandle(outp);
+    }
+
+    if (status == 0) {
+        ASSERT(commandProcess);
+        ObCloseHandle(commandProcess);
+    }
+    ObCloseHandle(outp);
     for (n = 0; n < i; n++)
         input[n] = '\0';
     ch[0] = '\0';
