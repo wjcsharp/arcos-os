@@ -5,6 +5,7 @@
 #include <ps.h>
 #include <ke.h>
 #include <kd.h>
+#include <ob.h>
 
 PMESS_PROCESS_QUEUE processQueue;
 
@@ -23,7 +24,7 @@ MessInitialize(){
 
 
 STATUS
-AddProcessToQueue(ULONG timeout){           // Eventually remove timout
+AddProcessToQueue(){           // Eventually remove timout
         
 	PMESS_PROCESS_NODE newNode;
 
@@ -45,6 +46,15 @@ AddProcessToQueue(ULONG timeout){           // Eventually remove timout
 
 }
 
+STATUS
+RemoveProcessFromQueue(){       // Remove?
+
+    ULONG pid;
+    
+    pid = KeCurrentProcess->PID;
+    
+    return STATUS_SUCCESS;
+}
 
 STATUS
 MessSendMessage(
@@ -56,44 +66,66 @@ MessSendMessage(
 {
 	PPROCESS pprocess;
 	PMESSAGE message ;
-	STATUS status;
+        PMESSAGE mq;
+        STATUS status;
         PMESS_PROCESS_NODE iterator = processQueue->first;
-
+        PMESS_PROCESS_NODE tempIterator;
+        
 	ASSERT(buffer);		// Allowing sending message without buffer?
 
-	KdPrint("MESS: SendMessage");
+	//KdPrint("MESS: SendMessage");
 
 	message = (PMESSAGE) MmAlloc(sizeof(MESSAGE) + bufferSize);
 	if(message == NULL)		// Check out of memory.
 		return STATUS_NO_MEMORY; 
 
 	// Init mess
-	message->senderPid = KeCurrentProcess->PID;
-	message->receiverPid = receiverPid;
-	message->priority = 1;						// NOTE TO SELF: FIX THIS?
-	message->type = type;
-	message->bufferSize = bufferSize;
-
-       	status = PsReferenceProcess(receiverPid,&pprocess);	// Get receiver process. CHECK STATUS!
-
-        // Check if the process is waiting, going through processQueue.
-        
-        while(iterator){
-            if(iterator->pid == receiverPid) {
-                KeSetSyscallResult(pprocess, (ULONG) message);
-                KeResumeProcess(pprocess);
-                KdPrint("Message found!");
-            }
-            iterator = iterator->next;
-        }
-        
+	message->senderPid      = KeCurrentProcess->PID;
+	message->receiverPid    = receiverPid;
+	message->priority       = 1;						// NOTE TO SELF: FIX THIS?
+	message->type           = type;
+	message->bufferSize     = bufferSize;
+        message->next           = NULL;
 	// Copy input to mess buffer.
 	RtlCopyMemory((PCHAR) message + sizeof(MESSAGE), buffer, bufferSize);
 	message->buffer = (PCHAR) message + sizeof(MESSAGE);
 
+        // Get receiver process to check its state and pid.
+       	status = PsReferenceProcess(receiverPid,&pprocess);	
+
+        // Check if the process is waiting, going through processQueue.
+        while(iterator){
+            if(iterator->pid == receiverPid && iterator->process->State == blocked) {   // I should think about this one more time...
+                //KdPrint("Message found!");
+                KeSetSyscallResult(pprocess, (ULONG) message);
+                KeResumeProcess(pprocess);
+                 // Deleting node from processQueue
+                tempIterator = iterator;
+                iterator->next = iterator->next;
+                MmFree(iterator);
+            }
+            iterator = iterator->next;
+        }
 
 	ASSERT(pprocess);
-	pprocess->MessageQueue = message;			// Add message.
+
+        // Add message to process' message queue. 
+        mq = pprocess->MessageQueue;
+        if(mq == NULL) pprocess->MessageQueue = message;
+        // Add message last in queue.
+        while(mq) {
+            //KdPrint("Wee! I'm looping!");
+            if(mq->next == NULL) {
+                mq->next = message;
+                // Break hack
+                mq = NULL;
+                break;
+                //KdPrint("This should never be written");
+            }
+            mq = mq->next;
+        }
+
+        ObDereferenceObject(pprocess);
 
 	return STATUS_SUCCESS;
 }
@@ -111,9 +143,9 @@ MessReceiveFirst(
 
 	PMESSAGE newMessage;
 
-	KdPrint("MESS: ReceiveFirst");
+	//KdPrint("MESS: ReceiveFirst");
 
-	if (KeCurrentProcess->MessageQueue)	// Message queue not empty - check it.
+	if (KeCurrentProcess->MessageQueue != NULL)	// Message queue not empty - check it.
 	{
 		newMessage = KeCurrentProcess->MessageQueue;		
 		KeCurrentProcess->MessageQueue = KeCurrentProcess->MessageQueue->next;	// Might be NULL.
@@ -124,7 +156,7 @@ MessReceiveFirst(
 	{
 		AddProcessToQueue(timeout);
                 KeSuspendProcess(timeout);
-                KdPrint("Process stopped");
+                //KdPrint("Process stopped");
         }
         return NULL;
 }
@@ -143,23 +175,41 @@ MessGetMessageSize(
     PVOID mess
     )
 {
+    //KdPrint("GetMessageSize");
     return (((PMESSAGE)mess)->bufferSize + sizeof(MESSAGE)); 	// Might aswell copy all of the message, including the header.
 }
 
 
 
-STATUS					// Changed to STATUS.
+/*
+ How to use in user program:
+
+    MESSAGE message = ReceiveFirst(2000)    Receive your message
+    PMESSAGE myMessage;                     Declare pointer to your new message
+    ULONG sizeOfMessage;
+    STATUS status;
+    sizeOfMessage = GetMessageSize(message); Use this function to get the size of message.
+    myMessage = Malloc(sizeOfMessage);  Declare memory to your new message. You have to include the MESSAGE header when calculating the size since you're copying all of the message, just not its buffer.
+    status = CopyMessage(myMessage,message,sizeOfMessage);
+
+
+ */
+
+STATUS	
 MessCopyMessage(
-    PVOID mess,         // PVOID!
-    PVOID buffer,
-    ULONG bufferSize
+    PVOID messDest,       
+    PVOID messSource,
+    ULONG destBufferSize
     )
 {
-    PMESSAGE message = (PMESSAGE)mess;
-    if ((message->bufferSize + sizeof(MESSAGE)) > bufferSize)
+    //KdPrint("CopyMessage");
+    ASSERT(messDest);
+    ASSERT(messSource);
+    // Check that dest buffer is big enough to contain source message.
+    if(destBufferSize < ((PMESSAGE)messSource)->bufferSize)
         return STATUS_BUFFER_TOO_SMALL;
-    RtlCopyMemory(buffer, message, bufferSize);
-    MessDeleteMessage(mess);
+    RtlCopyMemory(messDest,messSource,(((PMESSAGE) messSource)->bufferSize) + sizeof(MESSAGE));
+
     return STATUS_SUCCESS;
 }
 
@@ -177,20 +227,24 @@ MessDeleteMessage(
 	mq = iterator = KeCurrentProcess->MessageQueue;
 	message = (PMESSAGE) mess;
 
-	if(mq == NULL)
-		return STATUS_SUCCESS;		// Hm.
+	if(mq == NULL) {
+            //KdPrint("MQ empty");
+            return STATUS_SUCCESS;		// Hm.
+        }
 
 	//unlink message from message list;
 	if(mq == message){		// It's the first message
-		mq = message->next;	// Either NULL or second message in list.
-		MmFree(mess);
+                //KdPrint("Deleting first message");
+                KeCurrentProcess->MessageQueue = message->next;	// Either NULL or second message in list.
+		MmFree(message);
 	}
 	else{
-		while(iterator){
+                while(iterator){
 			if(iterator->next == message){
-				iterator->next = message->next;
+                            iterator->next = message->next;
 			    MmFree(mess);
-			    return STATUS_SUCCESS;
+                            //KdPrint("Deleting non-first message");
+                            return STATUS_SUCCESS;
 			}
 			else
 				iterator = iterator->next;
@@ -203,15 +257,18 @@ MessDeleteMessage(
 STATUS
 MessDeleteMessageQueue()
 {
-	PMESSAGE mq, message;
+        PMESSAGE mq, message;
+        //KdPrint("DeleteMessageQueue");
 
 	mq = KeCurrentProcess->MessageQueue;
 
-	while(mq){				// BUGBUG!
+	while(mq){                  // Bug fixed.
 		message = mq;
 		mq = mq->next;
 		MmFree((PVOID)message);
 	}
+
+        KeCurrentProcess->MessageQueue = NULL;
 
 	return STATUS_SUCCESS;
 }

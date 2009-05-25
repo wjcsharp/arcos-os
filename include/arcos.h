@@ -3,7 +3,6 @@
 
 #include <types.h>
 #include <status.h>
-#include <mess.h>
 
 //
 // helper macro for conversion to string literals
@@ -158,6 +157,16 @@ typedef struct _HANDLE_TABLE_ENTRY {
 //
 #define MAX_HANDLE_COUNT 256
 
+typedef struct _MESSAGE {
+	ULONG	senderPid;
+	ULONG	receiverPid;
+	ULONG	priority;
+	ULONG	type;
+	PVOID	buffer;		// Points to body of message
+	ULONG	bufferSize;
+	struct _MESSAGE *next;
+} MESSAGE, *PMESSAGE;
+
 typedef struct _PROCESS {
     CONTEXT Context;
     HANDLE_TABLE_ENTRY HandleTable[MAX_HANDLE_COUNT];
@@ -189,7 +198,5 @@ typedef struct _MESS_PROCESS_QUEUE {
 	PMESS_PROCESS_NODE	first;
 	PMESS_PROCESS_NODE	last;
 } MESS_PROCESS_QUEUE, *PMESS_PROCESS_QUEUE;
-
-
 
 #endif

@@ -76,6 +76,18 @@ KeSystemService(
             KeSetSyscallResult(KeCurrentProcess, (ULONG) MessReceiveFirst(Arg0));
             break;
 
+        case 14:
+            KeSetSyscallResult(KeCurrentProcess, MessGetMessageSize((PVOID) Arg0));
+            break;
+
+        case 15:
+            KeSetSyscallResult(KeCurrentProcess, (ULONG) MessCopyMessage((PVOID) Arg0, (PVOID) Arg1, Arg2));
+            break;
+
+        case 16:
+            KeSetSyscallResult(KeCurrentProcess, (ULONG) MessDeleteMessage((PVOID) Arg0));
+            break;
+
         case 17:
             KeSetSyscallResult(KeCurrentProcess, PsGetProcessesInfo((PPROCESS_INFO) Arg0, Arg1, (PULONG) Arg2));
             break;

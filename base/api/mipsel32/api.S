@@ -87,7 +87,7 @@ ReceiveByType:
     jr      ra
 
 .globl  GetMessageSize
-GetMessagesize:
+GetMessageSize:
     addi    v0, zero, 14
     syscall
     jr      ra
