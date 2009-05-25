@@ -115,7 +115,30 @@ SuperviseProc:
     addi    v0, zero, 18
     syscall
     jr      ra
+    
+.globl Malloc
+Malloc:
+	addi    v0, zero, 19
+	syscall
+	jr      ra
 
+.globl Free
+Free:
+	addi    v0, zero, 20
+	syscall
+	jr      ra
+	
+.globl FreeAll
+FreeAll:
+	addi    v0, zero, 21
+	syscall
+	jr      ra
+	
+.globl GetUsedMemSum
+GetUsedMemSum:
+	addi    v0, zero, 22
+	syscall
+	jr      ra
 
     # Put your own syscalls here. Just change the name and increment the 0.
 
