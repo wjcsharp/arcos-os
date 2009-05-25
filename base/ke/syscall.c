@@ -2,6 +2,7 @@
 #include <ke.h>
 #include <ps.h>
 #include <io.h>
+#include <mm.h>
 #include <mess.h>
 
 VOID
@@ -82,7 +83,22 @@ KeSystemService(
         //case 18:
           //  KeSetSyscallResult(KeCurrentProcess, PsSupervise(Arg0, Arg1));
             //break;
+		
+		case 19:
+			KeSetSyscallResult(KeCurrentProcess, (ULONG)MmVirtualAlloc((PVOID) Arg0, Arg1));
+			break;
 
+		case 20:
+			MmVirtualFree((PVOID) Arg0, (PVOID) Arg1);
+			break;
+
+		case 21:
+			MmVirtualFreeAll((PVOID) Arg0);
+			break;
+
+		case 22:
+			KeSetSyscallResult(KeCurrentProcess, MmGetUsedVirtMemSum());
+			break;
 
         default:
             // probably a bugcheck is overreacting but what the hell

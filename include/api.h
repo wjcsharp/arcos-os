@@ -77,4 +77,25 @@ SuperviseProc(
         ULONG Pid
         );
 
+PVOID 
+Malloc(
+		PPROCESS BlockOwner, 
+		ULONG Size
+		);
+
+PVOID 
+Free(
+		PPROCESS BlockOwner, 
+		PVOID BlockBody
+		);
+
+VOID
+FreeAll(
+		PPROCESS BlockOwner, 
+		PVOID BlockBody
+		);
+
+ULONG
+GetUsedMemSum();
+
 #endif
