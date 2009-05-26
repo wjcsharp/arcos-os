@@ -123,7 +123,6 @@ PIDInUse(
     while (process) {
         if (process->PID == PID)
             return TRUE;
-
         process = ObGetNextObjectOfType(process);
     }
     return FALSE;
@@ -338,6 +337,10 @@ PsKillProcess(
         KdPrint("stop scheduling failed in kill process");
         return status;
     }
+
+    //Free message-queueBUGBUGBUGBUG
+    MessDeleteMessageQueue(PProcess->MessageQueue);
+
     //Clear handletable
     ObKillProcess(PProcess);
 
@@ -350,8 +353,7 @@ PsKillProcess(
 
     PProcess->ExitStatus = ExitStatus;
 
-    //Free message-queueBUGBUGBUGBUG
-    MessDeleteMessageQueue();
+
 
     //Signal object finished
     ObSignalObject(PProcess);
