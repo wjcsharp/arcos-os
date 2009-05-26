@@ -7,4 +7,5 @@ SOURCES= \
 	shell.c \
 	philosopher.c \
         taskmanager.c \
+        changeprio.c \
         kill.c
