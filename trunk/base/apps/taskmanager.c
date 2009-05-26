@@ -24,7 +24,7 @@ AppTaskManager() {
 
     tmout = CreateFile('s');
 
-    for (j = 0; j < 5; j++) {
+    for (j = 0; j < 1; j++) {
         //KdPrint("GetProcessInfo BEGIN");
         GetProcessInfo(pinfo, TASKM_BUFFER_SIZE, &numprocess);
         //KdPrint("GetProcessInfo END");
@@ -49,7 +49,7 @@ AppTaskManager() {
             WriteString(tmout, strbuff);
             //  Sleep(1000);
         }
-        Sleep(5000);
+        //Sleep(5000);
     }
     //KdPrint("Before tmgoodbye");
     WriteString(tmout, "--------Task Manager says godbye--------\n\r");
