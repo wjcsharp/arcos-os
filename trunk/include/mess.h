@@ -64,6 +64,6 @@ MessDeleteMessage(
 	);
 
 STATUS
-MessDeleteMessageQueue();
+MessDeleteMessageQueue(PMESSAGE messageQueue);
 
 #endif

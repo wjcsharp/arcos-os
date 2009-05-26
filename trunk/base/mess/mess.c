@@ -29,16 +29,18 @@ AddProcessToQueue(){           // Eventually remove timout
 	PMESS_PROCESS_NODE newNode;
 
 	// Init node.
-	newNode = MmAlloc(sizeof(MESS_PROCESS_NODE));	// Add mem-check.
-	newNode->process = KeCurrentProcess;
+	newNode = MmAlloc(sizeof(MESS_PROCESS_NODE));
+        if(!newNode) return STATUS_NO_MEMORY;
+        newNode->process = KeCurrentProcess;
 	newNode->next = NULL;
         newNode->pid = KeCurrentProcess->PID;
-        
+        KdPrint("Adding new node to processQueue. pid = %d", newNode->pid);
 	if(!processQueue->first && !processQueue->last){	// No nodes in queue.
 		processQueue->first = processQueue->last = newNode;		
 	}
 	else {							// Some node in queue.
-		processQueue->last->next = newNode;
+            KdPrint("add");
+                processQueue->last->next = newNode;
 		processQueue->last = newNode;
 	}
 	
@@ -100,14 +102,17 @@ MessSendMessage(
         }
         // Check if the process is waiting, going through processQueue.
         iterator = iteratorPrev = processQueue->first;
+        
         while(iterator){
             if(iterator->pid == receiverPid && iterator->process->State == blocked) {   // I should think about this one more time...
                 KdPrint("Message found!");
                 // Fix result and resume process.
                 KeSetSyscallResult(pprocess, (ULONG) message);
                 KeResumeProcess(pprocess);
-                // Is process first in queue?
-                if(processQueue->first == iterator) {
+                // Delete node from processQueue. Is process first in queue?
+                // TAKE CARE OF ->LAST!!!
+                // LÄGG TILL FALL: P FINNS I PQ MEN ÄR INTE BLOCKAD - FICK ALDRIG NÅGOT MESS.
+               if(processQueue->first == iterator) {
                     tempIterator = processQueue->first;
                     processQueue->first = processQueue->first->next;
                     MmFree(iterator);
@@ -132,26 +137,25 @@ MessSendMessage(
             iteratorPrev = iterator;
             iterator = iterator->next;
         }
+        
 
 	ASSERT(pprocess);
 
         // Add message to process' message queue. 
         mq = pprocess->MessageQueue;
         if(mq == NULL) pprocess->MessageQueue = message;
-        // Add message last in queue.
-        while(mq) {
-            //KdPrint("Wee! I'm looping!");
-            if(mq->next == NULL) {
-                mq->next = message;
-                // Break hack
-                mq = NULL;
-                break;
-                KdPrint("SendMessage: This should never be written");
+        else {// Add message last in queue.
+            while(mq) {
+                if(mq->next == NULL) {
+                    mq->next = message;
+                    // Break hack
+                    break;
+                }
+                KdPrint("mq");
+                mq = mq->next;
             }
-            mq = mq->next;
         }
-
-        ObDereferenceObject(pprocess);
+        //ObDereferenceObject(pprocess);
 
 	return STATUS_SUCCESS;
 }
@@ -225,14 +229,14 @@ STATUS
 MessCopyMessage(
     PVOID messDest,       
     PVOID messSource,
-    ULONG destBufferSize
+    ULONG sizeOfMessage
     )
 {
     //KdPrint("CopyMessage");
     ASSERT(messDest);
     ASSERT(messSource);
     // Check that dest buffer is big enough to contain source message.
-    if(destBufferSize < ((PMESSAGE)messSource)->bufferSize)
+    if(sizeOfMessage < ((PMESSAGE)messSource)->bufferSize + sizeof(MESSAGE))
         return STATUS_BUFFER_TOO_SMALL;
     RtlCopyMemory(messDest,messSource,(((PMESSAGE) messSource)->bufferSize) + sizeof(MESSAGE));
 
@@ -281,20 +285,20 @@ MessDeleteMessage(
 }
 
 STATUS
-MessDeleteMessageQueue()
+MessDeleteMessageQueue(PMESSAGE messageQueue)
 {
         PMESSAGE mq, message;
         //KdPrint("DeleteMessageQueue");
 
-	mq = KeCurrentProcess->MessageQueue;
+	mq = messageQueue;
 
-	while(mq){                  // Bug fixed.
+	while(mq){
 		message = mq;
 		mq = mq->next;
 		MmFree((PVOID)message);
 	}
 
-        KeCurrentProcess->MessageQueue = NULL;
+        messageQueue = NULL;        // Does this change anything really?
 
 	return STATUS_SUCCESS;
 }
