@@ -22,7 +22,7 @@ VOID AppPhilosopher() {
 	PVOID NewMess;
 
 	// Get args from waiter process
-	PCHAR WaiterArgs = KeCurrentProcess->Args;
+	PCHAR WaiterArgs; //= KeCurrentProcess->Args;
 
 	// Make separate ULONGs from the WaiterArgs string
 	//
