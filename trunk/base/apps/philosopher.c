@@ -24,15 +24,6 @@ VOID AppPhilosopher() {
 	// Get args from waiter process
 	CHAR WaiterArgs[30]; //= KeCurrentProcess->Args;
 
-	// Alloc memory
-	/*
-	LeftForkMess = Malloc(4);
-	RightForkMess = Malloc(4);
-	LeftDropMess = Malloc(4);
-	RightDropMess = Malloc(4);
-	*/
-
-
 	CopyArgs(WaiterArgs, 30);
 
 	// Make separate ULONGs from the WaiterArgs string
@@ -46,11 +37,10 @@ VOID AppPhilosopher() {
 
 	// Some debugging
 
-	KdPrint("LeftFork: %c", LeftForkNum);
+	//KdPrint("LeftFork: %c", LeftForkNum);
+	//KdPrint("RightFork: %c", RightForkNum);
+	//KdPrint("WaiterPID: %d", WaiterPID);
 
-	KdPrint("RightFork: %c", RightForkNum);
-
-	KdPrint("WaiterPID: %d", WaiterPID);
 
 	// Make left fork message
 	LeftForkMess[0] = 'L';
@@ -73,10 +63,13 @@ VOID AppPhilosopher() {
 	LeftDropMess[2] = '\0';
 
 	
+	//KdPrint("LeftForkMess: %c%c", LeftForkMess[0], LeftForkMess[1]); 
+	
 	while(1) {
 
 
 		// Think
+		KdPrint("Philosopher[%c]: Thinking..", LeftForkNum);
 		Sleep(2000);
 
 
@@ -88,6 +81,7 @@ VOID AppPhilosopher() {
 			}
 			DeleteMessage(NewMess);
 
+			KdPrint("Philosopher[%c]: I got the left fork!", LeftForkNum);
 
 		// Get second chopstick
 			SendMessage(WaiterPID, 0, RightForkMess, 3);
@@ -98,15 +92,20 @@ VOID AppPhilosopher() {
 			}
 			DeleteMessage(NewMess);
 
+			KdPrint("Philosopher[%c]: I got the right fork!", LeftForkNum);
+
 
 		// Eat
+		KdPrint("Philosopher[%c]: Now I'm eating..", LeftForkNum);
 		Sleep(3000);
 
-
+		
+		KdPrint("Philosopher[%c]: Dropping left fork (%c)", LeftForkNum, LeftForkNum);
 		// Drop left chopstick
 		SendMessage(WaiterPID, 0, LeftDropMess, 3);
 
 
+		KdPrint("Philosopher[%c]: Dropping right fork (%c)", LeftForkNum, RightForkNum);
 		// Drop right chopstick
 		SendMessage(WaiterPID, 0, RightDropMess, 3);
 
