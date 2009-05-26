@@ -69,9 +69,9 @@ VOID MmPrintBlocks() {
 	// Go through all blocks
 	while(PMb != NULL) {
 		if(PMb->IsFree == TRUE) 
-			KdPrint("F\t - Block 0x%x\t - Size %d \n", ALIGN_MEMORY((ULONG)PMb + HeaderSize), PMb->Size);	
+			KdPrint("F\t - Block 0x%x\t - NextBlock 0x%x\t - Size %d \n", ALIGN_MEMORY((ULONG)PMb + HeaderSize), ALIGN_MEMORY((ULONG)PMb->NextBlock + HeaderSize), PMb->Size);	
 		else
-			KdPrint("U\t - Block 0x%x\t - Size %d \n", ALIGN_MEMORY((ULONG)PMb + HeaderSize), PMb->Size);
+			KdPrint("U\t - Block 0x%x\t - NextBlock 0x%x\t - Size %d \n", ALIGN_MEMORY((ULONG)PMb + HeaderSize), ALIGN_MEMORY((ULONG)PMb->NextBlock + HeaderSize), PMb->Size);
 
 		PMb = PMb->NextBlock;
 	}
@@ -92,15 +92,8 @@ ULONG MmGetUsedVirtMemSum() {
 	// Go through the list
 	while(PVMb != NULL) {
 		
-		//KdPrint("inte NULL!");
-		
 		// Get the "real" block
-		//KdPrint("PVMb: 0x%x", PVMb);
 		PMb = ALIGN_MEMORY((ULONG)PVMb - HeaderSize);
-		
-		KdPrint("PMb: 0x%x", PMb);
-
-		KdPrint("PMb->Size: %d", PMb->Size);
 
 		MemSum = MemSum + PMb->Size + HeaderSize;
 		PVMb = PVMb->NextBlock;
@@ -191,7 +184,7 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 		if(PMb->IsFree) {
 			if(PMb->Size >= (ULONG)ALIGN_MEMORY(SizeToBeAllocated)) {
 				
-				ULONG FragmentSize = (ULONG)ALIGN_MEMORY(PMb->Size - (SizeToBeAllocated + HeaderSize));
+				ULONG FragmentSize = (ULONG)ALIGN_MEMORY(PMb->Size - (SizeToBeAllocated));
 
 				// Is the fragment block bigger than the header?
 				if (FragmentSize > HeaderSize) {
@@ -219,8 +212,8 @@ PVOID MmAlloc(ULONG SizeToBeAllocated) {
 				else {
 
 					// Return block body
-					ReturnAddress = ALIGN_MEMORY(PMb + HeaderSize);
-
+					ReturnAddress = ALIGN_MEMORY((ULONG)PMb + HeaderSize);
+					
 					// The only block property to be set
 					PMb->IsFree = FALSE;
 
