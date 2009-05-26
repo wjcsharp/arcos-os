@@ -127,19 +127,19 @@ ULONG min(ULONG A, ULONG B) {
 
 VOID
 AppTaskManager() {
-    PPROCESS_INFO pinfo;
+    //PPROCESS_INFO pinfo;
     ULONG numprocess, i, j, cputmp, tend;
     CHAR strbuff[250];
     HANDLE tmout;
     PCHAR timend[] = {"ms", "s"};
+    PROCESS_INFO pinfo[TASKM_BUFFER_SIZE];
 
     tmout = CreateFile('s');
-    pinfo = (PPROCESS_INFO) MmAlloc(TASKM_BUFFER_SIZE * sizeof (PROCESS_INFO));
-
+    
     for (j = 0; j < 5; j++) {
-        //KdPrint("GetProcessInfo BEGIN");
+        KdPrint("GetProcessInfo BEGIN");
         GetProcessInfo(pinfo, TASKM_BUFFER_SIZE, &numprocess);
-        //KdPrint("Before WriteFile");
+        KdPrint("GetProcessInfo END");
         WriteString(tmout, "\n\r---------TASKMANAGER---------\n\r");
         //KdPrint("---taskm DONE");
         //Sleep(1000);
@@ -656,8 +656,7 @@ PsGetProcessesInfo(
 
     //Get first process object
     pprocess = ObGetFirstObjectOfType(processType);
-    ASSERT(pprocess);
-
+    
     while (pprocess) {
         if (BufferSize > foundProc) {
             status = CopyPInfo(pprocess, &pinfo);
