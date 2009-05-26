@@ -11,7 +11,7 @@ AppKill() {
     HANDLE outp;
     //Get function args
     argLength = CopyArgs(Args, 25);
-    KdPrint(":::%s:::%d", Args, argLength);
+    //KdPrint(":::%s:::%d", Args, argLength);
     if (argLength == 0) {
         KdPrint("Kill needs an argument e.g. 'kill 5'"); //BUGBUGBUG
         KillMe();
