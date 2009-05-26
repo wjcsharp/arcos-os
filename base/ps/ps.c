@@ -97,10 +97,13 @@ AppChangePrio() {
 
 VOID
 AppKill() {
-    ULONG PID;
+    ULONG PID, argLength;
     STATUS status;
-
-    if (!(KeCurrentProcess->Args)) {
+    CHAR Args[25];
+    //Get function args
+    argLength = CopyArgs(Args, 25);
+    //KdPrint("%s:::%d", Args, argLength);
+    if (argLength == 0) {
         KdPrint("Kill needs an argument e.g. 'kill 5'"); //BUGBUGBUG
         KillMe();
     }
@@ -135,11 +138,11 @@ AppTaskManager() {
     PROCESS_INFO pinfo[TASKM_BUFFER_SIZE];
 
     tmout = CreateFile('s');
-    
+
     for (j = 0; j < 5; j++) {
-        KdPrint("GetProcessInfo BEGIN");
+        //KdPrint("GetProcessInfo BEGIN");
         GetProcessInfo(pinfo, TASKM_BUFFER_SIZE, &numprocess);
-        KdPrint("GetProcessInfo END");
+        //KdPrint("GetProcessInfo END");
         WriteString(tmout, "\n\r---------TASKMANAGER---------\n\r");
         //KdPrint("---taskm DONE");
         //Sleep(1000);
@@ -482,6 +485,28 @@ PsKillProcess(
     return STATUS_SUCCESS;
 }
 
+ULONG
+PsCopyArgs(
+        PCHAR Buffer,
+        ULONG Buffersize
+        ) {
+    CHAR c;
+    PCHAR args;
+    ULONG count = 0;
+
+    args = KeCurrentProcess->Args;
+
+    if (args == NULL)
+        return 0;
+
+    while ((c = args[count]) && (Buffersize > count + 1)) {
+        Buffer[count] = c;
+        count++;
+    }
+    Buffer[count] = 0;
+    return count;
+}
+
 STATUS
 PsChangePriority(
         ULONG PID,
@@ -562,9 +587,6 @@ PsGetState(
 }
 
 STATUS
-PsCopyArgs();
-
-STATUS
 PsGetPid(
         HANDLE Handle,
         PULONG PPid
@@ -605,7 +627,7 @@ PsOpenProcess(
 STATUS
 PsReferenceProcess(
         ULONG PID,
-        PPROCESS *ProcessPtr
+        PPROCESS * ProcessPtr
         ) {
     PPROCESS pprocess;
 
@@ -656,7 +678,7 @@ PsGetProcessesInfo(
 
     //Get first process object
     pprocess = ObGetFirstObjectOfType(processType);
-    
+
     while (pprocess) {
         if (BufferSize > foundProc) {
             status = CopyPInfo(pprocess, &pinfo);

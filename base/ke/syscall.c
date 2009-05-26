@@ -92,28 +92,32 @@ KeSystemService(
             KeSetSyscallResult(KeCurrentProcess, PsGetProcessesInfo((PPROCESS_INFO) Arg0, Arg1, (PULONG) Arg2));
             break;
 
-        //case 18:
-          //  KeSetSyscallResult(KeCurrentProcess, PsSupervise(Arg0, Arg1));
+            //case 18:
+            //  KeSetSyscallResult(KeCurrentProcess, PsSupervise(Arg0, Arg1));
             //break;
-		
-		case 19:
-			KeSetSyscallResult(KeCurrentProcess, (ULONG)MmVirtualAlloc((PVOID) Arg0, Arg1));
-			break;
+            /*
+                    case 19:
+                            KeSetSyscallResult(KeCurrentProcess, (ULONG)MmVirtualAlloc((PVOID) Arg0, Arg1));
+                            break;
 
-		case 20:
-			MmVirtualFree((PVOID) Arg0, (PVOID) Arg1);
-			break;
+                    case 20:
+                            MmVirtualFree((PVOID) Arg0, (PVOID) Arg1);
+                            break;
 
-		case 21:
-			MmVirtualFreeAll((PVOID) Arg0);
-			break;
+                    case 21:
+                            MmVirtualFreeAll((PVOID) Arg0);
+                            break;
 
-		case 22:
-			KeSetSyscallResult(KeCurrentProcess, MmGetUsedVirtMemSum());
-			break;
-
+                    case 22:
+                            KeSetSyscallResult(KeCurrentProcess, MmGetUsedVirtMemSum());
+                            break;
+             */
         case 23:
-            ObWaitForSingleObject((HANDLE)Arg0);
+            ObWaitForSingleObject((HANDLE) Arg0);
+            break;
+
+        case 25:
+            KeSetSyscallResult(KeCurrentProcess, PsCopyArgs((PCHAR) Arg0, Arg1));
             break;
 
         default:

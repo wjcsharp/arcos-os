@@ -128,4 +128,11 @@ WaitForSingleObject(
         HANDLE Handle
         );
 
+//Returns stringlength
+ULONG
+CopyArgs(
+        PCHAR buffer,
+        ULONG buffersize
+        );
+
 #endif
