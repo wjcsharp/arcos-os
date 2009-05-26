@@ -76,18 +76,18 @@ void AppShell()
 			if (status != 0) 
 			{
 				WriteFile(handle, "\n\rARCOS:\\>Unknown command. Try again.", 38);
-				//CloseHandle(commandProcess);				
 			}
 			else
 			{
 				status = WaitForSingleObject(commandProcess);
-				//CloseHandle(commandProcess);
+				CloseHandle(commandProcess);
 			}
 			for (n = 0; n < i; n++)
 				input[n] = '\0';
 			ch[0] = '\0';
 			WriteFile(handle, "\n\r", 1); 
-			//CloseHandle(handle);
+			
 		}
 	}
+    CloseHandle(handle);
 }
