@@ -5,4 +5,5 @@ TARGETTYPE=library
 SOURCES= \
 	scroller.c \
 	shell.c \
-	philosopher.c
+	philosopher.c \
+        taskmanager.c

@@ -21,6 +21,7 @@ LIBS = \
         $(BASEDIR)/build/lib/*/hal \
         $(BASEDIR)/build/lib/*/kd \
         $(BASEDIR)/build/lib/*/ps \
+        $(BASEDIR)/build/lib/*/apps \
         $(BASEDIR)/build/lib/*/mess \
         $(BASEDIR)/build/lib/*/hal \
         $(BASEDIR)/build/lib/*/io \
