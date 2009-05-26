@@ -16,10 +16,10 @@ VOID
 TestShell() {
     KdPrint("Shell PID is %d", GetProcessId());
 
-    while (1) {
+   // while (1) {
         AppShell();
         //Sleep(0);
-    }
+    //}
 }
 
 /*
