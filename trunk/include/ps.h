@@ -19,7 +19,6 @@
 // Defines size of default memory to be allocated for a process
 #define PROCESS_MEMORY_SIZE 32768
 
-
 typedef struct _PROGRAM {
     PCHAR Name;
     VOID(*Execute)(PCHAR Args);
@@ -107,6 +106,12 @@ PsReferenceProcess(
         PPROCESS *ProcessPtr
         );
 
+//Returns stringlength
+ULONG
+PsCopyArgs(
+        PCHAR buffer,
+        ULONG buffersize
+        );
 
 STATUS
 PsGetProcessesInfo(

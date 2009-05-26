@@ -114,7 +114,7 @@ KeInitialize(VOID) {
     ObCloseHandle(testShell);
     //PsCreateProcess(TestProcess, 30, &testProcess, NULL);
     //PsCreateProcess(TestProcess2, 5, &testProcess2, NULL);
-    //PsCreateProcess(TestScrollerProcess, 10, &testScrollerProcess, NULL);
+    PsCreateProcess(TestScrollerProcess, 10, &testScrollerProcess, NULL);
 
     //PsCreateProcessByName("TestProcess3", 1, &testProcess3, NULL);
     //ObCloseHandle(testProcess3);
