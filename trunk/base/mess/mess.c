@@ -28,6 +28,8 @@ AddProcessToQueue(){           // Eventually remove timout
         
 	PMESS_PROCESS_NODE newNode;
 
+        // CHECK! DONT ADD TO QUEUE IF ALREADY IN IT!!!
+
 	// Init node.
 	newNode = MmAlloc(sizeof(MESS_PROCESS_NODE));
         if(!newNode) return STATUS_NO_MEMORY;
@@ -39,7 +41,7 @@ AddProcessToQueue(){           // Eventually remove timout
 		processQueue->first = processQueue->last = newNode;		
 	}
 	else {							// Some node in queue.
-            KdPrint("add");
+                KdPrint("add");
                 processQueue->last->next = newNode;
 		processQueue->last = newNode;
 	}
@@ -49,12 +51,30 @@ AddProcessToQueue(){           // Eventually remove timout
 }
 
 STATUS
-RemoveProcessFromQueue(){       // Remove?
+RemoveProcessFromQueue(PMESS_PROCESS_NODE iterator, PMESS_PROCESS_NODE iteratorPrev){
 
-    ULONG pid;
-    
-    pid = KeCurrentProcess->PID;
-    
+    PMESS_PROCESS_NODE tempIterator;
+
+    iterator = iteratorPrev = processQueue->first;
+    if(processQueue->first == iterator) {
+        tempIterator = processQueue->first;
+        processQueue->first = processQueue->first->next;
+        // Is this the only node?
+        if(processQueue->last == iterator) processQueue->last = NULL;       // Should work.
+        MmFree(iterator);
+    }
+    // Is process last in queue?
+    else if(processQueue->last == iterator){
+        processQueue->last = iteratorPrev;
+        MmFree(iterator);
+      }
+    // Else in middle... :(
+    else {
+        iteratorPrev->next = iterator->next;
+        MmFree(iterator);
+    }
+
+    // Memcheck?
     return STATUS_SUCCESS;
 }
 
@@ -101,20 +121,30 @@ MessSendMessage(
             return status;
         }
         // Check if the process is waiting, going through processQueue.
+        // If the process is in the queue but isn't blocked, it has stopped
+        // waiting and should be removed from the queue. The message should
+        // still be added to its message queue though.
         iterator = iteratorPrev = processQueue->first;
-        
         while(iterator){
-            if(iterator->pid == receiverPid && iterator->process->State == blocked) {   // I should think about this one more time...
+            if(iterator->pid == receiverPid && iterator->process->State != blocked){
+                // If we arrived here, things are a bit fucked up. The
+                // process is in the queue but not blocked.
+                // Remove it and break.
+                RemoveProcessFromQueue(iterator, iteratorPrev);
+                break;
+            }
+            else if(iterator->pid == receiverPid && iterator->process->State == blocked) {   // I should think about this one more time...
                 KdPrint("Message found!");
                 // Fix result and resume process.
                 KeSetSyscallResult(pprocess, (ULONG) message);
                 KeResumeProcess(pprocess);
                 // Delete node from processQueue. Is process first in queue?
-                // TAKE CARE OF ->LAST!!!
-                // LÄGG TILL FALL: P FINNS I PQ MEN ÄR INTE BLOCKAD - FICK ALDRIG NÅGOT MESS.
+                // FIX: Koden under samma som i RemoveProcessFromQueue.
                if(processQueue->first == iterator) {
                     tempIterator = processQueue->first;
                     processQueue->first = processQueue->first->next;
+                    // Is this the only node?
+                    if(processQueue->last == iterator) processQueue->last = NULL;       // Should work.
                     MmFree(iterator);
                     break;
                     KdPrint("SendMessage: This should NOT be written! 1");
@@ -172,7 +202,8 @@ MessReceiveFirst(
 	//return NULL;
 
 	PMESSAGE newMessage;
-
+        PMESS_PROCESS_NODE iterator;
+        
 	//KdPrint("MESS: ReceiveFirst");
 
 	if (KeCurrentProcess->MessageQueue != NULL)	// Message queue not empty - check it.
@@ -184,7 +215,13 @@ MessReceiveFirst(
 	}
 	else	// No message in message queue - wait a while/timeout.
 	{
-		AddProcessToQueue();
+		// Check if process already is in queue.
+            iterator = processQueue->first;
+            while(iterator){
+                // Process is already in queue - don't do anything.
+                //if(iterator->pid == KeCurrentProcess->PID)
+            }
+                AddProcessToQueue();
                 KeSuspendProcess(timeout);
                 //KdPrint("Process stopped");
         }

@@ -10,112 +10,99 @@
  
  #include <kd.h>
  #include <api.h>
+#include <rtl.h>
 
+// Delete this.
 #include <arcos.h>
 #include <ke.h>
 
  void AppRingNode()
  {
- 
-                //KdPrint("I'm alive!");
-                //KillMe();
- 
                 HANDLE handle;
-                ULONG recievedPID;
+                ULONG receivedPID;
                 PMESSAGE message;
-                CHAR c[100];
+                CHAR stringBuffer[100];
                 PCHAR s;
-                ULONG PID;
-		
-		
+				
                 handle = CreateFile('s');
-                s = c;
-                PID = 7;
 		
-		KdPrint("babyring pid: %d", GetProcessId());
-
-                Sleep(1000);
-
                 message = ReceiveFirst(5000);
-                
-		//ASSERT(message);
-                /*
-		recievedPID = *((PULONG)message->buffer);
-                WriteFile(handle,"\n\rI recieved message from ",20);
-                RtlFormatString(s,100,"%d",PID);
-                s = "7";
-                WriteFile(handle,s,20);
-                WriteFile(handle,", my own PID is ",20);
-                RtlFormatString(s,100,"%d",GetProcessId());
-                WriteFile(handle,s,20);
-                
-		
-		message = ReceiveFirst(10000);
-                WriteFile(handle,"\n\rRecieved ",20);
-                ASSERT(message);
-                WriteFile(handle,message->buffer,20); //BUGGGGGGGGGGG
-                KdPrint("Real");
-                RtlFormatString(s,100,", I'm sending message to %d.",recievedPID);
-                WriteFile(handle,s,20);
-                SendMessage(recievedPID,0,"hej! Jag är meddelande",23);
-                WriteFile(handle,"\n\rMessage sent. I'm killing myself....",20);
+                if(message) KdPrint("Baby found message! myPid = %d, received pid = %d", GetProcessId(),*(PULONG)(message->buffer));
+                else { KdPrint("BIP BIP BIP! Babynode not finding pid message! Commiting suicide."); KillMe(); }
+
+                receivedPID = *((PULONG)message->buffer);
+                DeleteMessage(message);
+
+                s = stringBuffer;
+                RtlFormatString(s, 100, "\n\rBip! I received target pid nr %d, my own pid is %d. Z z z...", receivedPID, GetProcessId());
+                WriteFile(handle,s,0);
+
+                // Eternal babyring loop.
+                while(1){
+                    // Wait for start message and sleep a second.
+                    Sleep(2000);
+                    message = ReceiveFirst(1);
+                    if(message){
+                        RtlFormatString(s,100,"\n\rYey! I got start message! My pid is %d, sending start message to %d. Z z z...", GetProcessId(),receivedPID);
+                        WriteFile(handle,s,0);
+                        DeleteMessage(message);
+                        SendMessage(receivedPID,0,&s,4);    // Message type and content doesn't matter here.
+                    }
+                    else{
+                        KdPrint("Babyring: Should never be here. Exiting."); KillMe();
+                    }
+                    //Sleep(2000);
+                }
+
                 KillMe();
-                ObCloseHandle(handle);
-		*/
-                KdPrint("Babynode not waiting anymore, killing myself.");
-	KillMe();
  }
  
  void AppRing()
  {
-     KillMe();
-                ULONG recievedPid, i, myPid;
-                PMESSAGE message;
+
+                ULONG i, myPid;
                 HANDLE ring, handle;
                 STATUS status;
-		CHAR argBuffer[20];
 		CHAR args[25];
-		CHAR c;
-		ULONG nr;
+		ULONG nr = 3;       // 3 = default.
 
 		// How many babyrings? Check args (only two digits).
-		CopyArgs(args, 25);
-		nr = args[0] - '0';		
-		if(args[1]) nr = nr + (args[1] - '0') * 10;
-
+                if(CopyArgs(args,25) != 0){
+                    nr = args[0] - '0';
+                    if(args[1]) nr = nr + (args[1] - '0') * 10;     // What if second number is zero?
+                }
+                if(nr < 3) nr = 3;      // Must be atleast three, otherwise for-loops will crash.
+                
+                KdPrint("nr = %d", nr);
 		// Fix array to store babyring pids.
-		ULONG pids[nr];
+		ULONG pids[10];
 
                 handle = CreateFile('s');
 
                 myPid = GetProcessId();
 
-		KdPrint("nr = %d",nr);
+		KdPrint("nr = %d",nr);  // Check check.
 
                 // Create all nodes.
                 for(i = 0;i < nr;i++)
                 {
                                 status = CreateProcess("ringnode",10,&ring,NULL);
                                 if(status != 0) KdPrint("Problem when creating process");
-                                PsGetPid(ring,&pids[i]);
+                                GetPid(ring,&pids[i]);
 				KdPrint("pid from ring: %d", pids[i]);
                 }
-                
-		ASSERT(nr > 1);
-                for(i = 0;i < nr-2;i++) SendMessage(pids[i],0,&pids[i+1],4);
-		KdPrint("All messages sent");
+                KdPrint("pids = ");
+                for(i = 0; i < nr; i++) KdPrint("%d", pids[i]);
+                // Sending target pid message. Last node is special case - its pid should be the first node.
+                for(i = 0;i < nr-1;i++) SendMessage(pids[i],0,&pids[i+1],4);
+                SendMessage(pids[nr-1],0,&pids[0],4);
 
-		/*                
-                SendMessage(PIDs[n-1],0,&myPID,4);
-                
-                message = ReceiveFirst(10000);
-                
-                ASSERT(message);
-                recievedPid = *((PULONG)message->buffer);   // Or is this PCHAR?
-                //KdPrint("Here");
-                //DeleteMessage(message);
-                KdPrint("Here");
-                WriteFile(handle,"Message deleted",25);
-		*/
-		KillMe();
+                Sleep(1000);
+                WriteFile(handle,"\n\rRing master sending start message.",0);
+
+                // Send start message.
+                SendMessage(pids[0],0,&pids[0],4);      // Message type and content doesn't matter here.
+                //while(1);
+                KdPrint("RING_MASTER: All messages sent, killing myself.");
+                KillMe();
 }
