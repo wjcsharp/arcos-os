@@ -94,21 +94,22 @@ ULONG MmGetUsedVirtMemSum() {
 		
 		// Get the "real" block
 		PMb = ALIGN_MEMORY((ULONG)PVMb - HeaderSize);
-
-		MemSum = MemSum + PMb->Size + HeaderSize;
+		
+		KdPrint("Size: %d", PMb->Size);
+		MemSum = MemSum + PMb->Size;
 		PVMb = PVMb->NextBlock;
 	}
 	return MemSum;
 }
 
 
-PVOID MmVirtualAlloc(PPROCESS BlockOwner, ULONG Size) {
+PVOID MmVirtualAlloc(ULONG Size) {
 	
 	// Size of header for the virtual blocks
 	static ULONG VirtualHeaderSize = sizeof(VIRTUAL_MEMORY_BLOCK);
 	
 	// Get a copy of the block list
-	PVIRTUAL_MEMORY_BLOCK PVMb = BlockOwner->AllocatedMemory;
+	PVIRTUAL_MEMORY_BLOCK PVMb = KeCurrentProcess->AllocatedMemory;
 	
 	// Create a new block
 	PVIRTUAL_MEMORY_BLOCK NewBlock;
@@ -116,15 +117,15 @@ PVOID MmVirtualAlloc(PPROCESS BlockOwner, ULONG Size) {
 
 	// Add it to the list
 	NewBlock->NextBlock = PVMb;
-	BlockOwner->AllocatedMemory = NewBlock;
+	KeCurrentProcess->AllocatedMemory = NewBlock;
 
-	return ALIGN_MEMORY((ULONG)BlockOwner->AllocatedMemory + VirtualHeaderSize);
+	return ALIGN_MEMORY((ULONG)KeCurrentProcess->AllocatedMemory + VirtualHeaderSize);
 }
 
-VOID MmVirtualFree(PPROCESS BlockOwner, PVOID BlockBody) {
+VOID MmVirtualFree(PVOID BlockBody) {
 	
 	// Get a copy of the virtual blocks list
-	PVIRTUAL_MEMORY_BLOCK PVMb = BlockOwner->AllocatedMemory;
+	PVIRTUAL_MEMORY_BLOCK PVMb = KeCurrentProcess->AllocatedMemory;
 
 
 	if ((PCHAR)PVMb == (PCHAR)BlockBody - sizeof(VIRTUAL_MEMORY_BLOCK)) {		// Is it the first block?

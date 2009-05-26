@@ -107,13 +107,11 @@ SuperviseProc(
 
 PVOID
 Malloc(
-        PPROCESS BlockOwner,
         ULONG Size
         );
 
 PVOID
 Free(
-        PPROCESS BlockOwner,
         PVOID BlockBody
         );
 
