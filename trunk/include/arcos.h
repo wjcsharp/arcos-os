@@ -146,6 +146,9 @@ typedef enum {
     created, running, ready,  blocked, done
 }PROCESS_STATE, *PPROCESS_STATE;
 
+struct _PROCESS;
+
+typedef VOID (*RESUME_METHOD)(struct _PROCESS*);
 
 typedef struct _HANDLE_TABLE_ENTRY {
     ULONG Attributes;
@@ -182,6 +185,7 @@ typedef struct _PROCESS {
     PCHAR Args;
     PMESSAGE MessageQueue; 	// Added by Olle
     ULONG Supervisor;	//PID of supervisor
+    RESUME_METHOD ResumeMethod;
     struct _PROCESS *NextPCB;
 } PROCESS, *PPROCESS;
 

@@ -45,7 +45,7 @@ VOID
 KeResumeProcess(PPROCESS Process);
 
 VOID
-KeSuspendProcess(ULONG Milliseconds);
+KeSuspendProcess(ULONG Milliseconds, RESUME_METHOD ResumeMethod);
 
 ULONG
 KeGetTickCount(VOID);

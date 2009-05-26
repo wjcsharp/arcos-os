@@ -29,7 +29,7 @@ KeSystemService(
         ) {
     switch (ServiceNumber) {
         case 0:
-            KeSuspendProcess(Arg0);
+            KeSuspendProcess(Arg0, NULL);
             break;
 
         case 1:
