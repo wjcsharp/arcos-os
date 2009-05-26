@@ -35,11 +35,11 @@ void AppShell()
     HANDLE handle, commandProcess;
 	ULONG i, n;
     STATUS status;
-    handle = CreateFile('s');
     ch[1] = NULL;
     c = ch;
 	while(1)
 	{
+		handle = CreateFile('s');
 		WriteFile(handle, "ARCOS:\\>", 9); 
 		i = 0;
 		while (*c != '\r') 
@@ -75,17 +75,19 @@ void AppShell()
 			status = CreateProcess(command, 9, &commandProcess, argument);
 			if (status != 0) 
 			{
-				WriteFile(handle, "\n\rARCOS:\\>Unknown command. Try again.", 38); 
+				WriteFile(handle, "\n\rARCOS:\\>Unknown command. Try again.", 38);
+				CloseHandle(commandProcess);				
 			}
 			else
 			{
 				status = WaitForSingleObject(commandProcess);
+				CloseHandle(commandProcess);
 			}
 			for (n = 0; n < i; n++)
 				input[n] = '\0';
 			ch[0] = '\0';
 			WriteFile(handle, "\n\r", 1); 
+			CloseHandle(handle);
 		}
 	}
 }
-
