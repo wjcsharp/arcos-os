@@ -17,8 +17,7 @@
 VOID AppPhilosopher() {
 	
 	ULONG  WaiterPID;
-	PCHAR LeftForkMess, RightForkMess, LeftDropMess, RightDropMess;
-	CHAR LeftForkNum, RightForkNum;
+	CHAR LeftForkMess[3], RightForkMess[3], LeftDropMess[3], RightDropMess[3], LeftForkNum, RightForkNum;
 
 	PVOID NewMess;
 
@@ -26,10 +25,13 @@ VOID AppPhilosopher() {
 	CHAR WaiterArgs[30]; //= KeCurrentProcess->Args;
 
 	// Alloc memory
+	/*
 	LeftForkMess = Malloc(4);
 	RightForkMess = Malloc(4);
 	LeftDropMess = Malloc(4);
 	RightDropMess = Malloc(4);
+	*/
+
 
 	CopyArgs(WaiterArgs, 30);
 
@@ -50,7 +52,27 @@ VOID AppPhilosopher() {
 
 	KdPrint("WaiterPID: %c", WaiterPID);
 
+	// Make left fork message
+	LeftForkMess[0] = 'L';
+	LeftForkMess[1] = LeftForkNum;
+	LeftForkMess[2] = '\0';
 
+	// Make right fork message
+	RightForkMess[0] = 'R';
+	RightForkMess[1] = RightForkNum;
+	RightForkMess[2] = '\0';
+
+	// Make left fork drop message
+	LeftDropMess[0] = 'D';
+	LeftDropMess[1] = LeftForkNum;
+	LeftDropMess[2] = '\0';
+
+	// Make left fork drop message
+	LeftDropMess[0] = 'D';
+	LeftDropMess[1] = RightForkNum;
+	LeftDropMess[2] = '\0';
+
+	/*
 	// Make left fork message
 	*LeftForkMess = 'L';
 	LeftForkMess++;
@@ -78,6 +100,7 @@ VOID AppPhilosopher() {
 	*RightDropMess = RightForkNum;
 	RightDropMess++;
 	*RightDropMess = '\0';
+	*/
 
 	/*********** Philosopher loop ******************/
 	//
