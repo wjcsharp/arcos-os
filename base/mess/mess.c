@@ -69,6 +69,7 @@ MessSendMessage(
         PMESSAGE mq;
         STATUS status;
         PMESS_PROCESS_NODE iterator = processQueue->first;
+        PMESS_PROCESS_NODE iteratorPrev;        // To fix deletion of node in processQueue.
         PMESS_PROCESS_NODE tempIterator;
         
 	ASSERT(buffer);		// Allowing sending message without buffer?
@@ -98,16 +99,25 @@ MessSendMessage(
             return status;
         }
         // Check if the process is waiting, going through processQueue.
+        iterator = iteratorPrev = processQueue->first;
         while(iterator){
             if(iterator->pid == receiverPid && iterator->process->State == blocked) {   // I should think about this one more time...
-                //KdPrint("Message found!");
+                KdPrint("Message found!");
+                // Fix result and resume process.
                 KeSetSyscallResult(pprocess, (ULONG) message);
                 KeResumeProcess(pprocess);
-                 // Deleting node from processQueue
-                tempIterator = iterator;
-                iterator->next = iterator->next;
+                // Deleting node from processQueue, this one for nodes in the middle (works for first too).
+                if(iterator->next->next) iteratorPrev->next = iterator->next->next;
+                // Is this the first node?
+                if(iterator == processQueue->first) processQueue->first = processQueue->first->next;
+                // Or last? (It's both if there's only one node in queue.)
+                else if(iterator == processQueue->last) processQueue->last = iteratorPrev;
+                // Free node memory.
                 MmFree(iterator);
             }
+            iteratorPrev = iterator;
+            iterator = iterator->next;
+            iteratorPrev = iterator;
             iterator = iterator->next;
         }
 
@@ -124,7 +134,7 @@ MessSendMessage(
                 // Break hack
                 mq = NULL;
                 break;
-                //KdPrint("This should never be written");
+                KdPrint("SendMessage: This should never be written");
             }
             mq = mq->next;
         }
@@ -158,7 +168,7 @@ MessReceiveFirst(
 	}
 	else	// No message in message queue - wait a while/timeout.
 	{
-		AddProcessToQueue(timeout);
+		AddProcessToQueue();
                 KeSuspendProcess(timeout);
                 //KdPrint("Process stopped");
         }
