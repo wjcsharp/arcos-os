@@ -3,4 +3,5 @@ TARGETPATH=lib
 TARGETTYPE=library
 
 SOURCES = \
-        io.c
+        io.c \
+	getline.c

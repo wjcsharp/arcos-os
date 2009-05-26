@@ -12,10 +12,13 @@ PFILE serialFile;
 PFILE lcdFile;
 
 CHAR outputSpace[512]; // Maximum of string to print = 512
+CHAR getLineSpace[512];
 PCHAR outputPointer;
+PCHAR getlinePointer;
 ULONG bufferPosition = 0;
 ULONG outputLength;
 BOOL doneWriting = TRUE;
+
 
 static FIFO fifo; // Input buffer, receives from keyboard
 PIO_WAITING_QUEUE waitingQueue; // Waiting queue for writeFile, FILO.
@@ -241,36 +244,6 @@ IoWriteLcd(
         *lcdAddress = string[i];
         lcdAddress += 8;
     }
-}
-
-PCHAR
-IoGetLine(){
-
-    ULONG i, length;
-    PCHAR s, iterator;
-    HANDLE handle;
-
-    handle = IoCreateFile('s');
-    length = 0;
-    // Allocate 100 bytes/chars.
-    iterator = s = MmAlloc(100);
-    if(!s) {
-        KdPrint("'I hate myself and want to die' / Kurt Cobain");
-        return NULL;
-    }
-    // Make null with s. This is so WriteFile will work properly.
-    for(i = 0; i < 100; i++)
-        *s = '\0';
-    
-    // Loop some input.
-    while(length < 100){
-        IoReadFile(handle,iterator++,1);
-        IoWriteFile(handle,iterator,1);
-        length++;
-        if(*iterator == '\r') break;        // Add '\r', or don't.
-    }
-
-    return s;
 }
 
 VOID

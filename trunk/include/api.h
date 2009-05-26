@@ -41,9 +41,6 @@ WriteFile(
         PVOID buffer,
         ULONG bufferSize);
 
-PCHAR
-GetLine();
-
 ULONG
 ReadFile(
         HANDLE handle,

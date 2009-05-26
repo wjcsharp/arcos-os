@@ -95,8 +95,8 @@ KeSystemService(
             case 18:
               KeSetSyscallResult(KeCurrentProcess, PsSupervise(Arg0, Arg1));
             break;
-            
-					case 19:
+            /*
+		case 19:
                             KeSetSyscallResult(KeCurrentProcess, (ULONG)MmVirtualAlloc(Arg0));
                             break;
 
@@ -107,17 +107,13 @@ KeSystemService(
                     case 22:
                             KeSetSyscallResult(KeCurrentProcess, MmGetUsedVirtMemSum());
                             break;
-             
+             */
         case 23:
             ObWaitForSingleObject((HANDLE) Arg0);
             break;
 
         case 25:
             KeSetSyscallResult(KeCurrentProcess, PsCopyArgs((PCHAR) Arg0, Arg1));
-            break;
-
-        case 26:
-            KeSetSyscallResult(KeCurrentProcess, (ULONG) IoGetLine());
             break;
 
         default:
