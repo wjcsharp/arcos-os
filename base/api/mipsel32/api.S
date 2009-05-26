@@ -152,5 +152,11 @@ CloseHandle:
     syscall
     jr      ra
 
+.globl GetPid
+GetPid:
+    addi    v0, zero, 27
+    syscall
+    jr      ra
+
     # Put your own syscalls here. Just change the name and increment the 0.
 
