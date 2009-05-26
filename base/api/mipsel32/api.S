@@ -140,12 +140,17 @@ WaitForSingleObject:
     syscall
     jr      ra
 
-
-
 .globl CopyArgs
 CopyArgs:
     addi    v0, zero, 25
     syscall
     jr      ra
+
+.globl GetLine
+GetLine:
+    addi    v0, zero, 26
+    syscall
+    jr      ra
+
     # Put your own syscalls here. Just change the name and increment the 0.
 
