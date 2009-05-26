@@ -95,19 +95,19 @@ KeSystemService(
             case 18:
               KeSetSyscallResult(KeCurrentProcess, PsSupervise(Arg0, Arg1));
             break;
-            /*
-                    case 19:
-                            KeSetSyscallResult(KeCurrentProcess, (ULONG)MmVirtualAlloc((PVOID) Arg0, Arg1));
+            
+					case 19:
+                            KeSetSyscallResult(KeCurrentProcess, (ULONG)MmVirtualAlloc(Arg0));
                             break;
 
                     case 20:
-                            MmVirtualFree((PVOID) Arg0, (PVOID) Arg1);
+                            MmVirtualFree((PVOID) Arg0);
                             break;
 
                     case 22:
                             KeSetSyscallResult(KeCurrentProcess, MmGetUsedVirtMemSum());
                             break;
-             */
+             
         case 23:
             ObWaitForSingleObject((HANDLE) Arg0);
             break;
