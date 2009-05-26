@@ -2,6 +2,7 @@
 #include <kd.h>
 #include <rtl.h>
 #include <api.h>
+#include <apps.h>
 
 #define TASKM_BUFFER_SIZE 20
 
@@ -52,7 +53,7 @@ AppTaskManager() {
     }
     //KdPrint("Before tmgoodbye");
     WriteString(tmout, "--------Task Manager says godbye--------\n\r");
-    ObCloseHandle(tmout);//BUGBUGBUG should be syscall? is this needed?
+    //ObCloseHandle(tmout);//BUGBUGBUG should be syscall? is this needed?
     KillMe();
 }
 

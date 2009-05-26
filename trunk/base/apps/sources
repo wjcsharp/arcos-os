@@ -8,4 +8,5 @@ SOURCES= \
 	philosopher.c \
         taskmanager.c \
         changeprio.c \
-        kill.c
+        kill.c \
+        waiter.c

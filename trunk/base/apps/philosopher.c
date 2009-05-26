@@ -72,38 +72,7 @@ VOID AppPhilosopher() {
 	LeftDropMess[1] = RightForkNum;
 	LeftDropMess[2] = '\0';
 
-	/*
-	// Make left fork message
-	*LeftForkMess = 'L';
-	LeftForkMess++;
-	*LeftForkMess = LeftForkNum;
-	LeftForkMess++;
-	*LeftForkMess = '\0';
-
-	// Make right fork message
-	*RightForkMess = 'R';
-	RightForkMess++;
-	*RightForkMess = RightForkNum;
-	RightForkMess++;
-	*RightForkMess = '\0';
 	
-	// Make left fork drop message
-	*LeftDropMess = 'D';
-	LeftDropMess++;
-	*LeftDropMess = LeftForkNum;
-	LeftDropMess++;
-	*LeftDropMess = '\0';
-
-	// Make left fork drop message
-	*RightDropMess = 'D';
-	RightDropMess++;
-	*RightDropMess = RightForkNum;
-	RightDropMess++;
-	*RightDropMess = '\0';
-	*/
-
-	/*********** Philosopher loop ******************/
-	//
 	while(1) {
 
 

@@ -30,9 +30,9 @@ APPLICATION PsAvailApps[] = {
     {"taskmanager", AppTaskManager},
     {"kill", AppKill},
     {"changeprio", AppChangePrio},
-    {"testprocess3", AppPSTestProcess3}
-    //{"Supervise", AppSupervise},
-    //,{"supervise", AppSupervise}
+    {"testprocess3", AppPSTestProcess3},
+    {"philosopher", AppPhilosopher},
+    {"waiter", AppWaiter}
 
 };
 
@@ -349,6 +349,9 @@ PsKillProcess(
 
     //Free message-queueBUGBUGBUGBUG
     MessDeleteMessageQueue();
+
+    //Signal object finished
+    ObSignalObject(PProcess);
 
     //Dereference process
     ASSERT(PProcess);

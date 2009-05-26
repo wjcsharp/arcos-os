@@ -2,6 +2,7 @@
 #include <kd.h>
 #include <rtl.h>
 #include <api.h>
+#include <apps.h>
 
 VOID
 AppKill() {
