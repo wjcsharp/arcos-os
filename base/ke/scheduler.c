@@ -376,6 +376,8 @@ KeBlockProcess(
 {
     KeCurrentProcess->State = blocked;
 
+    KeCurrentProcess->ResumeMethod = NULL;
+
     //
     // add process to the blocked list
     // 
@@ -402,6 +404,9 @@ KeResumeProcess(
 {
     ASSERT(Process);
     ASSERT(Process->State == blocked);
+
+    if (Process->ResumeMethod)
+        Process->ResumeMethod(Process);
 
     //
     // remove process from the blocked list
@@ -484,7 +489,8 @@ KepWakeUpSleepers(
 //
 VOID
 KeSuspendProcess(
-    ULONG Milliseconds
+    ULONG Milliseconds,
+    RESUME_METHOD ResumeMethod
     )
 {
     ASSERT(KeCurrentProcess->NextPCB == NULL);
@@ -492,6 +498,8 @@ KeSuspendProcess(
     KeCurrentProcess->WakeUpTime = KepTickCount + Milliseconds;
 
     KeCurrentProcess->State = blocked;
+
+    KeCurrentProcess->ResumeMethod = ResumeMethod;
 
     //
     // add this process to the (sorted) timer list

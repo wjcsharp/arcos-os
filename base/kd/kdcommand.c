@@ -90,6 +90,36 @@ KdpCmdObjects(
     }
 }
 
+VOID
+KdpCmdBlockedList(
+    PCHAR Parameter
+    )
+{
+    extern PPROCESS KepBlockedList;
+    extern PPROCESS KepTimerList;
+    PPROCESS current;
+
+    UNREFERENCED_PARAMETER(Parameter);
+
+    KdpPrint("Blocked processes:\n");
+    current = KepBlockedList;
+    while (current) {
+        CHAR dump[320];
+        ObDumpObject(current, dump, sizeof(dump));
+        KdpPrint("0x%x %s\n", current, dump);
+        current = current->NextPCB;
+    }
+
+    KdpPrint("Timer processes:\n");
+    current = KepTimerList;
+    while (current) {
+        CHAR dump[320];
+        ObDumpObject(current, dump, sizeof(dump));
+        KdpPrint("0x%x %s\n", current, dump);
+        current = current->NextPCB;
+    }
+}
+
 // neccessary forward declaration...
 VOID
 KdpCmdHelp(PCHAR Parameter);
@@ -97,7 +127,8 @@ KdpCmdHelp(PCHAR Parameter);
 KD_COMMAND KdpCommands[] = {
     { "help", "Prints this help", KdpCmdHelp },
     { "ticks", "Gets number of milliseconds that elapsed since the system started", KdpCmdTicks },
-    { "objects", "Prints a list of objects present in the system", KdpCmdObjects }
+    { "objects", "Prints a list of objects present in the system", KdpCmdObjects },
+    { "bl", "Prints the state of blocked process queues", KdpCmdBlockedList }
 };
 
 VOID
