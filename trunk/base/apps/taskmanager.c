@@ -3,7 +3,7 @@
 #include <rtl.h>
 #include <api.h>
 
-#define TASKM_BUFFER_SIZE 12
+#define TASKM_BUFFER_SIZE 20
 
 ULONG
 min(ULONG A, ULONG B) {
