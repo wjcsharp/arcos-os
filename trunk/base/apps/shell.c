@@ -38,47 +38,54 @@ void AppShell()
     handle = CreateFile('s');
     ch[1] = NULL;
     c = ch;
-    WriteFile(handle, "ARCOS:\\>", 9); 
-    i = 0;
-    while (*c != '\r') 
+	while(1)
 	{
-        command = NULL;
-        argument = NULL;
-        ReadFile(handle, c, 1); 
-        if (*c == '\b' || *c == 127) 
+		WriteFile(handle, "ARCOS:\\>", 9); 
+		i = 0;
+		while (*c != '\r') 
 		{
-            if (i > 0) 
+			command = NULL;
+			argument = NULL;
+			ReadFile(handle, c, 1); 
+			if (*c == '\b' || *c == 127) 
 			{
-                i = i - 1;
-                input[i] = '\0';
-                WriteFile(handle, "\e[D \e[D", 9); 
-            }
-        } 
-		else if (*c == '\r')
-            break;
-        else 
-		{
-            input[i] = ch[0];
-            WriteFile(handle, c, 1);  
-            i++;
-        }
-        if (i > 99)
-            i = 0;
-    }
-    split(input, &command, &argument);
-	if (RtlCompareStrings(command,"Exit") == 0)
-		KillMe();
-	else
-	{
-		status = CreateProcess(command, 9, &commandProcess, argument);
-		if (status != 0) 
-		{
-			WriteFile(handle, "\n\rARCOS:\\>Unknown command. Try again.", 38); 
+				if (i > 0) 
+				{
+					i = i - 1;
+					input[i] = '\0';
+					WriteFile(handle, "\e[D \e[D", 9); 
+				}
+			} 
+			else if (*c == '\r')
+				break;
+			else 
+			{
+				input[i] = ch[0];
+				WriteFile(handle, c, 1);  
+				i++;
+			}
+			if (i > 99)
+				i = 0;
 		}
-		for (n = 0; n < i; n++)
-			input[n] = '\0';
-		ch[0] = '\0';
-		WriteFile(handle, "\n\r", 1); 
+		split(input, &command, &argument);
+		if (RtlCompareStrings(command,"Exit") == 0)
+			KillMe();
+		else
+		{
+			status = CreateProcess(command, 9, &commandProcess, argument);
+			if (status != 0) 
+			{
+				WriteFile(handle, "\n\rARCOS:\\>Unknown command. Try again.", 38); 
+			}
+			else
+			{
+				status = WaitForSingleObject(commandProcess);
+			}
+			for (n = 0; n < i; n++)
+				input[n] = '\0';
+			ch[0] = '\0';
+			WriteFile(handle, "\n\r", 1); 
+		}
 	}
 }
 
