@@ -50,7 +50,7 @@ VOID AppPhilosopher() {
 
 	KdPrint("RightFork: %c", RightForkNum);
 
-	KdPrint("WaiterPID: %c", WaiterPID);
+	KdPrint("WaiterPID: %d", WaiterPID);
 
 	// Make left fork message
 	LeftForkMess[0] = 'L';
