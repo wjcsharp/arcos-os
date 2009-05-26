@@ -6,4 +6,5 @@ SOURCES= \
 	scroller.c \
 	shell.c \
 	philosopher.c \
-        taskmanager.c
+        taskmanager.c \
+        kill.c
