@@ -32,7 +32,8 @@ APPLICATION PsAvailApps[] = {
     {"changeprio", AppChangePrio},
     {"testprocess3", AppPSTestProcess3},
     {"philosopher", AppPhilosopher},
-    {"waiter", AppWaiter}
+    {"waiter", AppWaiter},
+	{"shell",AppShell}
 
 };
 
