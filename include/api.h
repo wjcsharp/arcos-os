@@ -126,5 +126,10 @@ CopyArgs(
         PCHAR buffer,
         ULONG buffersize
         );
+		
+STATUS
+CloseHandle(
+    HANDLE Handle
+    );
 
 #endif
