@@ -104,10 +104,6 @@ KeSystemService(
                             MmVirtualFree((PVOID) Arg0, (PVOID) Arg1);
                             break;
 
-                    case 21:
-                            MmVirtualFreeAll((PVOID) Arg0);
-                            break;
-
                     case 22:
                             KeSetSyscallResult(KeCurrentProcess, MmGetUsedVirtMemSum());
                             break;

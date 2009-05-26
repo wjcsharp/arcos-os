@@ -128,12 +128,6 @@ Free:
 	syscall
 	jr      ra
 	
-.globl FreeAll
-FreeAll:
-	addi    v0, zero, 21
-	syscall
-	jr      ra
-	
 .globl GetUsedMemSum
 GetUsedMemSum:
 	addi    v0, zero, 22

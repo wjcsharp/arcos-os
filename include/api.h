@@ -114,12 +114,6 @@ Free(
         PVOID BlockBody
         );
 
-VOID
-FreeAll(
-        PPROCESS BlockOwner,
-        PVOID BlockBody
-        );
-
 ULONG
 GetUsedMemSum();
 

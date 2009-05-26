@@ -22,16 +22,15 @@ VOID AppPhilosopher() {
 	PVOID NewMess;
 
 	// Get args from waiter process
-	PCHAR WaiterArgs; //= KeCurrentProcess->Args;
+	CHAR WaiterArgs[30]; //= KeCurrentProcess->Args;
+
+	CopyArgs(WaiterArgs, 30);
 
 	// Make separate ULONGs from the WaiterArgs string
 	//
-	LeftForkNum = (ULONG)WaiterArgs;
-	WaiterArgs++;
-	WaiterArgs++;
-	RightForkNum = (ULONG)WaiterArgs;
-	WaiterArgs++;
-	WaiterArgs++;
+	LeftForkNum = WaiterArgs[0];
+	RightForkNum = WaiterArgs[2];
+
 
 	WaiterPID = RtlAtoUL(WaiterArgs);
 
