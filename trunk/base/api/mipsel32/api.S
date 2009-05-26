@@ -145,6 +145,12 @@ CopyArgs:
     addi    v0, zero, 25
     syscall
     jr      ra
+	
+.globl CloseHandle
+CloseHandle:
+    addi    v0, zero, 26
+    syscall
+    jr      ra
 
     # Put your own syscalls here. Just change the name and increment the 0.
 
