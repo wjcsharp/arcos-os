@@ -218,14 +218,14 @@ IoReadSerial(
         // KdPrint("serial empty queue");
         waitingQueue->first = waitingQueue->last = newNode;
         ObReferenceObject(KeCurrentProcess, NULL);
-        KeStopSchedulingProcess(KeCurrentProcess);
+        KeBlockProcess();
     } else {
         ASSERT(waitingQueue->last);
         // KdPrint("serial non empty queue");
         waitingQueue->last->next = newNode;
         waitingQueue->last = newNode;
         ObReferenceObject(KeCurrentProcess, NULL);
-        KeStopSchedulingProcess(KeCurrentProcess);
+        KeBlockProcess();
     }
 }
 
@@ -254,25 +254,21 @@ IoInterruptHandler(CHAR c) {
     AddCharToBuffer(c);
     // KdPrint("inIoInterruptH");
 
+    // Check if someone waiting for read (keyboard).
     if (waitingQueue->first) {
-        //    KdPrint("inIoInterruptH1");
+        // Write first char from buffer to waiting process buffer.
         *(waitingQueue->first->pbuffer) = GetFirstCharFromBuffer();
-        //   KdPrint("inIoInterruptH2");
+        
         tempNode = waitingQueue->first;
-        //  KdPrint("inIoInterruptH3");
         waitingQueue->first = waitingQueue->first->next;
-        // KdPrint("before kestartsched");
-        KeStartSchedulingProcess(tempNode->pprocess);
+        ASSERT(tempNode->pprocess);
+        KeResumeProcess(tempNode->pprocess);
         ObDereferenceObject(tempNode->pprocess);
-        //KdPrint("after kestartsched");
-        //KdPrint("IOInterrupt %x", tempNode);
         MmFree(tempNode);
-        // KdPrint("after MmFree iointerrupt");
     }
 }
 
 // Device is ready for ouput - write the next char on console.
-
 VOID
 IoTransmitterInterruptHandler() {
     PIO_BUFFER_NODE tempNode; // Move this?

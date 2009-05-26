@@ -87,7 +87,7 @@ void AppShell()
 				input[n] = '\0';
 			ch[0] = '\0';
 			WriteFile(handle, "\n\r", 1); 
-			CloseHandle(handle);
+			//CloseHandle(handle);
 		}
 	}
 }
