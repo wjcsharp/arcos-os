@@ -106,17 +106,29 @@ MessSendMessage(
                 // Fix result and resume process.
                 KeSetSyscallResult(pprocess, (ULONG) message);
                 KeResumeProcess(pprocess);
-                // Deleting node from processQueue, this one for nodes in the middle (works for first too).
-                if(iterator->next->next) iteratorPrev->next = iterator->next->next;
-                // Is this the first node?
-                if(iterator == processQueue->first) processQueue->first = processQueue->first->next;
-                // Or last? (It's both if there's only one node in queue.)
-                else if(iterator == processQueue->last) processQueue->last = iteratorPrev;
-                // Free node memory.
-                MmFree(iterator);
+                // Is process first in queue?
+                if(processQueue->first == iterator) {
+                    tempIterator = processQueue->first;
+                    processQueue->first = processQueue->first->next;
+                    MmFree(iterator);
+                    break;
+                    KdPrint("SendMessage: This should NOT be written! 1");
+                }
+                // Is process last in queue?
+                else if(processQueue->last == iterator){
+                    processQueue->last = iteratorPrev;
+                    MmFree(iterator);
+                    break;
+                    KdPrint("SendMessage: This should NOT be written! 2");
+                  }
+                // Else in middle... :(
+                else {
+                    iteratorPrev->next = iterator->next;
+                    MmFree(iterator);
+                    break;
+                    KdPrint("SendMessage: This should NOT be written! 3");
+                }
             }
-            iteratorPrev = iterator;
-            iterator = iterator->next;
             iteratorPrev = iterator;
             iterator = iterator->next;
         }
