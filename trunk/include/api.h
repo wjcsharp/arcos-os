@@ -18,6 +18,12 @@ Sleep(ULONG Milliseconds);
 ULONG
 GetProcessId();
 
+STATUS
+GetPid(
+        HANDLE Handle,
+        PULONG PPid
+        );
+
 ULONG
 GetProcessPriority();
 

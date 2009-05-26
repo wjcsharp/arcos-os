@@ -116,10 +116,14 @@ KeSystemService(
             KeSetSyscallResult(KeCurrentProcess, PsCopyArgs((PCHAR) Arg0, Arg1));
             break;
 			
-		 case 26:
+	case 26:
             KeSetSyscallResult(KeCurrentProcess, ObCloseHandle((HANDLE) Arg0));
             break;
 
+	case 27:
+            KeSetSyscallResult(KeCurrentProcess, (ULONG) PsGetPid((HANDLE) Arg0, (PULONG) Arg1));
+            break;
+            
         default:
             // probably a bugcheck is overreacting but what the hell
             KeBugCheck("Bad syscall. I think I will just die now.");
