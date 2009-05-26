@@ -102,14 +102,13 @@ AppKill() {
     CHAR Args[25];
     //Get function args
     argLength = CopyArgs(Args, 25);
-    //KdPrint("%s:::%d", Args, argLength);
+    KdPrint(":::%s:::%d", Args, argLength);
     if (argLength == 0) {
         KdPrint("Kill needs an argument e.g. 'kill 5'"); //BUGBUGBUG
         KillMe();
     }
 
-
-    PID = RtlAtoUL(KeCurrentProcess->Args);
+    PID = RtlAtoUL(Args);
 
     status = KillByPID(PID, 1); //ExitStatus 1 == murdered
     if (0 == status)
@@ -120,58 +119,9 @@ AppKill() {
     KillMe();
 }
 
-ULONG min(ULONG A, ULONG B) {
-    if (A < B)
-        return A;
-    return B;
-}
 
-#define TASKM_BUFFER_SIZE 12
 
-VOID
-AppTaskManager() {
-    //PPROCESS_INFO pinfo;
-    ULONG numprocess, i, j, cputmp, tend;
-    CHAR strbuff[250];
-    HANDLE tmout;
-    PCHAR timend[] = {"ms", "s"};
-    PROCESS_INFO pinfo[TASKM_BUFFER_SIZE];
 
-    tmout = CreateFile('s');
-
-    for (j = 0; j < 5; j++) {
-        //KdPrint("GetProcessInfo BEGIN");
-        GetProcessInfo(pinfo, TASKM_BUFFER_SIZE, &numprocess);
-        //KdPrint("GetProcessInfo END");
-        WriteString(tmout, "\n\r---------TASKMANAGER---------\n\r");
-        //KdPrint("---taskm DONE");
-        //Sleep(1000);
-        for (i = 0; i < (min(numprocess, TASKM_BUFFER_SIZE)); i++) {
-            if (!pinfo[i].RunningProgram)
-                pinfo[i].RunningProgram = "Unnamed";
-        }
-        for (i = 0; i < (min(numprocess, TASKM_BUFFER_SIZE)); i++) {
-            //Check how big cputime is
-            cputmp = pinfo[i].CPUTime;
-            if (cputmp < 10000)
-                tend = 0;
-            else {
-                cputmp = cputmp / 1000;
-                tend = 1;
-            }
-            RtlFormatString(strbuff, 250, "%s PID: %d, STATE:%d CPU TIME: %d %s\n\r", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].State, cputmp, timend[tend]);
-            //KdPrint("Before WriteFile");
-            WriteString(tmout, strbuff);
-            //  Sleep(1000);
-        }
-        Sleep(5000);
-    }
-    //KdPrint("Before tmgoodbye");
-    WriteString(tmout, "--------Task Manager says godbye--------\n\r");
-    ObCloseHandle(tmout);
-    MmFree(pinfo);
-    KillMe();
-}
 
 VOID
 AppPSTestProcess3() {
@@ -454,7 +404,7 @@ PsKillProcess(
         ULONG ExitStatus
         ) {
     STATUS status;
-    KdPrint("ps Killing:%d", PProcess->PID); //BUGBUGBUG
+    //KdPrint("ps Killing:%d", PProcess->PID); //BUGBUGBUG
     status = ObReferenceObject(PProcess, processType);
     if (status != 0)
         return status;
