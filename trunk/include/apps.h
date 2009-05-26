@@ -35,4 +35,10 @@ AppChangePrio();
 VOID
 AppShell();
 
+VOID
+AppRing();
+
+VOID
+AppRingNode();
+
 #endif

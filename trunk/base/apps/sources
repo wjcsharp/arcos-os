@@ -9,4 +9,5 @@ SOURCES= \
         taskmanager.c \
         changeprio.c \
         kill.c \
+	ring.c \
         waiter.c
