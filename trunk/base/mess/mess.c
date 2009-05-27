@@ -124,7 +124,7 @@ MessSendMessage(
 
     ASSERT(buffer); // Allowing sending message without buffer?
 
-    KdPrint("MESS: SendMessage");
+    //KdPrint("MESS: SendMessage");
 
     message = (PMESSAGE) MmAlloc(sizeof (MESSAGE) + bufferSize);
     if (message == NULL) // Check out of memory.
@@ -222,7 +222,7 @@ MessReceiveFirst(
         ) {
     PMESSAGE newMessage;
 
-    KdPrint("MESS: ReceiveFirst");
+    //KdPrint("MESS: ReceiveFirst");
 
     if (KeCurrentProcess->MessageQueue != NULL) // Message queue not empty - check it.
     {

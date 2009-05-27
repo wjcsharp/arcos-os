@@ -375,14 +375,17 @@ PsCopyArgs(
 
     args = KeCurrentProcess->Args;
 
-    if (args == NULL)
+    if (args == NULL){
+        Buffer[count] = '\0';
         return 0;
+    }
+        
 
     while ((c = args[count]) && (Buffersize > count + 1)) {
         Buffer[count] = c;
         count++;
     }
-    Buffer[count] = 0;
+    Buffer[count] = '\0';
     return count;
 }
 

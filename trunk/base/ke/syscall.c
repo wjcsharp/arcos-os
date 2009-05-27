@@ -92,11 +92,11 @@ KeSystemService(
             KeSetSyscallResult(KeCurrentProcess, PsGetProcessesInfo((PPROCESS_INFO) Arg0, Arg1, (PULONG) Arg2));
             break;
 
-            case 18:
-              KeSetSyscallResult(KeCurrentProcess, PsSupervise(Arg0, Arg1));
+        case 18:
+            KeSetSyscallResult(KeCurrentProcess, PsSupervise(Arg0, Arg1));
             break;
             /*
-		case 19:
+                case 19:
                             KeSetSyscallResult(KeCurrentProcess, (ULONG)MmVirtualAlloc(KeCurrentProcess, Arg0));
                             break;
 
