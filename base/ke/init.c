@@ -12,6 +12,7 @@
 #include <api.h>
 #include <apps.h>
 
+/*
 VOID
 TestShell() {
     KdPrint("Shell PID is %d", GetProcessId());
@@ -21,7 +22,7 @@ TestShell() {
         //Sleep(0);
     //}
 }
-
+*/
 /*
 VOID
 TestProcess() {
@@ -110,7 +111,7 @@ KeInitialize(VOID) {
 
     //HANDLE handle = IoCreateFile('serial');
 
-    PsCreateProcess(TestShell, 31, &testShell, NULL);
+    CreateProcess("shell", 31, &testShell, NULL);
     ObCloseHandle(testShell);
     //PsCreateProcess(TestProcess, 30, &testProcess, NULL);
     //PsCreateProcess(TestProcess2, 5, &testProcess2, NULL);
