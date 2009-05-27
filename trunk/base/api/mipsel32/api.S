@@ -74,14 +74,8 @@ ReceiveFirst:
     syscall
     jr      ra
 
-.globl  ReceiveHighestPriority
-ReceiveHighestPriority:
-    addi    v0, zero, 12
-    syscall
-    jr      ra
-
-.globl  ReceiveByType
-ReceiveByType:
+.globl  ReceiveType
+ReceiveType:
     addi    v0, zero, 13
     syscall
     jr      ra

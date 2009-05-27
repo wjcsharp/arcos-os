@@ -76,6 +76,10 @@ KeSystemService(
             KeSetSyscallResult(KeCurrentProcess, (ULONG) MessReceiveFirst(Arg0));
             break;
 
+        case 13:
+            KeSetSyscallResult(KeCurrentProcess, (ULONG) MessReceiveType(Arg0, Arg1));
+            break;
+
         case 14:
             KeSetSyscallResult(KeCurrentProcess, MessGetMessageSize((PVOID) Arg0));
             break;

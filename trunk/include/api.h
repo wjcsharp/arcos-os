@@ -72,6 +72,12 @@ ReceiveFirst(
         ULONG timeout
         );
 
+PVOID
+ReceiveType(
+        ULONG timeout,
+        ULONG type
+        );
+
 ULONG
 GetMessageSize(
         PVOID mess

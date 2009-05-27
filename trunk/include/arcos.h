@@ -193,7 +193,8 @@ typedef struct _PROCESS {
 // them in mess.h.
 typedef struct _MESS_PROCESS_NODE {
 	PPROCESS            process;
-        ULONG               pid;
+        ULONG           pid;
+        ULONG           type;
 	struct _MESS_PROCESS_NODE  *next;
 } MESS_PROCESS_NODE, *PMESS_PROCESS_NODE;
 

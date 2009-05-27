@@ -13,8 +13,7 @@
 
 #include <arcos.h>
 
-// Define types for messages
-#define MESSAGE_TYPE_STRING	0
+
 
 // Note to anyone: MESS_PROCESS_NODE and MESS_PROCESS_QUEUE are defined
 // in arcos.h. 
@@ -41,7 +40,7 @@ MessReceiveHighestPriority(
 	);
 
 PVOID
-MessReceiveByType(
+MessReceiveType(
 	ULONG timeout,
 	ULONG type
 	);
