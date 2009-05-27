@@ -6,6 +6,9 @@
 //Arguments is passed via PCHAR Args in PROCESS as a string.
 
 VOID
+AppStartWaiter();
+
+VOID
 AppPhilosopher();
 
 VOID
@@ -20,7 +23,7 @@ AppTaskManager();
 VOID
 AppPSTestProcess3();
 
-VOID		// Should return status.
+VOID // Should return status.
 scrollerInit();
 
 VOID

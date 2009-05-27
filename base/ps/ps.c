@@ -33,9 +33,10 @@ APPLICATION PsAvailApps[] = {
     {"testprocess3", AppPSTestProcess3},
     {"philosopher", AppPhilosopher},
     {"waiter", AppWaiter},
-	{"shell",AppShell},
-        {"ring",AppRing},
-        {"ringnode",AppRingNode}
+    {"shell", AppShell},
+    {"ring", AppRing},
+    {"ringnode", AppRingNode},
+    {"startwaiter", AppStartWaiter}
 
 };
 
@@ -45,7 +46,6 @@ PIDInUse(ULONG PID);
 
 ULONG
 GetNewPID();
-
 
 VOID
 AppPSTestProcess3() {
@@ -375,11 +375,11 @@ PsCopyArgs(
 
     args = KeCurrentProcess->Args;
 
-    if (args == NULL){
+    if (args == NULL) {
         Buffer[count] = '\0';
         return 0;
     }
-        
+
 
     while ((c = args[count]) && (Buffersize > count + 1)) {
         Buffer[count] = c;
