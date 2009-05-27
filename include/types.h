@@ -45,4 +45,9 @@ typedef struct _STRING {
     USHORT Length;
 } STRING, *PSTRING;
 
+// Define types for messages
+#define MESSAGE_TYPE_FIRST  0       // For internal use only.
+#define MESSAGE_TYPE_STRING	1
+#define MESSAGE_TYPE_ULONG  2
+
 #endif

@@ -31,12 +31,12 @@ LengthOfQueue(PMESS_PROCESS_NODE node){
 }
 
 STATUS
-AddProcessToQueue() { // Eventually remove timout
+AddProcessToQueue(ULONG type) {
 
     PMESS_PROCESS_NODE newNode;
 
     // CHECK! DONT ADD TO QUEUE IF ALREADY IN IT!!!
-        //KdPrint("length = %d", LengthOfQueue(processQueue->first));
+    //KdPrint("length = %d", LengthOfQueue(processQueue->first));
 
     // Init node.
     newNode = MmAlloc(sizeof (MESS_PROCESS_NODE));
@@ -44,6 +44,7 @@ AddProcessToQueue() { // Eventually remove timout
     newNode->process = KeCurrentProcess;
     newNode->next = NULL;
     newNode->pid = KeCurrentProcess->PID;
+    newNode->type = type;
     //KdPrint("Adding new node to processQueue. pid = %d", newNode->pid);
     if (!processQueue->first && !processQueue->last) { // No nodes in queue.
         processQueue->first = processQueue->last = newNode;
@@ -157,39 +158,20 @@ MessSendMessage(
         if (iterator->pid == receiverPid && iterator->process->State != blocked) {
             // If we arrived here, things are a bit fucked up. The
             // process is in the queue but not blocked.
-            // Remove it and break.
+            // Remove it.
             //KdPrint("should not happen");
             RemoveProcessFromQueue(iterator, iteratorPrev);
-            break;
-        } else if (iterator->pid == receiverPid && iterator->process->State == blocked) { // BUGBUG!!!
+        } else if (iterator->pid == receiverPid && iterator->process->State == blocked) {
             //KdPrint("Message found!");
             // Fix result and resume process.
-            KeSetSyscallResult(pprocess, (ULONG) message);
-            if(!pprocess->NextPCB) KeResumeProcess(pprocess);       // EXTREMELY STUPID FIX.
-            RemoveProcessFromQueue(iterator,iteratorPrev);
-            /*
-            // Delete node from processQueue. Is process first in queue?
-            // FIX: Koden under samma som i RemoveProcessFromQueue.
-            if (processQueue->first == iterator) {
-                processQueue->first = processQueue->first->next;
-                // Is this the only node?
-                if (processQueue->last == iterator) processQueue->last = NULL; // Should work.
-                MmFree(iterator);
-                break;
-            }                // Is process last in queue?
-            else if (processQueue->last == iterator) {
-                processQueue->last = iteratorPrev;
-                MmFree(iterator);
-                break;
-            }                // Else in middle... :(
-            else {
-                iteratorPrev->next = iterator->next;
-                MmFree(iterator);
-                break;
+            // Is the process receiving first or is process waiting for same type as the new message?
+            if(iterator->type == MESSAGE_TYPE_FIRST || iterator->type == message->type) {
+                KeSetSyscallResult(pprocess, (ULONG) message);
+                KeResumeProcess(pprocess);
+                RemoveProcessFromQueue(iterator,iteratorPrev);
             }
-            */
+            // If not, the type of message is not what the process is waiting for. Don't do anything.
         }
-
         iteratorPrev = iterator;
         iterator = iterator->next;
     }
@@ -232,12 +214,58 @@ MessReceiveFirst(
         return newMessage; // Return pointer to new message. Should be copied by the process, I guess, and then deleted.
     } else // No message in message queue - wait a while/timeout and add it to queue.
     {
-        AddProcessToQueue();
+        AddProcessToQueue(MESSAGE_TYPE_FIRST);
         KeSuspendProcess(timeout, ResumeMethod);
         //KdPrint("Process stopped");
     }
     return NULL;
 }
+
+PVOID
+MessReceiveType(
+        ULONG timeout,
+        ULONG type
+        ) 
+{
+
+    PMESSAGE newMessage;
+    PMESSAGE mq, mqPrev;
+
+    if (KeCurrentProcess->MessageQueue != NULL) // Message queue not empty - check it.
+    {
+        // Is it the first message?
+        if(KeCurrentProcess->MessageQueue->type == type){
+            newMessage = KeCurrentProcess->MessageQueue;
+            newMessage->next = NULL;
+            KeCurrentProcess->MessageQueue = KeCurrentProcess->MessageQueue->next;
+            return newMessage;
+        }
+        // Else go through message queue.
+        mq = mqPrev = KeCurrentProcess->MessageQueue;
+        while(mq){
+            // This is the message to get.
+            if(mq->type == type) {
+                newMessage = mq;
+                newMessage->next = NULL;
+                mqPrev->next = mq->next;
+                return newMessage;
+            }
+            mqPrev = mq;
+            mq = mq->next;
+        }
+        // If come here, the right type of message is not in queue. Add to waiting queue and suspend.
+        AddProcessToQueue(type);
+        KeSuspendProcess(timeout, ResumeMethod);
+    }
+    // No message in message queue - wait a while/timeout and add it to queue.
+    else
+    {
+        AddProcessToQueue(type);
+        KeSuspendProcess(timeout, ResumeMethod);
+    }
+    return NULL;
+}
+
 
 /*
 
