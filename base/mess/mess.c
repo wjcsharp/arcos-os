@@ -222,7 +222,7 @@ MessReceiveFirst(
                 //if(iterator->pid == KeCurrentProcess->PID)
             }
                 AddProcessToQueue();
-                KeSuspendProcess(timeout);
+                KeSuspendProcess(timeout, NULL);
                 //KdPrint("Process stopped");
         }
         return NULL;
