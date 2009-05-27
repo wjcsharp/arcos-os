@@ -36,7 +36,7 @@ AddProcessToQueue() { // Eventually remove timout
     PMESS_PROCESS_NODE newNode;
 
     // CHECK! DONT ADD TO QUEUE IF ALREADY IN IT!!!
-        KdPrint("length = %d", LengthOfQueue(processQueue->first));
+        //KdPrint("length = %d", LengthOfQueue(processQueue->first));
 
     // Init node.
     newNode = MmAlloc(sizeof (MESS_PROCESS_NODE));
@@ -44,15 +44,15 @@ AddProcessToQueue() { // Eventually remove timout
     newNode->process = KeCurrentProcess;
     newNode->next = NULL;
     newNode->pid = KeCurrentProcess->PID;
-    KdPrint("Adding new node to processQueue. pid = %d", newNode->pid);
+    //KdPrint("Adding new node to processQueue. pid = %d", newNode->pid);
     if (!processQueue->first && !processQueue->last) { // No nodes in queue.
         processQueue->first = processQueue->last = newNode;
     } else { // Some node in queue.
-        KdPrint("add");
+        //KdPrint("add");
         processQueue->last->next = newNode; // last should NOT be null if first isn't.
-        KdPrint("add2");
+        //KdPrint("add2");
         processQueue->last = newNode;
-        KdPrint("add3");
+        //KdPrint("add3");
     }
 
     return STATUS_SUCCESS;
@@ -101,7 +101,7 @@ ResumeMethod(PPROCESS process) {
     while (iterator) {
         if (iterator->pid == process->PID) {
             RemoveProcessFromQueue(iterator,iteratorPrev);
-            KdPrint("deleted from queue");
+            //KdPrint("deleted from queue");
         }
         iteratorPrev = iterator;
         iterator = iterator->next;
@@ -145,7 +145,7 @@ MessSendMessage(
     status = PsReferenceProcess(receiverPid, &pprocess);
     // Check if status exists.
     if (status != 0) {
-        KdPrint("No such process in SendMessage - check pid!");
+        //KdPrint("No such process in SendMessage - check pid!");
         return status;
     }
     // Check if the process is waiting, going through processQueue.
@@ -158,11 +158,11 @@ MessSendMessage(
             // If we arrived here, things are a bit fucked up. The
             // process is in the queue but not blocked.
             // Remove it and break.
-            KdPrint("should not happen");
+            //KdPrint("should not happen");
             RemoveProcessFromQueue(iterator, iteratorPrev);
             break;
         } else if (iterator->pid == receiverPid && iterator->process->State == blocked) { // I should think about this one more time...
-            KdPrint("Message found!");
+            //KdPrint("Message found!");
             // Fix result and resume process.
             KeSetSyscallResult(pprocess, (ULONG) message);
             KeResumeProcess(pprocess);
@@ -203,11 +203,11 @@ MessSendMessage(
                 // Break hack
                 break;
             }
-            KdPrint("mq");
+            //KdPrint("mq");
             mq = mq->next;
         }
     }
-    //ObDereferenceObject(pprocess);
+    ObDereferenceObject(pprocess);
 
     return STATUS_SUCCESS;
 }
