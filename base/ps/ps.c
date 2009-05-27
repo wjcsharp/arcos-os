@@ -104,6 +104,7 @@ PsInitialize() {
 
     //Set quantum
     process->Quantum = 1;
+    process->RunningProgram = "IDLE Process";
 
     //Initialize handletable
     ObInitProcess(NULL, process);
