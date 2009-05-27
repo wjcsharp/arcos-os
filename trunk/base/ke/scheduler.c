@@ -287,7 +287,7 @@ KepRemoveFromProcessList(
                 //
                 // make sure is't completely unlinked :)
                 //
-                currentProcess->NextPCB = NULL;
+                Process->NextPCB = NULL;
                 
                 return TRUE;
             }
