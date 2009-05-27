@@ -31,7 +31,7 @@ AppWaiter() {
 
     for (i = 0; i < 5; i++) {
         RtlFormatString(args, 25, "%d %d %d", i, (i + 1) % 5, GetProcessId());
-        KdPrint(args);
+        //KdPrint(args);
         status = CreateProcess("philosopher", 5, &philos, args);
         if (status == 0)
             CloseHandle(philos);
@@ -50,19 +50,20 @@ AppWaiter() {
         finalMess = tmpmess->buffer;
         //L/R/D fork:finalMess[0], forknr:finalMess[1]-'0' sendPID:
         KdPrint("MessType:%cNUM:%dPID:%d", finalMess[0], finalMess[1] - '0', tmpmess->senderPid);
-        Sleep(3000);
+
         messType = finalMess[0];
         forkNr = (ULONG) (finalMess[1] - '0');
         philPid = tmpmess->senderPid;
 
         //IF a drop message
         if (messType == 'D') {
+            KdPrint("InD");
             forksInUse--;
             freeForks[forkNr] = TRUE;
 
             for (j = 0; j < 4; j++) {
                 if ((hungryr[j][0] == (ULONG) (forkNr)) && (hungryr[j][1] != 0)) {
-                    SendMessage(hungryr[j][1], 0, "fork", 4);
+                    SendMessage(hungryr[j][1], 0, "fork", 5);
                     forksInUse++;
                     freeForks[forkNr] = FALSE;
                     hungryr[j][0] = 0;
@@ -73,7 +74,7 @@ AppWaiter() {
             if (forksInUse < 4) {
                 for (j = 0; j < 5; j++) {
                     if ((hungryl[j][0] == (ULONG) (forkNr)) && (hungryl[j][1] != 0)) {
-                        SendMessage(hungryr[j][1], 0, "fork", 4);
+                        SendMessage(hungryr[j][1], 0, "fork", 5);
                         forksInUse++;
                         freeForks[forkNr] = FALSE;
                         hungryl[j][0] = 0;
@@ -90,26 +91,28 @@ AppWaiter() {
                 forksInUse++;
                 freeForks[forkNr] = FALSE;
                 KdPrint("sending R to:%d", philPid);
-                SendMessage(philPid, 0, "fork", 4);
-                //KdPrint("sending R END");
+                SendMessage(philPid, 0, "fork", 5);
+                KdPrint("sending R END");
             } else {
                 for (j = 0; j < 4; j++) {
-                    if (hungryr[j][1] == 0)
+                    if (hungryr[j][1] == 0) {
                         hungryr[j][0] = forkNr;
-                    hungryr[j][1] = philPid;
-                    break;
+                        hungryr[j][1] = philPid;
+                        break;
+                    }
                 }
-
             }
-
         }
 
+
         if (messType == 'L') {
-             KdPrint("in L");
+            KdPrint("in L");
             if ((forksInUse < 4) && freeForks[forkNr]) {
                 forksInUse++;
                 freeForks[forkNr] = FALSE;
-                SendMessage(philPid, 0, "fork", 4);
+                KdPrint("sending L to:%d", philPid);
+                SendMessage(philPid, 0, "fork", 5);
+                KdPrint("after sendL");
             } else {
                 for (j = 0; j < 5; j++) {
                     if (hungryl[j][1] == 0) {
@@ -117,15 +120,11 @@ AppWaiter() {
                         hungryl[j][1] = philPid;
                         break;
                     }
-
                 }
-
             }
-
         }
-
         DeleteMessage(message);
-        //KdPrint("Waiter killing itself");
     }
+    KdPrint("waiter kills itself");
     KillMe();
 }

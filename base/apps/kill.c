@@ -10,11 +10,16 @@ AppKill() {
     STATUS status;
     CHAR Args[25];
     HANDLE outp;
+    Sleep(5000);
+    outp = CreateFile('s');
     //Get function args
     argLength = CopyArgs(Args, 25);
     //KdPrint(":::%s:::%d", Args, argLength);
     if (argLength == 0) {
-        KdPrint("Kill needs an argument e.g. 'kill 5'"); //BUGBUGBUG
+        WriteString(outp, "\n\rKill needs an argument e.g. 'kill 5'\r\n");
+        //KdPrint("Kill needs an argument e.g. 'kill 5'"); //BUGBUGBUG
+        Sleep(5000);
+        CloseHandle(outp);
         KillMe();
     }
 
@@ -25,6 +30,6 @@ AppKill() {
         KdPrint("Killed %d", PID); //BUGBUGBUG
     else
         KdPrint("Failed to kill %d", PID); //BUGBUGBUG
-
+    CloseHandle(outp);
     KillMe();
 }
