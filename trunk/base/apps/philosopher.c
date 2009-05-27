@@ -81,7 +81,7 @@ AppPhilosopher() {
         NewMess = NULL;
         while (!NewMess) {
             SendMessage(WaiterPID, 0, LeftForkMess, 3);
-            NewMess = ReceiveFirst(3000);
+            NewMess = ReceiveFirst(4000);
         }
         DeleteMessage(NewMess);
 
@@ -94,7 +94,7 @@ AppPhilosopher() {
         NewMess = NULL;
         while (!NewMess) {
             SendMessage(WaiterPID, 0, RightForkMess, 3);
-            NewMess = ReceiveFirst(3000);
+            NewMess = ReceiveFirst(4000);
         }
         DeleteMessage(NewMess);
 

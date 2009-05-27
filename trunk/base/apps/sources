@@ -10,4 +10,5 @@ SOURCES= \
         changeprio.c \
         kill.c \
 	ring.c \
-        waiter.c
+        waiter.c \
+        startwaiter.c  
