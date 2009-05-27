@@ -97,11 +97,11 @@ KeSystemService(
             break;
             /*
 		case 19:
-                            KeSetSyscallResult(KeCurrentProcess, (ULONG)MmVirtualAlloc(Arg0));
+                            KeSetSyscallResult(KeCurrentProcess, (ULONG)MmVirtualAlloc(KeCurrentProcess, Arg0));
                             break;
 
                     case 20:
-                            MmVirtualFree((PVOID) Arg0);
+                            MmVirtualFree(KeCurrentProcess, (PVOID) Arg0);
                             break;
 
                     case 22:

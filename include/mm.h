@@ -38,11 +38,11 @@ MmGetUsedVirtMemSum();
 
 // Returns the address to the memory allocated
 PVOID
-MmVirtualAlloc(ULONG Size);
+MmVirtualAlloc(PPROCESS BlockOwner, ULONG Size);
 
 // Free the memory of a virtual block
 VOID
-MmVirtualFree(PVOID BlockBody);
+MmVirtualFree(PPROCESS BlockOwner, PVOID BlockBody);
 
 // Free all blocks allocated by the BlockOwner
 VOID
