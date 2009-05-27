@@ -27,8 +27,7 @@
                 handle = CreateFile('s');
 		
                 message = ReceiveFirst(5000);
-                if(message) KdPrint("Baby found message! myPid = %d, received pid = %d", GetProcessId(),*(PULONG)(message->buffer));
-                else { KdPrint("BIP BIP BIP! Babynode not finding pid message! Commiting suicide."); KillMe(); }
+                if(!message) KillMe();
 
                 receivedPID = *((PULONG)message->buffer);
                 DeleteMessage(message);
@@ -59,36 +58,32 @@
                 ULONG i, myPid;
                 HANDLE ring, handle;
                 STATUS status;
-		CHAR args[25];
-		ULONG nr = 3;       // 3 = default.
+                CHAR args[25];
+            	ULONG nr = 3;       // 3 = default.
 
-		// How many babyrings? Check args (only two digits).
+            	// How many babyrings? Check args (only one digit).
                 if(CopyArgs(args,25) != 0){
                     nr = args[0] - '0';
-                    if(args[1]) nr = nr + (args[1] - '0') * 10;     // What if second number is zero?
                 }
                 if(nr < 3) nr = 3;      // Must be atleast three, otherwise for-loops will crash.
                 
-                KdPrint("nr = %d", nr);
-		// Fix array to store babyring pids.
-		ULONG pids[nr];
+                // Fix array to store babyring pids.
+                ULONG pids[nr];
 
                 handle = CreateFile('s');
 
                 myPid = GetProcessId();
 
-		KdPrint("nr = %d",nr);  // Check check.
-
                 // Create all nodes.
                 for(i = 0;i < nr;i++)
                 {
                                 status = CreateProcess("ringnode",10,&ring,NULL);
-                                if(status != 0) KdPrint("Problem when creating process");
-                                GetPid(ring,&pids[i]);
-				KdPrint("pid from ring: %d", pids[i]);
+                                if(status != 0);
+                                else {
+                                    GetPid(ring,&pids[i]);
+                                    CloseHandle(ring);
+                                }
                 }
-                KdPrint("pids = ");
-                for(i = 0; i < nr; i++) KdPrint("%d", pids[i]);
                 // Sending target pid message. Last node is special case - its pid should be the first node.
                 for(i = 0;i < nr-1;i++) SendMessage(pids[i],0,&pids[i+1],4);
                 SendMessage(pids[nr-1],0,&pids[0],4);
@@ -98,7 +93,6 @@
 
                 // Send start message.
                 SendMessage(pids[0],0,&pids[0],4);      // Message type and content doesn't matter here.
-                //while(1);
-                KdPrint("RING_MASTER: All messages sent, killing myself.");
+                CloseHandle(handle);
                 KillMe();
 }
