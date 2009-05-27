@@ -8,16 +8,17 @@ VOID
 AppWaiter() {
     HANDLE philos;
     BOOL freeForks[5];
-    ULONG forksInUse, forkNr, messType, philPid, i, j, status;
+    ULONG forksInUse, forkNr, messType, philPid, i, status;
     CHAR args[25], myMessage[50]; //BUGBUGBUG but it works
     PMESSAGE message, tmpmess;
     PCHAR finalMess;
-    ULONG hungryl[5][2], hungryr[4][2];
+    //ULONG hungryl[5][2], hungryr[4][2];
 
     forksInUse = 0;
     for (i = 0; i < 5; i++) {
         freeForks[i] = TRUE;
     }
+   /*
     //init hungry pids to 0
     for (i = 0; i < 5; i++) {
         hungryl[i][1] = 0;
@@ -25,7 +26,7 @@ AppWaiter() {
     for (i = 0; i < 4; i++) {
         hungryr[i][1] = 0;
     }
-
+*/
 
     message = NULL;
 
@@ -37,7 +38,7 @@ AppWaiter() {
             CloseHandle(philos);
     }
 
-    for (i = 0; i < 500; i++) {
+    for (i = 0; i < 300; i++) {
         //KdPrint("before receive");
         while (!(message = ReceiveFirst(5000)));
         //Store message locally
@@ -49,7 +50,7 @@ AppWaiter() {
         tmpmess = (PMESSAGE) message;
         finalMess = tmpmess->buffer;
         //L/R/D fork:finalMess[0], forknr:finalMess[1]-'0' sendPID:
-        KdPrint("MessType:%cNUM:%dPID:%d", finalMess[0], finalMess[1] - '0', tmpmess->senderPid);
+        //KdPrint("MessType:%cNUM:%dPID:%d", finalMess[0], finalMess[1] - '0', tmpmess->senderPid);
 
         messType = finalMess[0];
         forkNr = (ULONG) (finalMess[1] - '0');
@@ -57,10 +58,10 @@ AppWaiter() {
 
         //IF a drop message
         if (messType == 'D') {
-            KdPrint("InD");
+            //KdPrint("InD:%d", forkNr);
             forksInUse--;
             freeForks[forkNr] = TRUE;
-
+/*
             for (j = 0; j < 4; j++) {
                 if ((hungryr[j][0] == (ULONG) (forkNr)) && (hungryr[j][1] != 0)) {
                     SendMessage(hungryr[j][1], 0, "fork", 5);
@@ -71,6 +72,7 @@ AppWaiter() {
                     break;
                 }
             }
+
             if (forksInUse < 4) {
                 for (j = 0; j < 5; j++) {
                     if ((hungryl[j][0] == (ULONG) (forkNr)) && (hungryl[j][1] != 0)) {
@@ -82,18 +84,18 @@ AppWaiter() {
                         break;
                     }
                 }
-            }
+            }*/
         }
 
         if (messType == 'R') {
-            KdPrint("in R");
+            //KdPrint("InR:%d", forkNr);
             if (freeForks[forkNr]) {
                 forksInUse++;
                 freeForks[forkNr] = FALSE;
-                KdPrint("sending R to:%d", philPid);
+             //   KdPrint("sending R to:%d", philPid);
                 SendMessage(philPid, 0, "fork", 5);
-                KdPrint("sending R END");
-            } else {
+             //   KdPrint("sending R END");
+            } /*else {
                 for (j = 0; j < 4; j++) {
                     if (hungryr[j][1] == 0) {
                         hungryr[j][0] = forkNr;
@@ -101,19 +103,19 @@ AppWaiter() {
                         break;
                     }
                 }
-            }
+            }*/
         }
 
 
         if (messType == 'L') {
-            KdPrint("in L");
+           // KdPrint("InL:%d", forkNr);
             if ((forksInUse < 4) && freeForks[forkNr]) {
                 forksInUse++;
                 freeForks[forkNr] = FALSE;
-                KdPrint("sending L to:%d", philPid);
+             //   KdPrint("sending L to:%d", philPid);
                 SendMessage(philPid, 0, "fork", 5);
-                KdPrint("after sendL");
-            } else {
+               // KdPrint("after sendL");
+            } /*else {
                 for (j = 0; j < 5; j++) {
                     if (hungryl[j][1] == 0) {
                         hungryl[j][0] = forkNr;
@@ -121,7 +123,7 @@ AppWaiter() {
                         break;
                     }
                 }
-            }
+            }*/
         }
         DeleteMessage(message);
     }

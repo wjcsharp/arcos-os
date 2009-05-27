@@ -21,12 +21,10 @@ AppPhilosopher() {
     HANDLE outp;
     PVOID NewMess;
     CHAR WaiterArgs[30]; //= KeCurrentProcess->Args;
-
+    CHAR outstring[80];
+    
     outp = CreateFile('s');
-
     // Get args from waiter process
-
-
     CopyArgs(WaiterArgs, 30);
 
     // Make separate ULONGs from the WaiterArgs string
@@ -61,9 +59,9 @@ AppPhilosopher() {
     LeftDropMess[2] = '\0';
 
     // Make left fork drop message
-    LeftDropMess[0] = 'D';
-    LeftDropMess[1] = RightForkNum;
-    LeftDropMess[2] = '\0';
+    RightDropMess[0] = 'D';
+    RightDropMess[1] = RightForkNum;
+    RightDropMess[2] = '\0';
 
 
     //KdPrint("LeftForkMess: %c%c", LeftForkMess[0], LeftForkMess[1]);
@@ -72,43 +70,56 @@ AppPhilosopher() {
 
 
         // Think
-        KdPrint("Philosopher[%c]: Thinking..", LeftForkNum);
+        RtlFormatString(outstring,80,"PID:%d THINKING\r\n", GetProcessId());
+        WriteString(outp, outstring);
+        //KdPrint("Philosopher[%c]: Thinking..", LeftForkNum);
         Sleep(2000);
 
 
         // Get first chopstick
-        SendMessage(WaiterPID, 0, LeftForkMess, 3);
+        //SendMessage(WaiterPID, 0, LeftForkMess, 3);
         NewMess = NULL;
         while (!NewMess) {
-            NewMess = ReceiveFirst(1000);
+            SendMessage(WaiterPID, 0, LeftForkMess, 3);
+            NewMess = ReceiveFirst(3000);
         }
         DeleteMessage(NewMess);
 
         //        KdPrint("Philosopher[%c]: I got the left fork!", LeftForkNum);
-        WriteString(outp, "Philosopher: I got the left fork!\r\n");
+        RtlFormatString(outstring,80,"PID:%d Got Left Fork\r\n", GetProcessId());
+        WriteString(outp, outstring);
         // Get second chopstick
-        SendMessage(WaiterPID, 0, RightForkMess, 3);
+
 
         NewMess = NULL;
         while (!NewMess) {
-            NewMess = ReceiveFirst(1000);
+            SendMessage(WaiterPID, 0, RightForkMess, 3);
+            NewMess = ReceiveFirst(3000);
         }
         DeleteMessage(NewMess);
 
         //KdPrint("Philosopher[%c]: I got the right fork!", LeftForkNum);
-        WriteString(outp, "Philosopher: I got the right fork!\r\n");
+        RtlFormatString(outstring,80,"PID:%d Got Right Fork EATING\r\n", GetProcessId());
+        WriteString(outp, outstring);
+
         // Eat
-        KdPrint("Philosopher[%c]: Now I'm eating..", LeftForkNum);
         Sleep(3000);
 
 
-        KdPrint("Philosopher[%c]: Dropping left fork (%c)", LeftForkNum, LeftForkNum);
+        //KdPrint("Philosopher[%c]: Dropping left fork (%c)", LeftForkNum, LeftForkNum);
         // Drop left chopstick
+
+        RtlFormatString(outstring,80,"PID:%d Dropping Left fork\r\n", GetProcessId());
+        WriteString(outp, outstring);
+        //KdPrint("LDM:%s", LeftDropMess);
         SendMessage(WaiterPID, 0, LeftDropMess, 3);
 
 
-        KdPrint("Philosopher[%c]: Dropping right fork (%c)", LeftForkNum, RightForkNum);
+        //KdPrint("Philosopher[%c]: Dropping right fork (%c)", LeftForkNum, RightForkNum);
         // Drop right chopstick
+        RtlFormatString(outstring,80,"PID:%d Dropping right fork\r\n", GetProcessId());
+        WriteString(outp, outstring);
+        //KdPrint("RDM%s", RightDropMess);
         SendMessage(WaiterPID, 0, RightDropMess, 3);
 
     }
