@@ -68,7 +68,7 @@ void AppShell()
 				i = 0;
 		}
 		split(input, &command, &argument);
-		if (RtlCompareStrings(command,"Exit") == 0)
+		if (RtlCompareStrings(command,"Exit") == 0 && i == 4)
 			KillMe();
 		else
 		{
@@ -86,7 +86,6 @@ void AppShell()
 				input[n] = '\0';
 			ch[0] = '\0';
 			WriteFile(handle, "\n\r", 1); 
-			
 		}
 	}
     CloseHandle(handle);
