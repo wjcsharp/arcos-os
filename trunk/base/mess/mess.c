@@ -22,12 +22,21 @@ MessInitialize() {
     return STATUS_SUCCESS;
 }
 
+ULONG
+LengthOfQueue(PMESS_PROCESS_NODE node){
+    if(node)
+        return 1 + LengthOfQueue(node->next);
+    else
+        return 0;
+}
+
 STATUS
 AddProcessToQueue() { // Eventually remove timout
 
     PMESS_PROCESS_NODE newNode;
 
     // CHECK! DONT ADD TO QUEUE IF ALREADY IN IT!!!
+        KdPrint("length = %d", LengthOfQueue(processQueue->first));
 
     // Init node.
     newNode = MmAlloc(sizeof (MESS_PROCESS_NODE));
@@ -56,7 +65,11 @@ STATUS
 RemoveProcessFromQueue(PMESS_PROCESS_NODE iterator, PMESS_PROCESS_NODE iteratorPrev) {
 
     // Is it the first method in queue?
-    if (processQueue->first == iterator) {
+    if (processQueue->first == iterator && processQueue->last == iterator){
+        processQueue->first = processQueue->last = NULL;
+        MmFree(iterator);
+    }
+    else if (processQueue->first == iterator) {
         processQueue->first = processQueue->first->next;
         // Is this the only node?
         if (processQueue->last == iterator) processQueue->last = NULL; // Should work.
@@ -86,10 +99,9 @@ ResumeMethod(PPROCESS process) {
 
     iterator = iteratorPrev = processQueue->first;
     while (iterator) {
-        if (iterator->pid == process->PID && iterator->process->State == blocked) {
-            RemoveProcessFromQueue(iterator, iteratorPrev);
+        if (iterator->pid == process->PID) {
+            RemoveProcessFromQueue(iterator,iteratorPrev);
             KdPrint("deleted from queue");
-            break;
         }
         iteratorPrev = iterator;
         iterator = iterator->next;
@@ -109,7 +121,6 @@ MessSendMessage(
     STATUS status;
     PMESS_PROCESS_NODE iterator = processQueue->first;
     PMESS_PROCESS_NODE iteratorPrev; // To fix deletion of node in processQueue.
-    PMESS_PROCESS_NODE tempIterator;
 
     ASSERT(buffer); // Allowing sending message without buffer?
 
