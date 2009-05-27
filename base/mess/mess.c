@@ -10,65 +10,62 @@
 PMESS_PROCESS_QUEUE processQueue;
 
 STATUS
-MessInitialize(){
+MessInitialize() {
 
-	// Init process queue.
-	processQueue = MmAlloc(sizeof(MESS_PROCESS_QUEUE));
-	if(!processQueue)
-		return STATUS_NO_MEMORY;
-	processQueue->first = NULL;
-	processQueue->last = NULL;
-        
-	return STATUS_SUCCESS;
-}
+    // Init process queue.
+    processQueue = MmAlloc(sizeof (MESS_PROCESS_QUEUE));
+    if (!processQueue)
+        return STATUS_NO_MEMORY;
+    processQueue->first = NULL;
+    processQueue->last = NULL;
 
-
-STATUS
-AddProcessToQueue(){           // Eventually remove timout
-        
-	PMESS_PROCESS_NODE newNode;
-
-        // CHECK! DONT ADD TO QUEUE IF ALREADY IN IT!!!
-
-	// Init node.
-	newNode = MmAlloc(sizeof(MESS_PROCESS_NODE));
-        if(!newNode) return STATUS_NO_MEMORY;
-        newNode->process = KeCurrentProcess;
-	newNode->next = NULL;
-        newNode->pid = KeCurrentProcess->PID;
-        KdPrint("Adding new node to processQueue. pid = %d", newNode->pid);
-	if(!processQueue->first && !processQueue->last){	// No nodes in queue.
-		processQueue->first = processQueue->last = newNode;		
-	}
-	else {							// Some node in queue.
-                KdPrint("add");
-                processQueue->last->next = newNode;
-		processQueue->last = newNode;
-	}
-	
-        return STATUS_SUCCESS;
-
+    return STATUS_SUCCESS;
 }
 
 STATUS
-RemoveProcessFromQueue(PMESS_PROCESS_NODE iterator, PMESS_PROCESS_NODE iteratorPrev){
+AddProcessToQueue() { // Eventually remove timout
 
-    PMESS_PROCESS_NODE tempIterator;
+    PMESS_PROCESS_NODE newNode;
 
-    iterator = iteratorPrev = processQueue->first;
-    if(processQueue->first == iterator) {
-        tempIterator = processQueue->first;
+    // CHECK! DONT ADD TO QUEUE IF ALREADY IN IT!!!
+
+    // Init node.
+    newNode = MmAlloc(sizeof (MESS_PROCESS_NODE));
+    if (!newNode) return STATUS_NO_MEMORY;
+    newNode->process = KeCurrentProcess;
+    newNode->next = NULL;
+    newNode->pid = KeCurrentProcess->PID;
+    KdPrint("Adding new node to processQueue. pid = %d", newNode->pid);
+    if (!processQueue->first && !processQueue->last) { // No nodes in queue.
+        processQueue->first = processQueue->last = newNode;
+    } else { // Some node in queue.
+        KdPrint("add");
+        processQueue->last->next = newNode; // last should NOT be null if first isn't.
+        KdPrint("add2");
+        processQueue->last = newNode;
+        KdPrint("add3");
+    }
+
+    return STATUS_SUCCESS;
+
+}
+
+// This function is a bit strange since the loop is supposed to be outside it.
+
+STATUS
+RemoveProcessFromQueue(PMESS_PROCESS_NODE iterator, PMESS_PROCESS_NODE iteratorPrev) {
+
+    // Is it the first method in queue?
+    if (processQueue->first == iterator) {
         processQueue->first = processQueue->first->next;
         // Is this the only node?
-        if(processQueue->last == iterator) processQueue->last = NULL;       // Should work.
+        if (processQueue->last == iterator) processQueue->last = NULL; // Should work.
         MmFree(iterator);
-    }
-    // Is process last in queue?
-    else if(processQueue->last == iterator){
+    }        // Is process last in queue?
+    else if (processQueue->last == iterator) {
         processQueue->last = iteratorPrev;
         MmFree(iterator);
-      }
-    // Else in middle... :(
+    }        // Else in middle... :(
     else {
         iteratorPrev->next = iterator->next;
         MmFree(iterator);
@@ -78,156 +75,154 @@ RemoveProcessFromQueue(PMESS_PROCESS_NODE iterator, PMESS_PROCESS_NODE iteratorP
     return STATUS_SUCCESS;
 }
 
-STATUS
-MessSendMessage(
-    ULONG receiverPid,
-    ULONG type,
-    PVOID buffer,
-    ULONG bufferSize		// Is bufferSize in bytes?
-    )
-{
-	PPROCESS pprocess;
-	PMESSAGE message ;
-        PMESSAGE mq;
-        STATUS status;
-        PMESS_PROCESS_NODE iterator = processQueue->first;
-        PMESS_PROCESS_NODE iteratorPrev;        // To fix deletion of node in processQueue.
-        PMESS_PROCESS_NODE tempIterator;
-        
-	ASSERT(buffer);		// Allowing sending message without buffer?
+// This method is used to delete processNode from processQueue when its done
+// waiting and got no message.
 
-	//KdPrint("MESS: SendMessage");
+VOID
+ResumeMethod(PPROCESS process) {
 
-	message = (PMESSAGE) MmAlloc(sizeof(MESSAGE) + bufferSize);
-	if(message == NULL)		// Check out of memory.
-		return STATUS_NO_MEMORY; 
+    PMESS_PROCESS_NODE iterator;
+    PMESS_PROCESS_NODE iteratorPrev;
 
-	// Init mess
-	message->senderPid      = KeCurrentProcess->PID;
-	message->receiverPid    = receiverPid;
-	message->priority       = 1;						// NOTE TO SELF: FIX THIS?
-	message->type           = type;
-	message->bufferSize     = bufferSize;
-        message->next           = NULL;
-	// Copy input to mess buffer.
-	RtlCopyMemory((PCHAR) message + sizeof(MESSAGE), buffer, bufferSize);
-	message->buffer = (PCHAR) message + sizeof(MESSAGE);
-
-        // Get receiver process to check its state and pid.
-       	status = PsReferenceProcess(receiverPid,&pprocess);	
-        // Check if status exists.
-        if(status != 0) {
-            KdPrint("No such process in SendMessage - check pid!");
-            return status;
+    iterator = iteratorPrev = processQueue->first;
+    while (iterator) {
+        if (iterator->pid == process->PID && iterator->process->State == blocked) {
+            RemoveProcessFromQueue(iterator, iteratorPrev);
+            KdPrint("deleted from queue");
+            break;
         }
-        // Check if the process is waiting, going through processQueue.
-        // If the process is in the queue but isn't blocked, it has stopped
-        // waiting and should be removed from the queue. The message should
-        // still be added to its message queue though.
-        iterator = iteratorPrev = processQueue->first;
-        while(iterator){
-            if(iterator->pid == receiverPid && iterator->process->State != blocked){
-                // If we arrived here, things are a bit fucked up. The
-                // process is in the queue but not blocked.
-                // Remove it and break.
-                RemoveProcessFromQueue(iterator, iteratorPrev);
-                break;
-            }
-            else if(iterator->pid == receiverPid && iterator->process->State == blocked) {   // I should think about this one more time...
-                KdPrint("Message found!");
-                // Fix result and resume process.
-                KeSetSyscallResult(pprocess, (ULONG) message);
-                KeResumeProcess(pprocess);
-                // Delete node from processQueue. Is process first in queue?
-                // FIX: Koden under samma som i RemoveProcessFromQueue.
-               if(processQueue->first == iterator) {
-                    tempIterator = processQueue->first;
-                    processQueue->first = processQueue->first->next;
-                    // Is this the only node?
-                    if(processQueue->last == iterator) processQueue->last = NULL;       // Should work.
-                    MmFree(iterator);
-                    break;
-                    KdPrint("SendMessage: This should NOT be written! 1");
-                }
-                // Is process last in queue?
-                else if(processQueue->last == iterator){
-                    processQueue->last = iteratorPrev;
-                    MmFree(iterator);
-                    break;
-                    KdPrint("SendMessage: This should NOT be written! 2");
-                  }
-                // Else in middle... :(
-                else {
-                    iteratorPrev->next = iterator->next;
-                    MmFree(iterator);
-                    break;
-                    KdPrint("SendMessage: This should NOT be written! 3");
-                }
-            }
-            iteratorPrev = iterator;
-            iterator = iterator->next;
-        }
-        
-
-	ASSERT(pprocess);
-
-        // Add message to process' message queue. 
-        mq = pprocess->MessageQueue;
-        if(mq == NULL) pprocess->MessageQueue = message;
-        else {// Add message last in queue.
-            while(mq) {
-                if(mq->next == NULL) {
-                    mq->next = message;
-                    // Break hack
-                    break;
-                }
-                KdPrint("mq");
-                mq = mq->next;
-            }
-        }
-        //ObDereferenceObject(pprocess);
-
-	return STATUS_SUCCESS;
+        iteratorPrev = iterator;
+        iterator = iterator->next;
+    }
 }
 
+STATUS
+MessSendMessage(
+        ULONG receiverPid,
+        ULONG type,
+        PVOID buffer,
+        ULONG bufferSize // Is bufferSize in bytes?
+        ) {
+    PPROCESS pprocess;
+    PMESSAGE message;
+    PMESSAGE mq;
+    STATUS status;
+    PMESS_PROCESS_NODE iterator = processQueue->first;
+    PMESS_PROCESS_NODE iteratorPrev; // To fix deletion of node in processQueue.
+    PMESS_PROCESS_NODE tempIterator;
 
+    ASSERT(buffer); // Allowing sending message without buffer?
+
+    //KdPrint("MESS: SendMessage");
+
+    message = (PMESSAGE) MmAlloc(sizeof (MESSAGE) + bufferSize);
+    if (message == NULL) // Check out of memory.
+        return STATUS_NO_MEMORY;
+
+    // Init mess
+    message->senderPid = KeCurrentProcess->PID;
+    message->receiverPid = receiverPid;
+    message->priority = 1; // NOTE TO SELF: FIX THIS?
+    message->type = type;
+    message->bufferSize = bufferSize;
+    message->next = NULL;
+    // Copy input to mess buffer.
+    RtlCopyMemory((PCHAR) message + sizeof (MESSAGE), buffer, bufferSize);
+    message->buffer = (PCHAR) message + sizeof (MESSAGE);
+
+    // Get receiver process to check its state and pid.
+    status = PsReferenceProcess(receiverPid, &pprocess);
+    // Check if status exists.
+    if (status != 0) {
+        KdPrint("No such process in SendMessage - check pid!");
+        return status;
+    }
+    // Check if the process is waiting, going through processQueue.
+    // If the process is in the queue but isn't blocked, it has stopped
+    // waiting and should be removed from the queue. The message should
+    // still be added to its message queue though.
+    iterator = iteratorPrev = processQueue->first;
+    while (iterator) {
+        if (iterator->pid == receiverPid && iterator->process->State != blocked) {
+            // If we arrived here, things are a bit fucked up. The
+            // process is in the queue but not blocked.
+            // Remove it and break.
+            KdPrint("should not happen");
+            RemoveProcessFromQueue(iterator, iteratorPrev);
+            break;
+        } else if (iterator->pid == receiverPid && iterator->process->State == blocked) { // I should think about this one more time...
+            KdPrint("Message found!");
+            // Fix result and resume process.
+            KeSetSyscallResult(pprocess, (ULONG) message);
+            KeResumeProcess(pprocess);
+            // Delete node from processQueue. Is process first in queue?
+            // FIX: Koden under samma som i RemoveProcessFromQueue.
+            if (processQueue->first == iterator) {
+                processQueue->first = processQueue->first->next;
+                // Is this the only node?
+                if (processQueue->last == iterator) processQueue->last = NULL; // Should work.
+                MmFree(iterator);
+                break;
+            }                // Is process last in queue?
+            else if (processQueue->last == iterator) {
+                processQueue->last = iteratorPrev;
+                MmFree(iterator);
+                break;
+            }                // Else in middle... :(
+            else {
+                iteratorPrev->next = iterator->next;
+                MmFree(iterator);
+                break;
+            }
+        }
+        iteratorPrev = iterator;
+        iterator = iterator->next;
+    }
+
+
+    ASSERT(pprocess);
+
+    // Add message to process' message queue.
+    mq = pprocess->MessageQueue;
+    if (mq == NULL) pprocess->MessageQueue = message;
+    else {// Add message last in queue.
+        while (mq) {
+            if (mq->next == NULL) {
+                mq->next = message;
+                // Break hack
+                break;
+            }
+            KdPrint("mq");
+            mq = mq->next;
+        }
+    }
+    //ObDereferenceObject(pprocess);
+
+    return STATUS_SUCCESS;
+}
 
 PVOID
 MessReceiveFirst(
-    ULONG timeout
-    )
-{
+        ULONG timeout
+        ) {
+    PMESSAGE newMessage;
 
-	//KeSuspendProcess(5000);
-	//return NULL;
+    //KdPrint("MESS: ReceiveFirst");
 
-	PMESSAGE newMessage;
-        PMESS_PROCESS_NODE iterator;
-        
-	//KdPrint("MESS: ReceiveFirst");
-
-	if (KeCurrentProcess->MessageQueue != NULL)	// Message queue not empty - check it.
-	{
-		newMessage = KeCurrentProcess->MessageQueue;		
-		KeCurrentProcess->MessageQueue = KeCurrentProcess->MessageQueue->next;	// Might be NULL.
-		newMessage->next = NULL;
-                return newMessage;	// Return pointer to new message. Should be copied by the process, I guess, and then deleted.
-	}
-	else	// No message in message queue - wait a while/timeout.
-	{
-		// Check if process already is in queue.
-            iterator = processQueue->first;
-            while(iterator){
-                // Process is already in queue - don't do anything.
-                //if(iterator->pid == KeCurrentProcess->PID)
-            }
-                AddProcessToQueue();
-                KeSuspendProcess(timeout, NULL);
-                //KdPrint("Process stopped");
-        }
-        return NULL;
+    if (KeCurrentProcess->MessageQueue != NULL) // Message queue not empty - check it.
+    {
+        newMessage = KeCurrentProcess->MessageQueue;
+        KeCurrentProcess->MessageQueue = KeCurrentProcess->MessageQueue->next; // Might be NULL.
+        newMessage->next = NULL;
+        return newMessage; // Return pointer to new message. Should be copied by the process, I guess, and then deleted.
+    } else // No message in message queue - wait a while/timeout and add it to queue.
+    {
+        AddProcessToQueue();
+        KeSuspendProcess(timeout, ResumeMethod);
+        //KdPrint("Process stopped");
+    }
+    return NULL;
 }
-
 
 /*
 
@@ -235,18 +230,15 @@ Magnus wrote:
 I will need a dealloc message queue function that frees every message in the list and then sets the list pointer to null
 This is to free memory when a process is killed.
 
-*/
+ */
 
 ULONG
 MessGetMessageSize(
-    PVOID mess
-    )
-{
+        PVOID mess
+        ) {
     //KdPrint("GetMessageSize");
-    return (((PMESSAGE)mess)->bufferSize + sizeof(MESSAGE)); 	// Might aswell copy all of the message, including the header.
+    return (((PMESSAGE) mess)->bufferSize + sizeof (MESSAGE)); // Might aswell copy all of the message, including the header.
 }
-
-
 
 /*
  How to use in user program:
@@ -262,80 +254,75 @@ MessGetMessageSize(
 
  */
 
-STATUS	
+STATUS
 MessCopyMessage(
-    PVOID messDest,       
-    PVOID messSource,
-    ULONG sizeOfMessage
-    )
-{
+        PVOID messDest,
+        PVOID messSource,
+        ULONG sizeOfMessage
+        ) {
     //KdPrint("CopyMessage");
     ASSERT(messDest);
     ASSERT(messSource);
     // Check that dest buffer is big enough to contain source message.
-    if(sizeOfMessage < ((PMESSAGE)messSource)->bufferSize + sizeof(MESSAGE))
+    if (sizeOfMessage < ((PMESSAGE) messSource)->bufferSize + sizeof (MESSAGE))
         return STATUS_BUFFER_TOO_SMALL;
-    RtlCopyMemory(messDest,messSource,(((PMESSAGE) messSource)->bufferSize) + sizeof(MESSAGE));
+    RtlCopyMemory(messDest, messSource, (((PMESSAGE) messSource)->bufferSize) + sizeof (MESSAGE));
 
     return STATUS_SUCCESS;
 }
 
 STATUS
 MessDeleteMessage(
-    PVOID mess
-    )
-{
-	PMESSAGE mq;		// mq = MessageQueue of current process.
-	PMESSAGE message;
-	PMESSAGE iterator;
-	ASSERT(mess);
-	ASSERT(KeCurrentProcess);
+        PVOID mess
+        ) {
+    PMESSAGE mq; // mq = MessageQueue of current process.
+    PMESSAGE message;
+    PMESSAGE iterator;
+    ASSERT(mess);
+    ASSERT(KeCurrentProcess);
 
-	mq = iterator = KeCurrentProcess->MessageQueue;
-	message = (PMESSAGE) mess;
+    mq = iterator = KeCurrentProcess->MessageQueue;
+    message = (PMESSAGE) mess;
 
-	if(mq == NULL) {
-            //KdPrint("MQ empty");
-            return STATUS_SUCCESS;		// Hm.
+    if (mq == NULL) {
+        //KdPrint("MQ empty");
+        return STATUS_SUCCESS; // Hm.
+    }
+
+    //unlink message from message list;
+    if (mq == message) { // It's the first message
+        //KdPrint("Deleting first message");
+        KeCurrentProcess->MessageQueue = message->next; // Either NULL or second message in list.
+        MmFree(message);
+    } else {
+        while (iterator) {
+            if (iterator->next == message) {
+                iterator->next = message->next;
+                MmFree(mess);
+                //KdPrint("Deleting non-first message");
+                return STATUS_SUCCESS;
+            } else
+                iterator = iterator->next;
         }
+    }
 
-	//unlink message from message list;
-	if(mq == message){		// It's the first message
-                //KdPrint("Deleting first message");
-                KeCurrentProcess->MessageQueue = message->next;	// Either NULL or second message in list.
-		MmFree(message);
-	}
-	else{
-                while(iterator){
-			if(iterator->next == message){
-                            iterator->next = message->next;
-			    MmFree(mess);
-                            //KdPrint("Deleting non-first message");
-                            return STATUS_SUCCESS;
-			}
-			else
-				iterator = iterator->next;
-		}
-	}
-
-	return STATUS_INVALID_HANDLE;		// Message is not in queue. The best status I could find.
+    return STATUS_INVALID_HANDLE; // Message is not in queue. The best status I could find.
 }
 
 STATUS
-MessDeleteMessageQueue(PMESSAGE messageQueue)
-{
-        PMESSAGE mq, message;
-        //KdPrint("DeleteMessageQueue");
+MessDeleteMessageQueue(PMESSAGE messageQueue) {
+    PMESSAGE mq, message;
+    //KdPrint("DeleteMessageQueue");
 
-	mq = messageQueue;
+    mq = messageQueue;
 
-	while(mq){
-		message = mq;
-		mq = mq->next;
-		MmFree((PVOID)message);
-	}
+    while (mq) {
+        message = mq;
+        mq = mq->next;
+        MmFree((PVOID) message);
+    }
 
-        messageQueue = NULL;        // Does this change anything really?
+    messageQueue = NULL; // Does this change anything really?
 
-	return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }

@@ -42,18 +42,14 @@
                     // Wait for start message and sleep a second.
                     Sleep(2000);
                     message = ReceiveFirst(1);
+                    Sleep(2000);
                     if(message){
                         RtlFormatString(s,100,"\n\rYey! I got start message! My pid is %d, sending start message to %d. Z z z...", GetProcessId(),receivedPID);
                         WriteFile(handle,s,0);
                         DeleteMessage(message);
                         SendMessage(receivedPID,0,&s,4);    // Message type and content doesn't matter here.
                     }
-                    else{
-                        KdPrint("Babyring: Should never be here. Exiting."); KillMe();
-                    }
-                    //Sleep(2000);
                 }
-
                 KillMe();
  }
  
