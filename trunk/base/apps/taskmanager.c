@@ -35,6 +35,7 @@ AppTaskManager() {
             if (!pinfo[i].RunningProgram)
                 pinfo[i].RunningProgram = "Unnamed";
         }
+		//KdPrint("bab!");
         for (i = 0; i < (min(numprocess, TASKM_BUFFER_SIZE)); i++) {
             //Check how big cputime is
             cputmp = pinfo[i].CPUTime;
@@ -44,11 +45,13 @@ AppTaskManager() {
                 cputmp = cputmp / 1000;
                 tend = 1;
             }
+			
             RtlFormatString(strbuff, 250, "%s PID: %d, STATE:%d CPU TIME: %d %s\n\r", pinfo[i].RunningProgram, pinfo[i].PID, pinfo[i].State, cputmp, timend[tend]);
             //KdPrint("Before WriteFile");
             WriteString(tmout, strbuff);
             //  Sleep(1000);
         }
+		
         //Sleep(5000);
     }
     //KdPrint("Before tmgoodbye");
