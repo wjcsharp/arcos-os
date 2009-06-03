@@ -25,21 +25,21 @@ AppWaiter() {
     for (i = 0; i < 5; i++) {
         freeForks[i] = TRUE;
     }
-   /*
-    //init hungry pids to 0
-    for (i = 0; i < 5; i++) {
-        hungryl[i][1] = 0;
-    }
-    for (i = 0; i < 4; i++) {
-        hungryr[i][1] = 0;
-    }
-*/
+    /*
+     //init hungry pids to 0
+     for (i = 0; i < 5; i++) {
+         hungryl[i][1] = 0;
+     }
+     for (i = 0; i < 4; i++) {
+         hungryr[i][1] = 0;
+     }
+     */
 
     message = NULL;
 
+    //Create philosophers
     for (i = 0; i < 5; i++) {
         RtlFormatString(args, 25, "%d %d %d", i, (i + 1) % 5, GetProcessId());
-        //KdPrint(args);
         status = CreateProcess("philosopher", 5, &philos, args);
         if (status == 0)
             CloseHandle(philos);
@@ -73,21 +73,21 @@ AppWaiter() {
             if (freeForks[forkNr]) {
                 forksInUse++;
                 freeForks[forkNr] = FALSE;
-             //   KdPrint("sending R to:%d", philPid);
+                //   KdPrint("sending R to:%d", philPid);
                 SendMessage(philPid, 0, "fork", 5);
-             //   KdPrint("sending R END");
-            } 
+                //   KdPrint("sending R END");
+            }
         }
 
 
         if (messType == 'L') {
-           // KdPrint("InL:%d", forkNr);
+            // KdPrint("InL:%d", forkNr);
             if ((forksInUse < 4) && freeForks[forkNr]) {
                 forksInUse++;
                 freeForks[forkNr] = FALSE;
-             //   KdPrint("sending L to:%d", philPid);
+                //   KdPrint("sending L to:%d", philPid);
                 SendMessage(philPid, 0, "fork", 5);
-               // KdPrint("after sendL");
+                // KdPrint("after sendL");
             } /*else {
                 for (j = 0; j < 5; j++) {
                     if (hungryl[j][1] == 0) {

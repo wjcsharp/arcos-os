@@ -26,18 +26,17 @@ APPLICATION PsAvailApps[] = {
     {"TaskManager", AppTaskManager},
     {"Kill", AppKill},
     {"ChangePrio", AppChangePrio},
-    {"TestProcess3", AppPSTestProcess3},
     {"taskmanager", AppTaskManager},
     {"kill", AppKill},
     {"changeprio", AppChangePrio},
-    {"testprocess3", AppPSTestProcess3},
     {"philosopher", AppPhilosopher},
     {"waiter", AppWaiter},
     {"shell", AppShell},
     {"ring", AppRing},
     {"ringnode", AppRingNode},
     {"startwaiter", AppStartWaiter},
-    {"drone", AppDrone}
+    {"drone", AppDrone},
+    {"keepalive", AppKeepAlive}
 
 };
 
@@ -47,21 +46,6 @@ PIDInUse(ULONG PID);
 
 ULONG
 GetNewPID();
-
-VOID
-AppPSTestProcess3() {
-    //ULONG i;
-
-    HANDLE handtag;
-    //PsCreateProcessByName("taskmanager", 1, &handtag, "   asdfg");
-    CreateProcess("taskmanager", 1, &handtag, NULL);
-    ObCloseHandle(handtag);
-
-    KdPrint("tp3 I AM:%d", GetProcessId());
-    SuperviseProc(2, 3);
-
-    KillMe();
-}
 
 STATUS
 CreateProcessObjectType() {
@@ -344,6 +328,7 @@ PsKillProcess(
 
     //Check for supervisor and if supervised send message
     if (PProcess->Supervisor) {//PID 0 is idle process, idle cant supervise.
+        //KdPrint("telling supervisor");
         RtlFormatString(messstring, 10, "%d", PProcess->PID);
         SendMessage(PProcess->Supervisor, 0, messstring, (RtlStringLength(messstring) + 1));
     }
