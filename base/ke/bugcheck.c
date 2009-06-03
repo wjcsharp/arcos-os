@@ -34,8 +34,8 @@ KeBugCheck(
     // Set colors & clear the screen
     //
     HalSetBackgroundColor(4);   // blue
-    HalSetForegroundColor(15);  // bright white
-    HalClearDisplay();
+    //HalSetForegroundColor(15);  // bright white
+    //HalClearDisplay();
 
     //
     // Print bugcheck header
