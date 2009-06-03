@@ -105,7 +105,7 @@ HalHandleException(
     // fetch exception code from the exception frame
     //
     ULONG exceptionCode = (pFrame->Cause & CP0_CAUSE_EXCEPTION_CODE_MASK) >> CP0_CAUSE_EXCEPTION_CODE_SHIFT;
-    
+    volatile PNS16550 tty;
     //
     // Capture current process context
     //
@@ -154,7 +154,7 @@ HalHandleException(
             HalResetTimer(67000 * 10);
         } 
 
-            volatile PNS16550 tty = (PNS16550)UART_BASE;
+           /* volatile PNS16550*/ tty = (PNS16550)UART_BASE;
 
         // serial device interrupt?
         if (pFrame->Cause & CP0_CAUSE_UART) {

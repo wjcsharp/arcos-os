@@ -6,6 +6,9 @@
 //Arguments is passed via PCHAR Args in PROCESS as a string.
 
 VOID
+AppStart();
+
+VOID
 AppStartWaiter();
 
 VOID

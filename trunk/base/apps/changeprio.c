@@ -1,3 +1,10 @@
+//
+// File:   changeprio.c
+// Author: Magnus Söderling
+//
+//
+
+
 #include <arcos.h>
 #include <kd.h>
 #include <rtl.h>

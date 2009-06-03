@@ -1,8 +1,8 @@
-/* 
- * File:   ps.c
- * Author: Magnus Söderling
- *
- */
+//
+// File:   ps.c
+// Author: Magnus Söderling
+//
+//
 
 #include <arcos.h>
 #include <apps.h>

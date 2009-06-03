@@ -1,3 +1,10 @@
+//
+// File:   kill.c
+// Author: Magnus Söderling
+//
+//
+
+
 #include <arcos.h>
 #include <kd.h>
 #include <rtl.h>
@@ -10,7 +17,7 @@ AppKill() {
     STATUS status;
     CHAR Args[25];
     HANDLE outp;
-    Sleep(5000);
+    
     outp = CreateFile('s');
     //Get function args
     argLength = CopyArgs(Args, 25);

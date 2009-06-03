@@ -1,3 +1,9 @@
+//
+// File:   taskmanager.c
+// Author: Magnus Söderling
+//
+//
+
 #include <arcos.h>
 #include <kd.h>
 #include <rtl.h>

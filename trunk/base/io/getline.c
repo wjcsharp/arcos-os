@@ -9,6 +9,7 @@
 #include <io.h>
 #include <api.h>
 #include <mm.h>
+#include <kd.h>
 
 PCHAR
 GetLine(){
