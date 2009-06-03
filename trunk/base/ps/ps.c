@@ -36,7 +36,8 @@ APPLICATION PsAvailApps[] = {
     {"ringnode", AppRingNode},
     {"startwaiter", AppStartWaiter},
     {"drone", AppDrone},
-    {"keepalive", AppKeepAlive}
+    {"keepalive", AppKeepAlive},
+    {"startkeepalive", AppStartKeepAlive}
 
 };
 
@@ -315,7 +316,7 @@ PsKillProcess(
     STATUS status;
     CHAR messstring[10];
 
-    //KdPrint("ps Killing:%d", PProcess->PID); //BUGBUGBUG
+    //KdPrint("ps Killing:%d", PProcess->PID); 
     status = ObReferenceObject(PProcess, processType);
     if (status != 0)
         return status;
@@ -328,7 +329,7 @@ PsKillProcess(
 
     //Check for supervisor and if supervised send message
     if (PProcess->Supervisor) {//PID 0 is idle process, idle cant supervise.
-        //KdPrint("telling supervisor");
+        KdPrint("telling supervisor");
         RtlFormatString(messstring, 10, "%d", PProcess->PID);
         SendMessage(PProcess->Supervisor, 0, messstring, (RtlStringLength(messstring) + 1));
     }

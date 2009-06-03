@@ -30,7 +30,7 @@ GetProcessPriority();
 VOID
 KillMe();
 
-ULONG
+STATUS
 CreateProcess(
         PCHAR ProgramName,
         ULONG Priority,

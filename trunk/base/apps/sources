@@ -13,4 +13,5 @@ SOURCES= \
         waiter.c \
         startwaiter.c \
         drone.c \
-        keepalive.c
+        keepalive.c \
+        startkeepalive.c
