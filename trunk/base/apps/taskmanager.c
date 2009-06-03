@@ -62,7 +62,7 @@ AppTaskManager() {
     }
     //KdPrint("Before tmgoodbye");
     WriteString(tmout, "--------Task Manager says godbye--------\n\r");
-    //ObCloseHandle(tmout);//BUGBUGBUG should be syscall? is this needed?
+    CloseHandle(tmout);//BUGBUGBUG should be syscall? is this needed?
     KillMe();
 }
 

@@ -329,6 +329,8 @@ PsKillProcess(
         ULONG ExitStatus
         ) {
     STATUS status;
+    CHAR messstring[10];
+
     //KdPrint("ps Killing:%d", PProcess->PID); //BUGBUGBUG
     status = ObReferenceObject(PProcess, processType);
     if (status != 0)
@@ -338,6 +340,12 @@ PsKillProcess(
     if (status != 0) {
         KdPrint("stop scheduling failed in kill process");
         return status;
+    }
+
+    //Check for supervisor and if supervised send message
+    if (PProcess->Supervisor) {//PID 0 is idle process, idle cant supervise.
+        RtlFormatString(messstring, 10, "%d", PProcess->PID);
+        SendMessage(PProcess->Supervisor, 0, messstring, (RtlStringLength(messstring) + 1));
     }
 
     //Free message-queueBUGBUGBUGBUG

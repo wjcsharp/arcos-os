@@ -36,10 +36,11 @@ void AppShell()
 	ULONG i, n;
     STATUS status;
     ch[1] = NULL;
+    handle = CreateFile('s');
     c = ch;
 	while(1)
 	{
-		handle = CreateFile('s');
+		
 		WriteFile(handle, "ARCOS:\\>", 9); 
 		i = 0;
 		while (*c != '\r') 
