@@ -1,3 +1,10 @@
+//
+// File:   waiter.c
+// Author: Magnus Söderling
+//
+//
+
+
 #include <arcos.h>
 #include <kd.h>
 #include <rtl.h>
@@ -39,7 +46,7 @@ AppWaiter() {
     }
 
     for (i = 0; i < 300; i++) {
-        //KdPrint("before receive");
+
         while (!(message = ReceiveFirst(5000)));
         //Store message locally
         status = CopyMessage(myMessage, message, GetMessageSize(message));

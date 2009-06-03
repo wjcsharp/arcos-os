@@ -1,7 +1,14 @@
+//
+// File:   startwaiter.c
+// Author: Magnus Söderling
+//
+//
+
+
 #include <arcos.h>
-#include <rtl.h>
+//#include <rtl.h>
 #include <api.h>
-#include <apps.h>
+//#include <apps.h>
 
 VOID
 AppStartWaiter(){
