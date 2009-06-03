@@ -2,7 +2,7 @@
 #define __API_H__
 
 
-#define WriteString(handle,msg) WriteFile(handle, msg, RtlStringLength(msg))
+#define WriteString(handle,msg) WriteFile(handle, msg, RtlStringLength(msg)+1)
 
 typedef struct _PROCESS_INFO {
     PROCESS_STATE State;

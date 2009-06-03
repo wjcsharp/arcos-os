@@ -36,7 +36,8 @@ APPLICATION PsAvailApps[] = {
     {"shell", AppShell},
     {"ring", AppRing},
     {"ringnode", AppRingNode},
-    {"startwaiter", AppStartWaiter}
+    {"startwaiter", AppStartWaiter},
+    {"drone", AppDrone}
 
 };
 

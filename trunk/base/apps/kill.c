@@ -19,6 +19,7 @@ AppKill() {
     HANDLE outp;
 
     outp = CreateFile('s');
+
     //Get function args
     argLength = CopyArgs(args, 25);
 
@@ -31,18 +32,18 @@ AppKill() {
     PID = RtlAtoUL(args);
 
     status = KillByPID(PID, 1); //ExitStatus 1 == murdered
-    KdPrint("after kill by pid in Appkill");
+    //KdPrint("after kill by pid in Appkill");
     if (0 == status) {
-        KdPrint("before rtlformatkilled PID");
+        //KdPrint("before rtlformatkilled PID");
         RtlFormatString(outstring, 80, "\r\n Killed %d\r\n", PID);
         KdPrint(outstring);
-        WriteString(outp, outstring);
-        KdPrint("after killed PID output");
+        WriteString(outp, "outstring");
+        //KdPrint("after killed PID output");
     } else {
         RtlFormatString(outstring, 80, "\r\n Failed to kill %d\r\n", PID);
         WriteString(outp, outstring);
     }
-    KdPrint("before closehandle");
+    //KdPrint("before closehandle");
     CloseHandle(outp);
     KillMe();
 }
