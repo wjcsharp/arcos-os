@@ -11,4 +11,5 @@ SOURCES= \
         kill.c \
 	ring.c \
         waiter.c \
-        startwaiter.c  
+        startwaiter.c \
+        drone.c  
