@@ -31,13 +31,18 @@ AppKill() {
     PID = RtlAtoUL(args);
 
     status = KillByPID(PID, 1); //ExitStatus 1 == murdered
+    KdPrint("after kill by pid in Appkill");
     if (0 == status) {
-        RtlFormatString(outstring,80,"\r\n Killed %d\r\n", PID);
+        KdPrint("before rtlformatkilled PID");
+        RtlFormatString(outstring, 80, "\r\n Killed %d\r\n", PID);
+        KdPrint(outstring);
         WriteString(outp, outstring);
-    } else{
-     RtlFormatString(outstring,80,"\r\n Failed to kill %d\r\n", PID);
+        KdPrint("after killed PID output");
+    } else {
+        RtlFormatString(outstring, 80, "\r\n Failed to kill %d\r\n", PID);
         WriteString(outp, outstring);
     }
+    KdPrint("before closehandle");
     CloseHandle(outp);
     KillMe();
 }
