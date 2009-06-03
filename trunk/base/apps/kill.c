@@ -15,28 +15,29 @@ VOID
 AppKill() {
     ULONG PID, argLength;
     STATUS status;
-    CHAR Args[25];
+    CHAR args[25], outstring[80];
     HANDLE outp;
-    
+
     outp = CreateFile('s');
     //Get function args
-    argLength = CopyArgs(Args, 25);
-    //KdPrint(":::%s:::%d", Args, argLength);
+    argLength = CopyArgs(args, 25);
+
     if (argLength == 0) {
         WriteString(outp, "\n\rKill needs an argument e.g. 'kill 5'\r\n");
-        //KdPrint("Kill needs an argument e.g. 'kill 5'"); //BUGBUGBUG
-        Sleep(5000);
         CloseHandle(outp);
         KillMe();
     }
 
-    PID = RtlAtoUL(Args);
+    PID = RtlAtoUL(args);
 
     status = KillByPID(PID, 1); //ExitStatus 1 == murdered
-    if (0 == status)
-        KdPrint("Killed %d", PID); //BUGBUGBUG
-    else
-        KdPrint("Failed to kill %d", PID); //BUGBUGBUG
+    if (0 == status) {
+        RtlFormatString(outstring,80,"\r\n Killed %d\r\n", PID);
+        WriteString(outp, outstring);
+    } else{
+     RtlFormatString(outstring,80,"\r\n Failed to kill %d\r\n", PID);
+        WriteString(outp, outstring);
+    }
     CloseHandle(outp);
     KillMe();
 }
