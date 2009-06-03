@@ -58,7 +58,8 @@ void AppRing() {
     STATUS status;
     CHAR args[25];
     ULONG nr = 3; // 3 = default.
-
+    // Fix array to store babyring pids.
+    ULONG pids[nr];
 
     // How many babyrings? Check args (only one digit).
     if (CopyArgs(args, 25) != 0) {
@@ -66,8 +67,7 @@ void AppRing() {
     }
     if (nr < 3) nr = 3; // Must be atleast three, otherwise for-loops will crash.
 
-    // Fix array to store babyring pids.
-    ULONG pids[nr];
+
 
     handle = CreateFile('s');
 
